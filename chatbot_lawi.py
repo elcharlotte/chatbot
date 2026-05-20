@@ -104,7 +104,7 @@ def main():
             ]
             st.rerun()
 
-    # --- PHASE 3: CHAT (JETZT MIT AUDIO) ---
+    # --- PHASE 3: CHAT (KORRIGIERT) ---
     elif st.session_state.step == "chat":
         st.title("Interview im Dialog 💬")
         user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
@@ -132,15 +132,19 @@ def main():
             
             with col_audio:
                 st.write("🎤 **Antwort einsprechen:**")
-                # Der Recorder rendert einen Start/Stop-Button im Browser
+                
+                # Wir verpassen dem Recorder einen dynamischen Key basierend auf der Interaktionsanzahl.
+                # Sobald sich die Interaktionsanzahl erhöht, wechselt der Key und Streamlit löscht 
+                # die alten Audio-Bytes im Hintergrund komplett!
+                recorder_key = f"recorder_{st.session_state.interaction_count}"
+                
                 audio_record = mic_recorder(
                     start_prompt="Aufnahme starten",
                     stop_prompt="Aufnahme stoppen",
-                    key='recorder'
+                    key=recorder_key
                 )
                 
                 if audio_record:
-                    # Wenn eine Aufnahme vorliegt, wandeln wir sie in ein In-Memory-File für OpenAI um
                     audio_bytes = audio_record['bytes']
                     audio_file = io.BytesIO(audio_bytes)
                     audio_file.name = "audio.wav"
@@ -156,12 +160,11 @@ def main():
                             st.error(f"STT Fehler: {e}")
 
             with col_text:
-                # Text-Fallback falls das Mikrofon nicht genutzt werden kann/soll
                 text_prompt = st.chat_input("Oder hier tippen...")
                 if text_prompt:
                     user_input = text_prompt
 
-            # Wenn Input (egal ob via Sprache oder Text) generiert wurde:
+            # Wenn Input generiert wurde:
             if user_input:
                 st.session_state.messages.append({"role": "user", "content": user_input})
                 
@@ -174,14 +177,12 @@ def main():
                     ai_msg = response.choices[0].message.content
                     st.session_state.messages.append({"role": "assistant", "content": ai_msg})
                     
-                    # OPTIONAL: KI-Antwort in Sprache umwandeln (TTS), damit der Nutzer sie hört
                     try:
                         tts_response = client.audio.speech.create(
                             model="tts-1",
-                            voice="alloy", # Stimmen: alloy, echo, fable, onyx, nova, shimmer
+                            voice="alloy",
                             input=ai_msg
                         )
-                        # Audio temporär im Session-State speichern, um es nach dem Rerun abzuspielen
                         st.session_state.latest_ai_audio = tts_response.content
                     except Exception as e:
                         st.warning(f"Audio-Ausgabe fehlgeschlagen: {e}")
@@ -189,12 +190,17 @@ def main():
                 # Zwischenspeichern nach jeder Nachricht
                 full_data = {"info": st.session_state.user_data, "self": st.session_state.bfi_self, "chat": st.session_state.messages}
                 save_to_nextcloud(st.session_state.participant_id, full_data)
+                
+                # WICHTIG: Bevor wir die Seite neu laden, löschen wir das alte Recorder-Widget
+                # aus dem Session State, damit es beim Rerun nicht wieder getriggert wird.
+                if recorder_key in st.session_state:
+                    del st.session_state[recorder_key]
+                
                 st.rerun()
 
             # Wenn ein frisches KI-Audio vorliegt, spielen wir es automatisch ab
             if "latest_ai_audio" in st.session_state and st.session_state.latest_ai_audio:
                 st.audio(st.session_state.latest_ai_audio, format="audio/mp3", autoplay=True)
-                # Löschen, damit es beim nächsten Seitenaufbau nicht nochmal triggert
                 st.session_state.latest_ai_audio = None
 
 # --- PHASE 4: AUSWERTUNG ---
