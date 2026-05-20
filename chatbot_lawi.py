@@ -6,6 +6,7 @@ import uuid
 # NEU: Import für den Audio-Recorder im Browser
 from streamlit_mic_recorder import mic_recorder
 import io
+import threading  # NEU: Erlaubt das Speichern im Hintergrund
 
 # --- KONFIGURATION & HELPER ---
 def save_to_nextcloud(participant_id, data_dict):
@@ -104,26 +105,17 @@ def main():
             ]
             st.rerun()
 
-# --- PHASE 3: CHAT (MIT ERZWUNGENER GESCHWINDIGKEITSKONTROLLE) ---
+# --- PHASE 3: CHAT (GESCHWINDIGKEITS-OPTIMIERT) ---
     elif st.session_state.step == "chat":
         st.title("Interview im Dialog 💬")
         user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
         st.session_state.interaction_count = len(user_msgs)
         st.info(f"Interaktion {st.session_state.interaction_count} von 10")
         
-        # --- AUDIO-EINSTELLUNGEN FÜR DIE PROBANDEN ---
+        # --- AUDIO-EINSTELLUNGEN ---
         st.sidebar.header("⚙️ Audio-Einstellungen")
-        audio_vorlesen = st.sidebar.toggle("Antworten laut vorlesen", value=True, help="Schalte dies aus, wenn du die Antworten lieber nur lesen möchtest.")
-        
-        # Eigener Regler für die Vorlesegeschwindigkeit
-        vorlese_tempo = st.sidebar.slider(
-            "Vorlesegeschwindigkeit", 
-            min_value=0.5, 
-            max_value=2.0, 
-            value=1.0, 
-            step=0.1,
-            format="%f"
-        )
+        audio_vorlesen = st.sidebar.toggle("Antworten laut vorlesen", value=True)
+        vorlese_tempo = st.sidebar.slider("Vorlesegeschwindigkeit", min_value=0.5, max_value=2.0, value=1.0, step=0.1)
         st.sidebar.divider()
         
         # Chatverlauf anzeigen
@@ -141,7 +133,6 @@ def main():
             client = OpenAI(api_key=st.secrets["openai"]["api_key"])
             user_input = None
 
-            # Zwei Eingabeoptionen anbieten: Sprechen oder Tippen
             st.write("---")
             col_audio, col_text = st.columns([1, 2])
             
@@ -160,7 +151,8 @@ def main():
                     audio_file = io.BytesIO(audio_bytes)
                     audio_file.name = "audio.wav"
                     
-                    with st.spinner("Transkribiere Audio..."):
+                    # Spinner direkt im Kontext platzieren
+                    with st.spinner("🎧 Ich höre zu... (Sprache wird verarbeitet)"):
                         try:
                             transcript = client.audio.transcriptions.create(
                                 model="whisper-1", 
@@ -175,48 +167,57 @@ def main():
                 if text_prompt:
                     user_input = text_prompt
 
-            # Wenn Input generiert wurde:
+            # Wenn Input vorliegt (Sprechen oder Tippen)
             if user_input:
+                # 1. Sofort im UI anzeigen, damit der Nutzer sieht, dass etwas passiert
                 st.session_state.messages.append({"role": "user", "content": user_input})
                 
-                # KI Antwort generieren
-                with st.spinner("KI denkt nach..."):
-                    response = client.chat.completions.create(
-                        model="gpt-4o-mini",
-                        messages=st.session_state.messages
-                    )
-                    ai_msg = response.choices[0].message.content
-                    st.session_state.messages.append({"role": "assistant", "content": ai_msg})
-                    
-                    if audio_vorlesen:
-                        try:
+                # 2. KI-Antwort und TTS in einem einzigen Lade-Block bündeln
+                with st.spinner("🤖 Interviewer überlegt..."):
+                    try:
+                        # Text generieren
+                        response = client.chat.completions.create(
+                            model="gpt-4o-mini",
+                            messages=st.session_state.messages
+                        )
+                        ai_msg = response.choices[0].message.content
+                        st.session_state.messages.append({"role": "assistant", "content": ai_msg})
+                        
+                        # Direkt im Anschluss Audio generieren (falls aktiv)
+                        if audio_vorlesen:
                             tts_response = client.audio.speech.create(
                                 model="tts-1",
                                 voice="alloy",
                                 input=ai_msg
                             )
-                            # Wir encoden das Audio direkt in Base64, damit wir es stabil in HTML einbetten können
                             import base64
                             b64_audio = base64.b64encode(tts_response.content).decode("utf-8")
                             st.session_state.latest_ai_audio_b64 = b64_audio
-                        except Exception as e:
-                            st.warning(f"Audio-Ausgabe fehlgeschlagen: {e}")
+                    except Exception as e:
+                        st.sidebar.error(f"KI/TTS Fehler: {e}")
                 
-                # Zwischenspeichern nach jeder Nachricht
-                full_data = {"info": st.session_state.user_data, "self": st.session_state.bfi_self, "chat": st.session_state.messages}
-                save_to_nextcloud(st.session_state.participant_id, full_data)
+                # 3. OPTIMIERUNG: Nextcloud-Upload in den Hintergrund verlagern
+                # Die App wartet nicht mehr auf die Uni-Cloud, sondern lädt sofort neu!
+                full_data = {
+                    "info": st.session_state.user_data, 
+                    "self": st.session_state.bfi_self, 
+                    "chat": st.session_state.messages
+                }
+                
+                # Thread starten (läuft autark im Hintergrund)
+                threading.Thread(
+                    target=save_to_nextcloud, 
+                    args=(st.session_state.participant_id, full_data),
+                    daemon=True
+                ).start()
                 
                 if recorder_key in st.session_state:
                     del st.session_state[recorder_key]
                 
                 st.rerun()
 
-            # Wenn ein frisches KI-Audio vorliegt UND das Vorlesen aktiviert ist:
+            # Audio abspielen
             if audio_vorlesen and "latest_ai_audio_b64" in st.session_state and st.session_state.latest_ai_audio_b64:
-                st.write("🔊 **Audio-Wiedergabe:**")
-                
-                # Wir bauen einen HTML5-Player, dem wir die Wunschgeschwindigkeit (playbackRate) 
-                # direkt über ein kleines JavaScript-Snippet aufzwingen.
                 audio_html = f"""
                     <audio id="ki-player" autoplay controls style="width: 100%;">
                         <source src="data:audio/mp3;base64,{st.session_state.latest_ai_audio_b64}" type="audio/mp3">
@@ -227,8 +228,6 @@ def main():
                     </script>
                 """
                 st.components.v1.html(audio_html, height=60)
-                
-                # Audio-Daten löschen, um doppeltes Abspielen beim nächsten Klick zu verhindern
                 st.session_state.latest_ai_audio_b64 = None
 
 # --- PHASE 4: AUSWERTUNG ---
