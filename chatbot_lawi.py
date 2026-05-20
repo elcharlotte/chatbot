@@ -3,11 +3,13 @@ from openai import OpenAI
 import json
 import requests
 import uuid
+# NEU: Import für den Audio-Recorder im Browser
+from streamlit_mic_recorder import mic_recorder
+import io
 
 # --- KONFIGURATION & HELPER ---
 def save_to_nextcloud(participant_id, data_dict):
     try:
-        # Pfad zu deinem Nextcloud-Ordner
         base_url = "https://cloudstore.uni-ulm.de/remote.php/dav/files/ffg79"
         folder = "Forschungsdaten"
         filename = f"interview_{participant_id}.json"
@@ -23,7 +25,6 @@ def save_to_nextcloud(participant_id, data_dict):
         return False
 
 def reset_app():
-    """Löscht den Session State und startet die App neu."""
     for key in list(st.session_state.keys()):
         del st.session_state[key]
     st.rerun()
@@ -32,7 +33,6 @@ def reset_app():
 def main():
     st.set_page_config(page_title="Persönlichkeits-Diagnostik", page_icon="🧠")
     
-    # Initialisierung des Session State
     if "participant_id" not in st.session_state:
         params = st.query_params
         st.session_state.participant_id = params.get("caseNumber", f"user_{uuid.uuid4().hex[:8]}")
@@ -104,13 +104,14 @@ def main():
             ]
             st.rerun()
 
-    # --- PHASE 3: CHAT ---
+    # --- PHASE 3: CHAT (JETZT MIT AUDIO) ---
     elif st.session_state.step == "chat":
         st.title("Interview im Dialog 💬")
         user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
         st.session_state.interaction_count = len(user_msgs)
         st.info(f"Interaktion {st.session_state.interaction_count} von 10")
         
+        # Chatverlauf anzeigen
         for msg in st.session_state.messages:
             if msg["role"] != "system":
                 with st.chat_message(msg["role"]):
@@ -122,27 +123,84 @@ def main():
                 st.session_state.step = "results"
                 st.rerun()
         else:
-            if prompt := st.chat_input("Ihre Antwort..."):
-                st.session_state.messages.append({"role": "user", "content": prompt})
-                
-                client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=st.session_state.messages
+            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+            user_input = None
+
+            # Zwei Eingabeoptionen anbieten: Sprechen oder Tippen
+            st.write("---")
+            col_audio, col_text = st.columns([1, 2])
+            
+            with col_audio:
+                st.write("🎤 **Antwort einsprechen:**")
+                # Der Recorder rendert einen Start/Stop-Button im Browser
+                audio_record = mic_recorder(
+                    start_prompt="Aufnahme starten",
+                    stop_prompt="Aufnahme stoppen",
+                    key='recorder'
                 )
-                msg = response.choices[0].message.content
-                st.session_state.messages.append({"role": "assistant", "content": msg})
+                
+                if audio_record:
+                    # Wenn eine Aufnahme vorliegt, wandeln wir sie in ein In-Memory-File für OpenAI um
+                    audio_bytes = audio_record['bytes']
+                    audio_file = io.BytesIO(audio_bytes)
+                    audio_file.name = "audio.wav"
+                    
+                    with st.spinner("Transkribiere Audio..."):
+                        try:
+                            transcript = client.audio.transcriptions.create(
+                                model="whisper-1", 
+                                file=audio_file
+                            )
+                            user_input = transcript.text
+                        except Exception as e:
+                            st.error(f"STT Fehler: {e}")
+
+            with col_text:
+                # Text-Fallback falls das Mikrofon nicht genutzt werden kann/soll
+                text_prompt = st.chat_input("Oder hier tippen...")
+                if text_prompt:
+                    user_input = text_prompt
+
+            # Wenn Input (egal ob via Sprache oder Text) generiert wurde:
+            if user_input:
+                st.session_state.messages.append({"role": "user", "content": user_input})
+                
+                # KI Antwort generieren
+                with st.spinner("KI denkt nach..."):
+                    response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=st.session_state.messages
+                    )
+                    ai_msg = response.choices[0].message.content
+                    st.session_state.messages.append({"role": "assistant", "content": ai_msg})
+                    
+                    # OPTIONAL: KI-Antwort in Sprache umwandeln (TTS), damit der Nutzer sie hört
+                    try:
+                        tts_response = client.audio.speech.create(
+                            model="tts-1",
+                            voice="alloy", # Stimmen: alloy, echo, fable, onyx, nova, shimmer
+                            input=ai_msg
+                        )
+                        # Audio temporär im Session-State speichern, um es nach dem Rerun abzuspielen
+                        st.session_state.latest_ai_audio = tts_response.content
+                    except Exception as e:
+                        st.warning(f"Audio-Ausgabe fehlgeschlagen: {e}")
                 
                 # Zwischenspeichern nach jeder Nachricht
                 full_data = {"info": st.session_state.user_data, "self": st.session_state.bfi_self, "chat": st.session_state.messages}
                 save_to_nextcloud(st.session_state.participant_id, full_data)
                 st.rerun()
 
+            # Wenn ein frisches KI-Audio vorliegt, spielen wir es automatisch ab
+            if "latest_ai_audio" in st.session_state and st.session_state.latest_ai_audio:
+                st.audio(st.session_state.latest_ai_audio, format="audio/mp3", autoplay=True)
+                # Löschen, damit es beim nächsten Seitenaufbau nicht nochmal triggert
+                st.session_state.latest_ai_audio = None
+
 # --- PHASE 4: AUSWERTUNG ---
     elif st.session_state.step == "results":
         st.title("Ihre Auswertung 📊")
         
-        # Initialisierung des Speicher-Status
         if "data_saved" not in st.session_state:
             st.session_state.data_saved = False
 
@@ -165,7 +223,6 @@ def main():
                     st.error(f"Fehler bei der Analyse: {e}")
                     st.session_state.ai_bfi = {t: 0 for t in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]}
 
-        # Ergebnisse anzeigen
         traits = ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]
         for t in traits:
             st.subheader(t)
@@ -178,7 +235,6 @@ def main():
 
         st.divider()
 
-        # Speichern & Abschlussbereich
         if not st.session_state.data_saved:
             st.subheader("Abschluss")
             consent = st.checkbox("Ich stimme der anonymisierten Datennutzung zu.")
@@ -193,11 +249,10 @@ def main():
                 }
                 if save_to_nextcloud(st.session_state.participant_id, final_payload):
                     st.session_state.data_saved = True
-                    st.rerun() # Seite neu laden, um den "Speichern"-Button auszublenden
+                    st.rerun()
                 else:
                     st.error("Speicherfehler.")
         else:
-            # Dieser Bereich wird angezeigt, sobald data_saved = True ist
             st.success("Daten erfolgreich gespeichert! Das Fenster kann nun geschlossen oder für die nächste Person vorbereitet werden.")
             
             col_a, col_b = st.columns(2)
