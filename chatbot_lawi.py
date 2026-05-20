@@ -104,12 +104,25 @@ def main():
             ]
             st.rerun()
 
-    # --- PHASE 3: CHAT (KORRIGIERT) ---
+    # --- PHASE 3: CHAT (MIT AUDIO-KONTROLLE) ---
     elif st.session_state.step == "chat":
         st.title("Interview im Dialog 💬")
         user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
         st.session_state.interaction_count = len(user_msgs)
         st.info(f"Interaktion {st.session_state.interaction_count} von 10")
+        
+        # --- AUDIO-EINSTELLUNGEN FÜR DIE PROBANDEN ---
+        st.sidebar.header("⚙️ Audio-Einstellungen")
+        audio_vorlesen = st.sidebar.toggle("Antworten laut vorlesen", value=True, help="Schalte dies aus, wenn du die Antworten lieber nur lesen möchtest.")
+        
+        # Hinweis im Interface: Geschwindigkeit steuert der Nutzer direkt im Player
+        st.sidebar.markdown(
+            """
+            **Geschwindigkeit ändern:**  
+            Klicke im Audio-Player unten einfach auf die drei Punkte `⠇` und wähle **Wiedergabegeschwindigkeit**, um das Tempo anzupassen.
+            """
+        )
+        st.sidebar.divider()
         
         # Chatverlauf anzeigen
         for msg in st.session_state.messages:
@@ -132,10 +145,6 @@ def main():
             
             with col_audio:
                 st.write("🎤 **Antwort einsprechen:**")
-                
-                # Wir verpassen dem Recorder einen dynamischen Key basierend auf der Interaktionsanzahl.
-                # Sobald sich die Interaktionsanzahl erhöht, wechselt der Key und Streamlit löscht 
-                # die alten Audio-Bytes im Hintergrund komplett!
                 recorder_key = f"recorder_{st.session_state.interaction_count}"
                 
                 audio_record = mic_recorder(
@@ -177,29 +186,30 @@ def main():
                     ai_msg = response.choices[0].message.content
                     st.session_state.messages.append({"role": "assistant", "content": ai_msg})
                     
-                    try:
-                        tts_response = client.audio.speech.create(
-                            model="tts-1",
-                            voice="alloy",
-                            input=ai_msg
+                    # Nur ein TTS-Audio generieren, wenn der Proband das Vorlesen auch eingeschaltet hat
+                    if audio_vorlesen:
+                        try:
+                            tts_response = client.audio.speech.create(
+                                model="tts-1",
+                                voice="alloy",
+                                input=ai_msg
                         )
-                        st.session_state.latest_ai_audio = tts_response.content
-                    except Exception as e:
-                        st.warning(f"Audio-Ausgabe fehlgeschlagen: {e}")
+                            st.session_state.latest_ai_audio = tts_response.content
+                        except Exception as e:
+                            st.warning(f"Audio-Ausgabe fehlgeschlagen: {e}")
                 
                 # Zwischenspeichern nach jeder Nachricht
                 full_data = {"info": st.session_state.user_data, "self": st.session_state.bfi_self, "chat": st.session_state.messages}
                 save_to_nextcloud(st.session_state.participant_id, full_data)
                 
-                # WICHTIG: Bevor wir die Seite neu laden, löschen wir das alte Recorder-Widget
-                # aus dem Session State, damit es beim Rerun nicht wieder getriggert wird.
                 if recorder_key in st.session_state:
                     del st.session_state[recorder_key]
                 
                 st.rerun()
 
-            # Wenn ein frisches KI-Audio vorliegt, spielen wir es automatisch ab
-            if "latest_ai_audio" in st.session_state and st.session_state.latest_ai_audio:
+            # Wenn ein frisches KI-Audio vorliegt UND das Vorlesen aktiviert ist:
+            if audio_vorlesen and "latest_ai_audio" in st.session_state and st.session_state.latest_ai_audio:
+                st.write("🔊 **Audio-Wiedergabe:**")
                 st.audio(st.session_state.latest_ai_audio, format="audio/mp3", autoplay=True)
                 st.session_state.latest_ai_audio = None
 
