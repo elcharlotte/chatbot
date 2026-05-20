@@ -104,7 +104,7 @@ def main():
             ]
             st.rerun()
 
-    # --- PHASE 3: CHAT (MIT AUDIO-KONTROLLE) ---
+# --- PHASE 3: CHAT (MIT ERZWUNGENER GESCHWINDIGKEITSKONTROLLE) ---
     elif st.session_state.step == "chat":
         st.title("Interview im Dialog 💬")
         user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
@@ -115,12 +115,14 @@ def main():
         st.sidebar.header("⚙️ Audio-Einstellungen")
         audio_vorlesen = st.sidebar.toggle("Antworten laut vorlesen", value=True, help="Schalte dies aus, wenn du die Antworten lieber nur lesen möchtest.")
         
-        # Hinweis im Interface: Geschwindigkeit steuert der Nutzer direkt im Player
-        st.sidebar.markdown(
-            """
-            **Geschwindigkeit ändern:**  
-            Klicke im Audio-Player unten einfach auf die drei Punkte `⠇` und wähle **Wiedergabegeschwindigkeit**, um das Tempo anzupassen.
-            """
+        # Eigener Regler für die Vorlesegeschwindigkeit
+        vorlese_tempo = st.sidebar.slider(
+            "Vorlesegeschwindigkeit", 
+            min_value=0.5, 
+            max_value=2.0, 
+            value=1.0, 
+            step=0.1,
+            format="%f"
         )
         st.sidebar.divider()
         
@@ -186,15 +188,17 @@ def main():
                     ai_msg = response.choices[0].message.content
                     st.session_state.messages.append({"role": "assistant", "content": ai_msg})
                     
-                    # Nur ein TTS-Audio generieren, wenn der Proband das Vorlesen auch eingeschaltet hat
                     if audio_vorlesen:
                         try:
                             tts_response = client.audio.speech.create(
                                 model="tts-1",
                                 voice="alloy",
                                 input=ai_msg
-                        )
-                            st.session_state.latest_ai_audio = tts_response.content
+                            )
+                            # Wir encoden das Audio direkt in Base64, damit wir es stabil in HTML einbetten können
+                            import base64
+                            b64_audio = base64.b64encode(tts_response.content).decode("utf-8")
+                            st.session_state.latest_ai_audio_b64 = b64_audio
                         except Exception as e:
                             st.warning(f"Audio-Ausgabe fehlgeschlagen: {e}")
                 
@@ -208,10 +212,24 @@ def main():
                 st.rerun()
 
             # Wenn ein frisches KI-Audio vorliegt UND das Vorlesen aktiviert ist:
-            if audio_vorlesen and "latest_ai_audio" in st.session_state and st.session_state.latest_ai_audio:
+            if audio_vorlesen and "latest_ai_audio_b64" in st.session_state and st.session_state.latest_ai_audio_b64:
                 st.write("🔊 **Audio-Wiedergabe:**")
-                st.audio(st.session_state.latest_ai_audio, format="audio/mp3", autoplay=True)
-                st.session_state.latest_ai_audio = None
+                
+                # Wir bauen einen HTML5-Player, dem wir die Wunschgeschwindigkeit (playbackRate) 
+                # direkt über ein kleines JavaScript-Snippet aufzwingen.
+                audio_html = f"""
+                    <audio id="ki-player" autoplay controls style="width: 100%;">
+                        <source src="data:audio/mp3;base64,{st.session_state.latest_ai_audio_b64}" type="audio/mp3">
+                    </audio>
+                    <script>
+                        var audio = document.getElementById('ki-player');
+                        audio.playbackRate = {vorlese_tempo};
+                    </script>
+                """
+                st.components.v1.html(audio_html, height=60)
+                
+                # Audio-Daten löschen, um doppeltes Abspielen beim nächsten Klick zu verhindern
+                st.session_state.latest_ai_audio_b64 = None
 
 # --- PHASE 4: AUSWERTUNG ---
     elif st.session_state.step == "results":
