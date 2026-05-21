@@ -70,10 +70,9 @@ def main():
         Das Gespräch wird von einem KI-Interviewer geführt und umfasst genau 10 Interaktionen.
         
         ### Umgang mit Ihren Daten
-        * **Wo werden die Daten gespeichert?** Ihre Daten (Chatverlauf und Auswertung) werden verschlüsselt auf den sichuren Servern der Universität Ulm (**Nextcloud/Cloudstore**) abgelegt.
+        * **Wo werden die Daten gespeichert?** Ihre Daten (Chatverlauf und Auswertung) werden verschlüsselt auf den sicheren Servern der Universität Ulm (**Nextcloud/Cloudstore**) abgelegt.
         * **Wo werden sie NICHT gespeichert?** Es werden keine personenbezogenen Daten auf externen kommerziellen Servern dauerhaft gespeichert. Die Chat-Inhalte werden via API an OpenAI verarbeitet, aber dort laut deren Datenschutzrichtlinien für Forschungs-APIs *nicht* zum Training genutzt und nach maximal 30 Tagen gelöscht.
         * **Anonymisierung**: Die Speicherung erfolgt ausschließlich unter der von Ihnen angegebenen Teilnehmer-ID. Es werden keine Klarnamen oder IP-Adressen mit den Forschungsdaten verknüpft.
-        * **Freiwilligkeit**: Sie können das Interview jederzeit ohne Angabe von Gründen abbrechen.
         """)
         
         st.divider()
