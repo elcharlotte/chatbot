@@ -40,7 +40,7 @@ def main():
         st.session_state.step = "welcome"
         st.session_state.messages = []
         st.session_state.interaction_count = 0
-        st.session_state.condition = "write_open"
+        st.session_state.condition = "speech_open"
 
     # --- PHASE 1: WILLKOMMEN & ID-EINGABE ---
     if st.session_state.step == "welcome":
