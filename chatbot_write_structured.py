@@ -39,7 +39,7 @@ def main():
         st.session_state.messages = []
         st.session_state.interaction_count = 0
         # NEU: Versuchsbedingung fest im Session State hinterlegen
-        st.session_state.condition = "write_open"
+        st.session_state.condition = "write_structured"
 
     # --- PHASE 1: WILLKOMMEN & ID-EINGABE ---
     if st.session_state.step == "welcome":
