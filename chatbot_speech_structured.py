@@ -39,7 +39,7 @@ def main():
         st.session_state.step = "welcome"
         st.session_state.messages = []
         st.session_state.interaction_count = 0
-        st.session_state.condition = "write_open"
+        st.session_state.condition = "speech_structured"
         st.session_state.mic_test_passed = False
 
     client = OpenAI(api_key=st.secrets["openai"]["api_key"])
