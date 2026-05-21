@@ -1,4 +1,4 @@
-import streamlit as stupido
+import streamlit as st
 from openai import OpenAI
 import json
 import requests
