@@ -4,8 +4,8 @@ import json
 import requests
 import uuid
 import threading
-import io  # NEU: Für die Verarbeitung der Audio-Bytes
-from streamlit_mic_recorder import mic_recorder  # NEU: Browser-Audiorecorder
+import io  
+from streamlit_mic_recorder import mic_recorder  
 
 # --- KONFIGURATION & HELPER ---
 def save_to_nextcloud(participant_id, data_dict):
@@ -35,12 +35,14 @@ def main():
     
     if "step" not in st.session_state:
         params = st.query_params
-        # Fallback-ID generieren, falls nichts in der URL oder Eingabe steht
         st.session_state.default_id = params.get("caseNumber", f"user_{uuid.uuid4().hex[:8]}")
         st.session_state.step = "welcome"
         st.session_state.messages = []
         st.session_state.interaction_count = 0
-        st.session_state.condition = "speech_open"
+        st.session_state.condition = "write_open"
+        st.session_state.mic_test_passed = False
+
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
     # --- PHASE 1: WILLKOMMEN & ID-EINGABE ---
     if st.session_state.step == "welcome":
@@ -71,9 +73,9 @@ def main():
         Das Gespräch wird von einem KI-Interviewer geführt und umfasst genau 10 Interaktionen.
         
         ### Umgang mit Ihren Daten
-        * **Wo werden die Daten gespeichert?** Ihre Daten (Chatverlauf und Auswertung) werden verschlüsselt auf den sicheren Servern der Universität Ulm (**Nextcloud/Cloudstore**) abgelegt.
-        * **Wo werden sie NICHT gespeichert?** Es werden keine personenbezogenen Daten auf externen kommerziellen Servern dauerhaft gespeichert. Die Chat-Inhalte werden via API an OpenAI verarbeitet, aber dort laut deren Datenschutzrichtlinien für Forschungs-APIs *nicht* zum Training genutzt und nach maximal 30 Tagen gelöscht.
-        * **Anonymisierung**: Die Speicherung erfolgt ausschließlich unter der von Ihnen angegebenen Teilnehmer-ID. Es werden keine Klarnamen oder IP-Adressen mit den Forschungsdaten verknüpft.
+        * **Wo werden die Daten gespeichert?** Ihre Daten werden verschlüsselt auf den sicheren Servern der Universität Ulm (**Nextcloud/Cloudstore**) abgelegt.
+        * **Wo werden sie NICHT gespeichert?** Es werden keine personenbezogenen Daten auf externen kommerziellen Servern dauerhaft gespeichert.
+        * **Anonymisierung**: Die Speicherung erfolgt ausschließlich unter der angegebenen Teilnehmer-ID.
         """)
         
         st.divider()
@@ -82,17 +84,60 @@ def main():
             "Ich habe die Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungszwecken zu."
         )
         
-        if st.button("Interview starten"):
+        if st.button("Weiter zum Mikrofon-Test"):
             if consent_checked:
                 st.session_state.research_consent = True
-                st.session_state.step = "chat"
-                st.session_state.messages = [
-                    {"role": "system", "content": "Du bist ein psychologischer Interviewer. Analysiere die Big Five. Sei empathisch aber zielgerichtet. Formuliere kurze Sätze. Nach 10 Interaktionen beende das Gespräch höflich."},
-                    {"role": "assistant", "content": f"Vielen Dank! Die ID {st.session_state.participant_id} ist registriert. Wir beginnen nun mit dem Interview. Erzählen Sie doch mal: Was haben Sie gestern so gemacht?"}
-                ]
+                st.session_state.step = "mic_test"
                 st.rerun()
             else:
                 st.warning("Bitte bestätigen Sie die Einwilligungserklärung, um fortzufahren.")
+
+    # --- NEU - PHASE 2.5: MIKROFON TEST ---
+    elif st.session_state.step == "mic_test":
+        st.title("🎙️ Mikrofon-Test")
+        st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet. Sprechen Sie nach dem Starten der Aufnahme ein paar Worte (z. B. 'Hallo, Test').")
+        
+        test_recorder = mic_recorder(
+            start_prompt="Test-Aufnahme starten",
+            stop_prompt="Test-Aufnahme stoppen",
+            key="mic_test_recorder"
+        )
+        
+        if test_recorder:
+            audio_bytes = test_recorder['bytes']
+            audio_file = io.BytesIO(audio_bytes)
+            audio_file.name = "test.wav"
+            
+            with st.spinner("Prüfe Audio-Eingang..."):
+                try:
+                    transcript = client.audio.transcriptions.create(
+                        model="whisper-1", 
+                        file=audio_file
+                    )
+                    if transcript.text.strip():
+                        st.session_state.mic_test_transcript = transcript.text
+                        st.session_state.mic_test_passed = True
+                    else:
+                        st.session_state.mic_test_transcript = "Es wurde kein Text erkannt. Bitte lauter sprechen oder das richtige Eingabegerät in den Browsereinstellungen wählen."
+                        st.session_state.mic_test_passed = False
+                except Exception as e:
+                    st.error(f"Fehler beim Mikrofon-Test: {e}")
+        
+        # Visuelle Rückmeldung für die Person
+        if "mic_test_transcript" in st.session_state:
+            st.info(f"**Erkanntes Audio:** „{st.session_state.mic_test_transcript}“")
+            
+            if st.session_state.mic_test_passed:
+                st.success("✅ Mikrofon funktioniert erfolgreich! Sie können das Interview jetzt starten.")
+                if st.button("Interview jetzt starten"):
+                    st.session_state.step = "chat"
+                    st.session_state.messages = [
+                        {"role": "system", "content": "Du bist ein psychologischer Interviewer. Analysiere die Big Five. Sei empathisch aber zielgerichtet. Formuliere kurze Sätze. Nach 10 Interaktionen beende das Gespräch höflich."},
+                        {"role": "assistant", "content": f"Vielen Dank! Die ID {st.session_state.participant_id} ist registriert und das Mikrofon wurde erfolgreich getestet. Wir beginnen nun mit dem Interview. Erzählen Sie doch mal: Was haben Sie gestern so gemacht?"}
+                    ]
+                    st.rerun()
+            else:
+                st.error("❌ Audio-Signal zu schwach oder fehlerhaft. Bitte versuchen Sie es erneut.")
 
     # --- PHASE 3: CHAT (AUDIO-EINGABE & TEXT-AUSGABE) ---
     elif st.session_state.step == "chat":
@@ -101,7 +146,6 @@ def main():
         st.session_state.interaction_count = len(user_msgs)
         st.info(f"Interaktion {st.session_state.interaction_count} von 10")
         
-        # Chatverlauf anzeigen
         for msg in st.session_state.messages:
             if msg["role"] != "system":
                 with st.chat_message(msg["role"]):
@@ -113,13 +157,11 @@ def main():
                 st.session_state.step = "results"
                 st.rerun()
         else:
-            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
             user_input = None
 
             st.write("---")
             st.write("🎤 **Antwort einsprechen:**")
             
-            # Dynamischer Key für jede Interaktionsrunde, um den Recorder zurückzusetzen
             recorder_key = f"recorder_{st.session_state.interaction_count}"
             
             audio_record = mic_recorder(
@@ -133,7 +175,6 @@ def main():
                 audio_file = io.BytesIO(audio_bytes)
                 audio_file.name = "audio.wav"
                 
-                # 1. Sprache zu Text verarbeiten (STT via Whisper)
                 with st.spinner("🎧 Ich höre zu... (Sprache wird verarbeitet)"):
                     try:
                         transcript = client.audio.transcriptions.create(
@@ -144,12 +185,9 @@ def main():
                     except Exception as e:
                         st.error(f"Spracherkennungs-Fehler: {e}")
 
-            # Wenn die Sprache erfolgreich transkribiert wurde
             if user_input:
-                # Transkribierten Text im UI-Verlauf sichern
                 st.session_state.messages.append({"role": "user", "content": user_input})
                 
-                # 2. Schriftliche KI-Antwort generieren
                 with st.spinner("🤖 Interviewer überlegt..."):
                     try:
                         response = client.chat.completions.create(
@@ -161,7 +199,6 @@ def main():
                     except Exception as e:
                         st.error(f"KI Fehler: {e}")
                 
-                # 3. Nextcloud-Zwischenspeicherung im Hintergrund
                 full_data = {
                     "participant_id": st.session_state.participant_id,
                     "condition": st.session_state.condition,
@@ -175,7 +212,6 @@ def main():
                     daemon=True
                 ).start()
                 
-                # Recorder-Zustand aufräumen und Seite neu laden
                 if recorder_key in st.session_state:
                     del st.session_state[recorder_key]
                 st.rerun()
@@ -190,7 +226,6 @@ def main():
         if "ai_bfi" not in st.session_state:
             with st.spinner("KI Analyse läuft..."):
                 try:
-                    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
                     chat_text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.messages if m["role"] != "system"])
                     
                     res = client.chat.completions.create(
