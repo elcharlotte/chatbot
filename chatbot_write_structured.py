@@ -104,7 +104,7 @@ Beschreibung: Intellektuelle Neugier, Vorliebe für Abwechslung und Phantasie.
 TOTAL_FACETS = 14 
 
 # Das Wort 'JSON' MUSS im Prompt stehen, damit der response_format Modus funktioniert.
-SYSTEM_PROMPT = f"""Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 14 Facetten des TSDI systematisch zu erfassen.
+SYSTEM_PROMPT = f"""Du bist ein psychologischer Interviewerin. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 14 Facetten des TSDI systematisch zu erfassen.
 
 DEINE ANTWORT-STRUKTUR:
 Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
