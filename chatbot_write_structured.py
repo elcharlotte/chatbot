@@ -90,7 +90,7 @@ Beschreibung: Intellektuelle Neugier, Vorliebe für Abwechslung und Phantasie.
 ### Facette: Intellekt / Ideen (O-In)
 * Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
 * Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
-* Item tsdi42_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
+* Item tsdi47_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
 ### Facette: Reflexion / Phantasie (O-R)
 * Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
 * Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
@@ -100,6 +100,9 @@ Beschreibung: Intellektuelle Neugier, Vorliebe für Abwechslung und Phantasie.
 * Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
 * Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
 """
+
+# Gesamtanzahl aller Facetten im Leitfaden für den Fortschrittsbalken
+TOTAL_FACETS = 14 
 
 SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein hochgradig strukturiertes, standardisiertes Interview zu führen, um die Facetten des unten stehenden 'Trait Self-Descriptive Inventory (TSDI)' systematisch zu erfassen. Du orientierst dich dabei an den Items des TSDI.
 
@@ -134,56 +137,81 @@ INTERVIEW GUIDELINES & CONSTRAINTS:
 """
 
 def main():
-    st.set_page_config(page_title="Persönlichkeits-Diagnostik (Unstrukturiert)", page_icon="🧠")
+    st.set_page_config(page_title="Persönlichkeits-Diagnostik", page_icon="🧠")
     
     if "step" not in st.session_state:
         params = st.query_params
-        st.session_state.default_id = params.get("caseNumber", f"user_{uuid.uuid4().hex[:8]}")
+        st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
         st.session_state.condition = "structured-write"
+        st.session_state.current_facet_count = 0
 
-    # --- PHASE 1: WILLKOMMEN ---
+    # --- PHASE 1: WILLKOMMEN (VP-Code & Matrikelnummer) ---
     if st.session_state.step == "welcome":
         st.title("Willkommen zum Interview 🤖")
-        st.write("Bitte geben Sie zunächst Ihre Teilnehmer-ID ein.")
+        st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
         
-        participant_id_input = st.text_input(
-            "Teilnehmer-ID (Participant ID)", 
-            value=st.session_state.default_id
+        # VP-Code Anleitung (Platzhalter)
+        st.markdown("""
+        **Anleitung zur Generierung Ihres VP-Codes:**
+        * *[PLATZHALTER: Bitte hier die spezifische Anweisung zur Code-Generierung einfügen, z. B. Erster Buchstabe des Vornamens der Mutter + Geburtstag etc.]*
+        """)
+        
+        vp_code_input = st.text_input(
+            "VP-Code (Teilnehmer-Code)", 
+            value=st.session_state.default_id,
+            placeholder="z.B. AB12XY"
+        )
+        
+        matrikel_input = st.text_input(
+            "Matrikelnummer",
+            placeholder="z.B. 1234567"
         )
         
         if st.button("Weiter zur Studienbeschreibung"):
-            if not participant_id_input.strip():
-                st.error("Bitte geben Sie eine gültige ID ein.")
+            if not vp_code_input.strip():
+                st.error("Bitte geben Sie einen gültigen VP-Code ein.")
+            elif not matrikel_input.strip():
+                st.error("Bitte geben Sie Ihre Matrikelnummer ein.")
             else:
-                st.session_state.participant_id = participant_id_input.strip()
+                st.session_state.participant_id = vp_code_input.strip()
+                st.session_state.matrikelnummer = matrikel_input.strip()
                 st.session_state.step = "consent"
                 st.rerun()
 
-    # --- PHASE 2: EINWILLIGUNG ---
+    # --- PHASE 2: EINWILLIGUNG (Studienhinweise, OpenAI & Ethik) ---
     elif st.session_state.step == "consent":
         st.title("Informationen zur Studie & Datenschutz 📝")
-        st.markdown("""
-        ### Beschreibung der Studie
-        In diesem KI-gestützten Interview untersuchen wir sprachliche Muster im Kontext der Persönlichkeitsdiagnostik. 
-        Das Gespräch wird von einem KI-Interviewer in einem **offenen, unstrukturierten Gesprächsmodus** geführt. 
-        Das Interview endet automatisch, sobald alle psychologischen Facetten im Dialog ausreichend erkundet wurden.
         
-        ### Umgang mit Ihren Daten
-        * **Speicherung:** Verschlüsselt auf den sicheren Servern der Universität Ulm (**Nextcloud/Cloudstore**).
-        * **Anonymisierung:** Die Speicherung erfolgt ausschließlich unter Ihrer Teilnehmer-ID.
+        st.markdown(f"""
+        ### Beschreibung & Zweck der Studie
+        Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende des Interviews 
+        erhalten Sie eine **automatisierte Einschätzung Ihrer Persönlichkeitsmerkmale (Big Five)** durch die KI angezeigt.
+        
+        **Wichtige Hinweise zur Übungsleistung:**
+        * Die Teilnahme an diesem Interview ist **Teil der Übungsleistung** und dient der Selbsterfahrung.
+        * **Verpflichtung:** Wer nicht teilnimmt, erhält *keinen* Credit für die Übung.
+        * **Ehrlichkeit:** Es müssen im Interview *keine* wahrheitsgemäßen Angaben gemacht werden. Beachten Sie jedoch, dass die Auswertung am Ende bei fiktiven Angaben natürlich nur bedingt sinnvoll ist.
+        * **Ethikvotum:** Diese Untersuchung wurde geprüft und bewilligt unter dem **Ethikantrag [PLATZHALTER: Nummer/ID des Ethikantrags einfügen]**.
+        """)
+        
+        st.markdown("""
+        ### Umgang mit Ihren Daten & Datenschutz
+        * **Datenübertragung an OpenAI:** Der Chat-Verlauf wird über eine gesicherte API-Schnittstelle an OpenAI übermittelt, um die Antworten des Interviewers zu generieren. Laut den API-Richtlinien von OpenAI werden diese Daten **nicht** zum Trainieren von Modellen verwendet und nach maximal 30 Tagen gelöscht.
+        * **Anonymität:** Es werden *keine* Klarnamen an OpenAI übermittelt. Die Zuordnung erfolgt rein über Ihren anonymisierten VP-Code.
+        * **Sichere Speicherung:** Die finalen Daten (inklusive Ihrer Matrikelnummer für die Credit-Zuordnung) werden verschlüsselt auf den sicheren Servern der **Universität Ulm (Nextcloud/Cloudstore)** abgelegt.
         """)
         
         st.divider()
-        consent_checked = st.checkbox("Ich stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungszwecken zu.")
+        consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
         
         if st.button("Interview starten"):
             if consent_checked:
                 st.session_state.research_consent = True
                 st.session_state.step = "chat"
                 
-                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal, was sie gestern so erlebt haben."
+                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal, was Sie gestern so erlebt haben."
                 
                 st.session_state.messages = [
                     {"role": "system", "content": SYSTEM_PROMPT},
@@ -193,9 +221,20 @@ def main():
             else:
                 st.warning("Bitte bestätigen Sie die Einwilligungserklärung, um fortzufahren.")
 
-    # --- PHASE 3: CHAT ---
+    # --- PHASE 3: CHAT (inkl. Fortschrittsbalken) ---
     elif st.session_state.step == "chat":
         st.title("Interview im Dialog 💬")
+        
+        # Berechnung des Fortschritts anhand der Assistant-Nachrichten (abzüglich der Begrüßung)
+        ai_messages_count = sum(1 for m in st.session_state.messages if m["role"] == "assistant") - 1
+        st.session_state.current_facet_count = min(max(0, ai_messages_count), TOTAL_FACETS)
+        
+        progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
+        
+        # Fortschrittsanzeige rendern
+        st.markdown(f"**Fortschritt der Diagnostik:** Erfasste Facetten: {st.session_state.current_facet_count} von {TOTAL_FACETS}")
+        st.progress(progress_percentage)
+        st.divider()
         
         interview_ended = any("[INTERVIEW_FERTIG]" in m["content"] for m in st.session_state.messages if m["role"] == "assistant")
         
@@ -205,7 +244,7 @@ def main():
                     st.markdown(msg["content"].replace("[INTERVIEW_FERTIG]", "").strip())
 
         if interview_ended:
-            st.success("Das Interview wurde von der KI erfolgreich beendet, da alle Facetten explorativ erfasst wurden.")
+            st.success("Das Interview wurde von der KI erfolgreich beendet, da alle Facetten erfasst wurden.")
             if st.button("Zur Auswertung"):
                 st.session_state.step = "results"
                 st.rerun()
@@ -227,8 +266,10 @@ def main():
                     except Exception as e:
                         st.error(f"KI Fehler: {e}")
                 
+                # Payload für Nextcloud inkl. Matrikelnummer
                 full_data = {
                     "participant_id": st.session_state.participant_id,
+                    "matrikelnummer": st.session_state.matrikelnummer,
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
                     "chat": st.session_state.messages
@@ -270,6 +311,7 @@ def main():
             if st.button("Ergebnisse final speichern & beenden"):
                 final_payload = {
                     "id": st.session_state.participant_id,
+                    "matrikelnummer": st.session_state.matrikelnummer,
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
                     "ai_assessment": st.session_state.ai_bfi,
