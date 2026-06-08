@@ -27,29 +27,133 @@ def reset_app():
         del st.session_state[key]
     st.rerun()
 
-# --- UI KOMPONENTEN ---
+# --- TSDI LEITFADEN ---
+TSDI_LEITFADEN = """
+## DIMENSION: VERTRÄGLICHKEIT (A)
+Beschreibung: Misst die zwischenmenschliche Orientierung.
+### Facette: Kooperation / Vertrauen (A-Co)
+* Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
+* Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
+* Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
+### Facette: Freundlichkeit / Mitgefühl (A-Fr)
+* Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
+* Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
+* Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
+### Facette: Hilfsbereitschaft (A-H)
+* Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
+* Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
+* Item tsdi42_39_A_H213: Ich bin immer großzügig, wenn es darum geht, anderen zu helfen.
+
+## DIMENSION: GEWISSENHAFTIGKEIT (C)
+Beschreibung: Grad an Selbstkontrolle, Genauigkeit, Zielstrebigkeit und Organisation.
+### Facette: Pflichtbewusstsein / Fleiß (C-Hw)
+* Item tsdi42_04_C_Hw126: Wenn ich mich zu etwas verpflichte, führe ich es immer zu Ende aus.
+* Item tsdi42_25_C_Hw137: Ich würde mich selbst als sehr ausdauernden Arbeiter einschätzen.
+* Item tsdi42_37_C_Hw167: Wenn ich etwas anfange, arbeite ich, bis es zu meiner Zufriedenheit beendet ist.
+### Facette: Ordnung / Besonnenheit (C-O)
+* Item tsdi42_14_C_O0153: Ich halte meine persönlichen Sachen gerne ordentlich und organisiert.
+* Item tsdi42_41_C_O0157: Ich versuche einen Plan für Aufgaben zu entwickeln und halte mich daran.
+* Item tsdi42_32_C_O0162: Ich versuche vollständig vorbereitet zu sein, bevor ich eine Aufgabe anpacke.
+
+## DIMENSION: EXTRAVERSION (E)
+Beschreibung: Aktivität und zwischenmenschliches Verhalten.
+### Facette: Aktivität / Durchsetzungsvermögen (E-A)
+* Item tsdi42_35_E_A002: Ich spreche lauter, wenn ich meine, einen Beitrag liefern zu können.
+* Item tsdi42_28_E_A004: Ich neige dazu, in Gruppen die Führung zu übernehmen.
+* Item tsdi42_03_E_A009: Ich habe eine menge Einfluss auf andere Leute.
+### Facette: Schüchternheit (E-SB)
+* Item tsdi42_19_E_SB010: Ich bin eine sehr schüchterne Person.
+* Item tsdi42_08_E_SB014: Meine Freunde halten mich für schüchtern.
+* Item tsdi42_18_E_SB026: Ich fühle mich nicht wohl, wenn ich im Zentrum der Aufmerksamkeit stehe.
+### Facette: Geselligkeit / Herzlichkeit (E-So)
+* Item tsdi42_33_E_So007: Ich bin gerne wo viel los ist.
+* Item tsdi42_26_E_So012: Ich gebe mir große Mühe Leute kennen zu lernen.
+* Item tsdi42_16_E_So028: Ich mag Partys auf denen viele Leute sind.
+
+## DIMENSION: NEUROTIZISMUS (N)
+Beschreibung: Emotionale Labilität vs. Stabilität.
+### Facette: Depressivität / Dysthymie (N-D)
+* Item tsdi42_07_N_D039: Es gibt Zeiten in denen ich mich selbst bedaure.
+* Item tsdi42_15_N_D054: Manchmal bin ich entmutigt und möchte am liebsten aufgeben.
+* Item tsdi42_30_N_D055: Ich fürchte oft, dass ich meine Ziele nicht erreichen könnte.
+### Facette: Reizbarkeit / Irritierbarkeit (N-Ir)
+* Item tsdi42_09_N_Ir034: Manchmal rege ich mich so auf, dass es mir auf den Magen schlägt.
+* Item tsdi42_05_N_Ir058: Wenn ich aufgebracht bin, kann ich nicht mehr klar denken.
+* Item tsdi42_06_N_Ir070: Ich kann Kritik nicht sehr gut akzeptieren.
+### Facette: Stressanfälligkeit / Ängstlichkeit (N-St)
+* Item tsdi42_29_N_St037: Ich fühle mich oft müde und erschöpft.
+* Item tsdi42_38_N_St040: Wenn ich unter großem Stress stehe, bin ich oft kurz davor zusammenzubrechen.
+* Item tsdi42_11_N_St043: Ich bin oft zittrig und angespannt.
+
+## DIMENSION: OFFENHEIT FÜR ERFAHRUNGEN (O)
+Beschreibung: Intellektuelle Neugier, Vorliebe für Abwechslung und Phantasie.
+### Facette: Intellekt / Ideen (O-In)
+* Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
+* Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
+* Item tsdi42_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
+### Facette: Reflexion / Phantasie (O-R)
+* Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
+* Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
+* Item tsdi42_34_O_R120: Ich lese gerne Gedichte.
+### Facette: wissenschaftliches Interesse (O-Sc)
+* Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
+* Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
+* Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
+"""
+
+SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein hochgradig strukturiertes, standardisiertes Interview zu führen, um die Facetten des unten stehenden 'Trait Self-Descriptive Inventory (TSDI)' systematisch zu erfassen.
+
+TASK OVERVIEW:
+Gehe die Dimensionen (A, C, E, N, O) und deren Facetten streng sequenziell (eine nach der anderen) durch. Für jede einzelne Facette stellst du genau eine gezielte, verhaltensnahe Frage. Du darfst erst zur nächsten Facette übergehen, wenn die aktuelle Facette beantwortet wurde. Springe niemals zwischen den Themen.
+
+INTERVIEW GUIDELINES & CONSTRAINTS:
+1. Einstieg: Beginne das Interview direkt mit der ersten strukturierten Frage zur ersten Facette (Verträglichkeit -> Kooperation / Vertrauen).
+2. Strikte Sequenzialität: Arbeite den Leitfaden chronologisch ab. Stelle pro Chat-Beitrag immer nur GENAU EINE Frage zu GENAU EINER Facette.
+3. Absolutes Verbot von Testfragen: Du darfst die psychometrischen Items nicht wörtlich vorlesen. Übersetze den Kern der Items in eine konkrete, offene Frage nach realem Verhalten oder Alltagssituationen.
+4. Keine freie Exploration: Bohre nicht tiefer nach und passe den Gesprächsverlauf nicht individuell an. Nimm die Antwort des Nutzers kurz zur Kenntnis und leite sofort standardisiert zur nächsten Facette über.
+
+--- STRUKTUR- & DIAGNOSTIK-REGELN ---
+5. THEMATISCHE KONSISTENZ: Halte dich strikt an die Reihenfolge im Leitfaden:
+   - Erst DIMENSION A (Facette 1, dann 2, dann 3)
+   - Dann DIMENSION C (Facette 1, dann 2)
+   - Dann DIMENSION E (Facette 1, dann 2, dann 3)
+   - Dann DIMENSION N (Facette 1, dann 2, dann 3)
+   - Dann DIMENSION O (Facette 1, dann 2, dann 3)
+6. STRUKTURIERTER ÜBERGANG: Jede deiner Nachrichten besteht aus maximal zwei Teilen:
+   - Einem ultrakurzen, validierenden Übergangssatz, der sich auf die vorherige Antwort bezieht (z. B. "Vielen Dank für Ihre Schilderung.").
+   - Der standardisierten Frage für die darauffolgende Facette.
+7. REINE DIAGNOSTIK – KEINE LÖSUNGEN/STRATEGIEN: Frage NIEMALS nach Lösungen, Hilfsmitteln, Bewältigungsstrategien oder Eisbrechern. Dich interessiert NUR der Ist-Zustand des Verhaltens.
+8. ABSOLUTES FLOSKEL-VERBOT: Nutze NIEMALS Phrasen wie 'Das verstehe ich', 'Das macht Sinn', 'Das klingt interessant', 'Spannend', 'Kein Problem' oder 'Ich möchte lediglich...'.
+9. UMGANG MIT RÜCKFRAGEN / WIDERSTAND: Wenn der Nutzer Fragen stellt oder den Sinn hinterfragt, antworte extrem kurz und sachlich ("Es hilft mir, Ihr Verhalten besser einzuordnen.") und wiederhole die aktuelle strukturierte Frage.
+10. MAXIMALE KÜRZE: Halte deine Textbeiträge extrem kurz (maximal 1-2 Sätze pro Antwort).
+11. SIEZEN: Sprich den Nutzer im gesamten Interview höflich mit 'Sie' an.
+
+---
+12. BEENDIGUNG: Sobald du die allerletzte Facette (Wissenschaftliches Interesse) abgefragt und die Antwort erhalten hast, verabschiede dich höflich und platziere am Ende deiner allerletzten Nachricht exakt das Wort '[INTERVIEW_FERTIG]' (inklusive der eckigen Klammern).
+---
+
+# DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
+{TSDI_LEITFADEN}
+"""
+
 def main():
-    st.set_page_config(page_title="Persönlichkeits-Diagnostik", page_icon="🧠")
+    st.set_page_config(page_title="Persönlichkeits-Diagnostik (Unstrukturiert)", page_icon="🧠")
     
     if "step" not in st.session_state:
         params = st.query_params
-        # Fallback-ID generieren, falls nichts in der URL oder Eingabe steht
         st.session_state.default_id = params.get("caseNumber", f"user_{uuid.uuid4().hex[:8]}")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.interaction_count = 0
-        # NEU: Versuchsbedingung fest im Session State hinterlegen
-        st.session_state.condition = "write_structured"
+        st.session_state.condition = "unstructured"
 
-    # --- PHASE 1: WILLKOMMEN & ID-EINGABE ---
+    # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
         st.title("Willkommen zum Interview 🤖")
         st.write("Bitte geben Sie zunächst Ihre Teilnehmer-ID ein.")
         
         participant_id_input = st.text_input(
             "Teilnehmer-ID (Participant ID)", 
-            value=st.session_state.default_id,
-            help="Bitte geben Sie die Ihnen zugewiesene ID ein."
+            value=st.session_state.default_id
         )
         
         if st.button("Weiter zur Studienbeschreibung"):
@@ -60,168 +164,61 @@ def main():
                 st.session_state.step = "consent"
                 st.rerun()
 
-    # --- PHASE 2: STUDIENBESCHREIBUNG & EINWILLIGUNG ---
+    # --- PHASE 2: EINWILLIGUNG ---
     elif st.session_state.step == "consent":
         st.title("Informationen zur Studie & Datenschutz 📝")
-        
         st.markdown("""
         ### Beschreibung der Studie
         In diesem KI-gestützten Interview untersuchen wir sprachliche Muster im Kontext der Persönlichkeitsdiagnostik. 
-        Das Gespräch wird von einem KI-Interviewer geführt und umfasst genau 10 Interaktionen.
+        Das Gespräch wird von einem KI-Interviewer in einem **offenen, unstrukturierten Gesprächsmodus** geführt. 
+        Das Interview endet automatisch, sobald alle psychologischen Facetten im Dialog ausreichend erkundet wurden.
         
         ### Umgang mit Ihren Daten
-        * **Wo werden die Daten gespeichert?** Ihre Daten (Chatverlauf und Auswertung) werden verschlüsselt auf den sicheren Servern der Universität Ulm (**Nextcloud/Cloudstore**) abgelegt.
-        * **Wo werden sie NICHT gespeichert?** Es werden keine personenbezogenen Daten auf externen kommerziellen Servern dauerhaft gespeichert. Die Chat-Inhalte werden via API an OpenAI verarbeitet, aber dort laut deren Datenschutzrichtlinien für Forschungs-APIs *nicht* zum Training genutzt und nach maximal 30 Tagen gelöscht.
-        * **Anonymisierung**: Die Speicherung erfolgt ausschließlich unter der von Ihnen angegebenen Teilnehmer-ID. Es werden keine Klarnamen oder IP-Adressen mit den Forschungsdaten verknüpft.
+        * **Speicherung:** Verschlüsselt auf den sicheren Servern der Universität Ulm (**Nextcloud/Cloudstore**).
+        * **Anonymisierung:** Die Speicherung erfolgt ausschließlich unter Ihrer Teilnehmer-ID.
         """)
         
         st.divider()
-        
-        consent_checked = st.checkbox(
-            "Ich habe die Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungszwecken zu."
-        )
+        consent_checked = st.checkbox("Ich stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungszwecken zu.")
         
         if st.button("Interview starten"):
             if consent_checked:
                 st.session_state.research_consent = True
                 st.session_state.step = "chat"
+                
+                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal ein bisschen von sich: Wie würden Sie sich selbst als Person beschreiben?"
+                
                 st.session_state.messages = [
-                    {"role": "system", "content": "Role: Du bist ein psychologischer Interviewer in einer wissenschaftlichen Persönlichkeitsstudie. Dein Ziel ist es, ein offenes, exploratives Interview zu führen, um die Ausprägungen des Nutzers in den Facetten des unten stehenden "Trait Self-Descriptive Inventory (TSDI)" zu erfassen.
-
-TASK OVERVIEW:
-Erforsche alle 5 Dimensionen und deren Facetten im Gesprächsverlauf. Du musst am Ende des Interviews jede Facette durch mindestens 3 offene, vertiefende Nachfragen (Follow-up-Fragen) exploriert haben. Das Interview soll sich für den Nutzer wie ein freies, ungezwungenes Gespräch anfühlen, nicht wie ein Test.
-
-INTERVIEW GUIDELINES & CONSTRAINTS:
-1. Einstieg: Beginne das Interview mit einer sehr offenen Einladung (z. B. "Erzähl mir ein bisschen von dir, was machst du gerne und wie würdest du dich selbst als Person beschreiben?").
-2. Offene Gesprächsführung: Überlasse dem Nutzer die Initiative. Verwende aktives Zuhören. Greife Aspekte auf, die der Nutzer von sich aus einbringt, und vertiefe diese.
-3. Absolutes Verbot von Testfragen: Du darfst die psychometrischen Items NIEMALS wörtlich vorlesen oder direkt als standardisierte Frage stellen (z. B. Nicht fragen: "Hält man dich für schüchtern?").
-4. Indirekte Exploration (Nudging): Nutze stattdessen offene W-Fragen, um Facetten zu explorieren (z. B. statt das Schüchternheits-Item abzufragen, frage: "Wie fühlst du dich normalerweise, wenn du in einer großen Gruppe im Mittelpunkt stehst?").
-5. Vertiefung (Follow-up): Wenn der Nutzer ein Thema anschneidet, das zu einer Facette passt, nutze mindestens 3 vertiefende Nachfragen ("Kannst du das genauer beschreiben?", "Wie wirkt sich das in deinem Alltag aus?", "Was bedeutet das für dich?"), um den Redefluss zu fördern und tiefere Einblicke zu gewinnen.
-6. Agenda-Kontrolle: Halte im Hintergrund fest, welche Facetten du bereits exploriert hast. Wenn ein Thema erschöpft ist, leite elegant und sanft zu einem neuen, offenen Lebensbereich über (z. B. Freizeit, Beruf/Studium, soziale Kontakte), um bisher unberührte Facetten anzustoßen.
-
----
-# DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
-
-## DIMENSION: VERTRÄGLICHKEIT (A)
-Beschreibung: Misst die zwischenmenschliche Orientierung. Hohe Werte stehen für Altruismus, Vertrauen und Harmoniebedürfnis; niedrige Werte für Egoismus, Skepsis und Kompetitivität.
-### Facette: Kooperation / Vertrauen (A-Co)
-Beschreibung: Bereitschaft zur Zusammenarbeit, Vertrauen in das Gute im Menschen und Vermeidung von Konfrontationen.
-* Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
-* Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
-* Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
-### Facette: Freundlichkeit / Mitgefühl (A-Fr)
-Beschreibung: Herzlicher Umgang mit Mitmenschen, Empathie und emotionale Unterstützung.
-* Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
-* Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
-* Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
-### Facette: Hilfsbereitschaft (A-H)
-Beschreibung: Aktive Unterstützung anderer, Großzügigkeit und die Neigung, für andere da zu sein.
-* Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
-* Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
-* Item tsdi42_39_A_H213: Ich bin immer großzügig, wenn es darum geht, anderen zu helfen.
-
-## DIMENSION: GEWISSENHAFTIGKEIT (C)
-Beschreibung: Grad an Selbstkontrolle, Genauigkeit, Zielstrebigkeit und Organisation. Hohe Werte stehen für Disziplin und Verlässlichkeit; niedrige Werte für Spontaneität und Nachlässigkeit.
-### Facette: Pflichtbewusstsein / Fleiß (C-Hw)
-Beschreibung: Arbeitsmoral, Ausdauer bei schwierigen Aufgaben und das Einhalten von Verpflichtungen.
-* Item tsdi42_04_C_Hw126: Wenn ich mich zu etwas verpflichte, führe ich es immer zu Ende aus.
-* Item tsdi42_25_C_Hw137: Ich würde mich selbst als sehr ausdauernden Arbeiter einschätzen.
-* Item tsdi42_37_C_Hw167: Wenn ich etwas anfange, arbeite ich, bis es zu meiner Zufriedenheit beendet ist.
-### Facette: Ordnung / Besonnenheit (C-O)
-Beschreibung: Struktur im Alltag, Vorliebe für Planung und das Vermeiden unüberlegter Handlungen.
-* Item tsdi42_14_C_O0153: Ich halte meine persönlichen Sachen gerne ordentlich und organisiert.
-* Item tsdi42_41_C_O0157: Ich versuche einen Plan für Aufgaben zu entwickeln und halte mich daran.
-* Item tsdi42_32_C_O0162: Ich versuche vollständig vorbereitet zu sein, bevor ich eine Aufgabe anpacke.
-
-## DIMENSION: EXTRAVERSION (E)
-Beschreibung: Aktivität und zwischenmenschliches Verhalten. Hohe Werte stehen für Geselligkeit, Durchsetzungsvermögen und Optimismus; niedrige Werte für Introversion, Zurückhaltung und Ruhe.
-### Facette: Aktivität / Durchsetzungsvermögen (E-A)
-Beschreibung: Tendenz, die Initiative zu ergreifen, Energiegeladenheit und das Einnehmen einer Führungsposition.
-* Item tsdi42_35_E_A002: Ich spreche lauter, wenn ich meine, einen Beitrag liefern zu können.
-* Item tsdi42_28_E_A004: Ich neige dazu, in Gruppen die Führung zu übernehmen.
-* Item tsdi42_03_E_A009: Ich habe eine Menge Einfluss auf andere Leute.
-### Facette: Schüchternheit (E-SB)
-Beschreibung: Suche nach Anregung, Begeisterungsfähigkeit und eine vitale Lebensenergie.
-* Item tsdi42_19_E_SB010: Ich bin eine sehr schüchterne Person.
-* Item tsdi42_08_E_SB014: Meine Freunde halten mich für schüchtern.
-* Item tsdi42_18_E_SB026: Ich fühle mich nicht wohl, wenn ich im Zentrum der Aufmerksamkeit stehe.
-### Facette: Geselligkeit / Herzlichkeit (E-So)
-Beschreibung: Freude am Zusammensein mit anderen Menschen, Knüpfen von Kontakten und Feierfreudigkeit.
-* Item tsdi42_33_E_So007: Ich bin gerne wo viel los ist.
-* Item tsdi42_26_E_So012: Ich gebe mir große Mühe Leute kennen zu lernen.
-* Item tsdi42_16_E_So028: Ich mag Partys auf denen viele Leute sind.
-
-## DIMENSION: NEUROTIZISMUS (N)
-Beschreibung: Emotionale Labilität vs. Stabilität. Tendenz, negative Emotionen wie Angst, Trauer oder Ärger intensiver zu erleben und empfindlich auf Stress zu reagieren.
-### Facette: Depressivität / Dysthymie (N-D)
-Beschreibung: Neigung zu gedrückter Stimmung, Selbstzweifeln, Einsamkeitsgefühlen und Pessimismus.
-* Item tsdi42_07_N_D039: Es gibt Zeiten in denen ich mich selbst bedaure.
-* Item tsdi42_15_N_D054: Manchmal bin ich entmutigt und möchte am liebsten aufgeben.
-* Item tsdi42_30_N_D055: Ich fürchte oft, dass ich meine Ziele nicht erreichen könnte.
-### Facette: Reizbarkeit / Irritierbarkeit (N-Ir)
-Beschreibung: Neigung zu Frustration, Empfindlichkeit gegenüber Kritik und schnelles Genervtsein.
-* Item tsdi42_09_N_Ir034: Manchmal rege ich mich so auf, dass es mir auf den Magen schlägt.
-* Item tsdi42_05_N_Ir058: Wenn ich aufgebracht bin, kann ich nicht mehr klar denken.
-* Item tsdi42_06_N_Ir070: Ich kann Kritik nicht sehr gut akzeptieren.
-### Facette: Stressanfälligkeit / Ängstlichkeit (N-St)
-Beschreibung: Nervosität in Stresssituationen, Sorgen bezüglich der Zukunft und körperliche Stresssymptome.
-* Item tsdi42_29_N_St037: Ich fühle mich oft müde und erschöpft.
-* Item tsdi42_38_N_St040: Wenn ich unter großem Stress stehe, bin ich oft kurz davor zusammenzubrechen.
-* Item tsdi42_11_N_St043: Ich bin oft zittrig und angespannt.
-
-## DIMENSION: OFFENHEIT FÜR ERFAHRUNGEN (O)
-Beschreibung: Intellektuelle Neugier, Vorliebe für Abwechslung, ausgeprägte Phantasie und Wertschätzung von Kunst und Kultur.
-### Facette: Intellekt / Ideen (O-In)
-Beschreibung: Freude am Nachdenken, Interesse an abstrakten oder philosophischen Fragestellungen und neuen Denkansätzen.
-* Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
-* Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
-* Item tsdi42_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
-### Facette: Reflexion / Phantasie (O-R)
-Beschreibung: Reiches Innenleben, Tagträumerei und tiefe Beschäftigung mit eigenen Gedanken und Büchern.
-* Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
-* Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
-* Item tsdi42_34_O_R120: Ich lese gerne Gedichte.
-### Facette: wissenschaftliches Interesse (O-Sc)
-Beschreibung: Interesse an Naturphänomenen, wissenschaftlichen Konzepten und grundlegenden Fragen der Existenz.
-* Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
-* Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
-* Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
-"},
-                    {"role": "assistant", "content": f"Vielen Dank! Die ID {st.session_state.participant_id} ist registriert. Wir beginnen nun mit dem Interview. Erzählen Sie doch mal: Was haben Sie gestern so gemacht?"}
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "assistant", "content": first_ai_msg}
                 ]
                 st.rerun()
             else:
                 st.warning("Bitte bestätigen Sie die Einwilligungserklärung, um fortzufahren.")
 
-    # --- PHASE 3: CHAT (NUR TEXT) ---
+    # --- PHASE 3: CHAT ---
     elif st.session_state.step == "chat":
         st.title("Interview im Dialog 💬")
-        user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
-        st.session_state.interaction_count = len(user_msgs)
-        st.info(f"Interaktion {st.session_state.interaction_count} von 10")
         
-        # Chatverlauf anzeigen
+        interview_ended = any("[INTERVIEW_FERTIG]" in m["content"] for m in st.session_state.messages if m["role"] == "assistant")
+        
         for msg in st.session_state.messages:
             if msg["role"] != "system":
                 with st.chat_message(msg["role"]):
-                    st.markdown(msg["content"])
+                    st.markdown(msg["content"].replace("[INTERVIEW_FERTIG]", "").strip())
 
-        if st.session_state.interaction_count >= 10:
-            st.warning("Interview beendet.")
+        if interview_ended:
+            st.success("Das Interview wurde von der KI erfolgreich beendet, da alle Facetten explorativ erfasst wurden.")
             if st.button("Zur Auswertung"):
                 st.session_state.step = "results"
                 st.rerun()
         else:
             client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-            
-            # Reiner Text-Input via standard chat_input
             user_input = st.chat_input("Ihre Antwort hier tippen...")
 
             if user_input:
-                # 1. Sofort im UI anzeigen
                 st.session_state.messages.append({"role": "user", "content": user_input})
                 
-                # 2. KI-Antwort generieren
                 with st.spinner("🤖 Interviewer überlegt..."):
                     try:
                         response = client.chat.completions.create(
@@ -233,36 +230,25 @@ Beschreibung: Interesse an Naturphänomenen, wissenschaftlichen Konzepten und gr
                     except Exception as e:
                         st.error(f"KI Fehler: {e}")
                 
-                # 3. Nextcloud-Zwischenspeicherung im Hintergrund
-                # ANPASSUNG: "condition" hier für die Rohdaten-Updates hinzugefügt
                 full_data = {
                     "participant_id": st.session_state.participant_id,
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
                     "chat": st.session_state.messages
                 }
-                
-                threading.Thread(
-                    target=save_to_nextcloud, 
-                    args=(st.session_state.participant_id, full_data),
-                    daemon=True
-                ).start()
-                
+                threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data), daemon=True).start()
                 st.rerun()
 
     # --- PHASE 4: AUSWERTUNG ---
     elif st.session_state.step == "results":
         st.title("Ihre Auswertung 📊")
-        
-        if "data_saved" not in st.session_state:
-            st.session_state.data_saved = False
+        if "data_saved" not in st.session_state: st.session_state.data_saved = False
 
         if "ai_bfi" not in st.session_state:
             with st.spinner("KI Analyse läuft..."):
                 try:
                     client = OpenAI(api_key=st.secrets["openai"]["api_key"])
                     chat_text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.messages if m["role"] != "system"])
-                    
                     res = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
@@ -276,8 +262,7 @@ Beschreibung: Interesse an Naturphänomenen, wissenschaftlichen Konzepten und gr
                     st.error(f"Fehler bei der Analyse: {e}")
                     st.session_state.ai_bfi = {t: 0 for t in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]}
 
-        traits = ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]
-        for t in traits:
+        for t in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
             ki_wert = st.session_state.ai_bfi.get(t, 0)
             st.metric(f"Geschätzte Ausprägung: {t}", f"{ki_wert} / 5")
             st.progress(float(ki_wert) / 5.0 if ki_wert else 0.0)
@@ -285,9 +270,7 @@ Beschreibung: Interesse an Naturphänomenen, wissenschaftlichen Konzepten und gr
         st.divider()
 
         if not st.session_state.data_saved:
-            st.subheader("Abschluss")
             if st.button("Ergebnisse final speichern & beenden"):
-                # ANPASSUNG: "condition" im finalen JSON-Payload integriert
                 final_payload = {
                     "id": st.session_state.participant_id,
                     "condition": st.session_state.condition,
@@ -299,16 +282,13 @@ Beschreibung: Interesse an Naturphänomenen, wissenschaftlichen Konzepten und gr
                     st.session_state.data_saved = True
                     st.rerun()
                 else:
-                    st.error("Speicherfehler beim finalen Senden.")
+                    st.error("Speicherfehler.")
         else:
-            st.success("Daten erfolgreich auf dem Server der Uni Ulm gespeichert!")
-            
+            st.success("Daten erfolgreich gespeichert!")
             col_a, col_b = st.columns(2)
-            with col_a:
-                st.link_button("Zur Uni-Webseite", "https://www.uni-ulm.de/in/psy-dia/forschung/an-studien-teilnehmen/")
-            with col_b:
-                if st.button("🔄 APP RESET (Nächste Person)"):
-                    reset_app()
+            with col_a: st.link_button("Zur Uni-Webseite", "https://www.uni-ulm.de/in/psy-dia/forschung/an-studien-teilnehmen/")
+            with col_b: 
+                if st.button("🔄 APP RESET"): reset_app()
 
 if __name__ == "__main__":
     main()
