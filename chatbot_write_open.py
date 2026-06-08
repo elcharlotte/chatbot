@@ -164,9 +164,8 @@ def main():
         st.title("Informationen zur Studie & Datenschutz 📝")
         st.markdown("""
         ### Beschreibung der Studie
-        In diesem KI-gestützten Interview untersuchen wir sprachliche Muster im Kontext der Persönlichkeitsdiagnostik. 
-        Das Gespräch wird von einem KI-Interviewer in einem **offenen, unstrukturierten Gesprächsmodus** geführt. 
-        Das Interview endet automatisch, sobald alle psychologischen Facetten im Dialog ausreichend erkundet wurden.
+        Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. 
+        Das Gespräch wird von einem KI-Interviewer in einem geführt, und endet automatisch, sobald alle psychologischen Facetten der BigFive im Dialog ausreichend erkundet wurden.
         
         ### Umgang mit Ihren Daten
         * **Speicherung:** Verschlüsselt auf den sicheren Servern der Universität Ulm (**Nextcloud/Cloudstore**).
@@ -181,7 +180,7 @@ def main():
                 st.session_state.research_consent = True
                 st.session_state.step = "chat"
                 
-                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal ein bisschen von sich: Wie würden Sie sich selbst als Person beschreiben?"
+                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?"
                 
                 st.session_state.messages = [
                     {"role": "system", "content": SYSTEM_PROMPT},
