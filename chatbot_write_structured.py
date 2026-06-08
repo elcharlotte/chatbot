@@ -101,38 +101,24 @@ Beschreibung: Intellektuelle Neugier, Vorliebe für Abwechslung und Phantasie.
 * Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
 """
 
-# Gesamtanzahl aller Facetten im Leitfaden für den Fortschrittsbalken
 TOTAL_FACETS = 14 
 
-SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein hochgradig strukturiertes, standardisiertes Interview zu führen, um die Facetten des unten stehenden 'Trait Self-Descriptive Inventory (TSDI)' systematisch zu erfassen. Du orientierst dich dabei an den Items des TSDI.
+# Das Wort 'JSON' MUSS im Prompt stehen, damit der response_format Modus funktioniert.
+SYSTEM_PROMPT = f"""Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 14 Facetten des TSDI systematisch zu erfassen.
 
-TASK OVERVIEW:
-Gehe die Dimensionen (A, C, E, N, O) und deren Facetten streng sequenziell (eine nach der anderen) durch. Für jede einzelne Facette stellst du genau eine gezielte, verhaltensnahe Frage. Du darfst erst zur nächsten Facette übergehen, wenn die aktuelle Facette beantwortet wurde. Springe niemals zwischen den Themen.
+DEINE ANTWORT-STRUKTUR:
+Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
+1. "aktuelle_facette": Eine Zahl von 0 bis 14. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 0. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 1, u.s.w.
+2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
 
-INTERVIEW GUIDELINES & CONSTRAINTS:
-1. Einstieg: Beginne das Interview direkt mit der ersten strukturierten Frage zur ersten Facette (Verträglichkeit -> Kooperation / Vertrauen).
-2. Strikte Sequenzialität: Arbeite den Leitfaden chronologisch ab. Stelle pro Chat-Beitrag immer nur GENAU EINE Frage zu GENAU EINER Facette.
-3. Umgang mit Testfragen: Übersetze den Kern der Items in eine konkrete, offene Frage nach realem Verhalten oder Alltagssituationen. Du darfst die psychometrischen Items wörtlich vorlesen, wenn es sinnvoll erscheint.
-4. Keine freie Exploration: Bohre nicht tiefer nach und passe den Gesprächsverlauf nicht individuell an. Leite sofort standardisiert zur nächsten Facette über.
+INTERVIEW-REGELN:
+* Gehe die Facetten streng sequenziell von 1 bis 14 durch.
+* Stelle pro Beitrag nur EINE verhaltensnahe Frage.
+* Formuliere die Fragen natürlich und flüssig, passend zu einem psychologischen Gespräch. Vermeide hölzerne Abfragen, bleibe aber rein diagnostisch (keine Ratschläge oder Therapieversuche).
+* Sprich den Nutzer mit 'Sie' an.
+* Wenn du die Antwort auf Facette 14 erhalten hast, verabschiede dich höflich und setze an das Ende deines 'interviewer_text' das Label '[INTERVIEW_FERTIG]'.
 
---- STRUKTUR- & DIAGNOSTIK-REGELN ---
-5. THEMATISCHE KONSISTENZ: Halte dich strikt an die Reihenfolge im Leitfaden:
-   - Erst DIMENSION A (Facette 1, dann 2, dann 3)
-   - Dann DIMENSION C (Facette 1, dann 2)
-   - Dann DIMENSION E (Facette 1, dann 2, dann 3)
-   - Dann DIMENSION N (Facette 1, dann 2, dann 3)
-   - Dann DIMENSION O (Facette 1, dann 2, dann 3)
-6. REINE DIAGNOSTIK – KEINE LÖSUNGEN/STRATEGIEN: Frage NIEMALS nach Lösungen, Hilfsmitteln, Bewältigungsstrategien oder Eisbrechern. Dich interessiert NUR der Ist-Zustand des Verhaltens.
-7. ABSOLUTES FLOSKEL-VERBOT: Nutze NIEMALS Phrasen wie 'Das verstehe ich', 'Das macht Sinn', 'Das klingt interessant', 'Spannend', 'Kein Problem' oder 'Ich möchte lediglich...'.
-10. UMGANG MIT RÜCKFRAGEN / WIDERSTAND: Wenn der Nutzer Fragen stellt oder den Sinn hinterfragt, antworte extrem kurz und sachlich ("Es hilft mir, Ihr Verhalten besser einzuordnen.") und wiederhole die aktuelle strukturierte Frage.
-9. MAXIMALE KÜRZE: Halte deine Textbeiträge extrem kurz (maximal 1-2 Sätze pro Antwort).
-10. SIEZEN: Sprich den Nutzer im gesamten Interview höflich mit 'Sie' an.
-
----
-11. BEENDIGUNG: Sobald du die allerletzte Facette (Wissenschaftliches Interesse) abgefragt und die Antwort erhalten hast, verabschiede dich höflich und platziere am Ende deiner allerletzten Nachricht exakt das Wort '[INTERVIEW_FERTIG]' (inklusive der eckigen Klammern).
----
-
-# DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
+LEITFADEN:
 {TSDI_LEITFADEN}
 """
 
@@ -146,34 +132,24 @@ def main():
         st.session_state.messages = []
         st.session_state.condition = "structured-write"
         st.session_state.current_facet_count = 0
+        st.session_state.research_consent = False
 
-    # --- PHASE 1: WILLKOMMEN (VP-Code & Matrikelnummer) ---
+    # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
         st.title("Willkommen zum Interview 🤖")
         st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
         
-        # VP-Code Anleitung (Platzhalter)
         st.markdown("""
         **Anleitung zur Generierung Ihres VP-Codes:**
-        * *[PLATZHALTER: Bitte hier die spezifische Anweisung zur Code-Generierung einfügen, z. B. Erster Buchstabe des Vornamens der Mutter + Geburtstag etc.]*
+        * *[PLATZHALTER: Bitte hier die spezifische Anweisung zur Code-Generierung einfügen]*
         """)
         
-        vp_code_input = st.text_input(
-            "VP-Code (Teilnehmer-Code)", 
-            value=st.session_state.default_id,
-            placeholder="z.B. AB12XY"
-        )
-        
-        matrikel_input = st.text_input(
-            "Matrikelnummer",
-            placeholder="z.B. 1234567"
-        )
+        vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. AB12XY")
+        matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
         
         if st.button("Weiter zur Studienbeschreibung"):
-            if not vp_code_input.strip():
-                st.error("Bitte geben Sie einen gültigen VP-Code ein.")
-            elif not matrikel_input.strip():
-                st.error("Bitte geben Sie Ihre Matrikelnummer ein.")
+            if not vp_code_input.strip() or not matrikel_input.strip():
+                st.error("Bitte füllen Sie beide Felder aus.")
             else:
                 st.session_state.participant_id = vp_code_input.strip()
                 st.session_state.matrikelnummer = matrikel_input.strip()
@@ -195,12 +171,12 @@ def main():
         * **Speicherung:** Daten landen auf der sicheren Nextcloud der Universität Ulm.
         """)
         
-        consent_checked = st.checkbox("Ich stimme der anonymisierten Nutzung zu.")
+        consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
         if st.button("Interview starten"):
             if consent_checked:
+                st.session_state.research_consent = True
                 st.session_state.step = "chat"
                 
-                # Der erste JSON-String, den die Anwendung simuliert
                 init_json = json.dumps({
                     "aktuelle_facette": 0,
                     "interviewer_text": "Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Wie leicht fällt es Ihnen im Alltag, generell immer freundlich und höflich zu anderen Menschen zu sein – selbst wenn diese Ihnen unhöflich begegnen?"
@@ -219,12 +195,13 @@ def main():
         st.title("Interview im Dialog 💬")
         
         # Fortschritt exakt aus der letzten Assistant-Nachricht auslesen
-        last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
-        try:
-            msg_data = json.loads(last_ai_msg)
-            st.session_state.current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
-        except:
-            pass # Fallback, falls JSON-Parsing fehlschlägt
+        if st.session_state.messages:
+            last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
+            try:
+                msg_data = json.loads(last_ai_msg)
+                st.session_state.current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
+            except:
+                pass
             
         progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
         
@@ -232,7 +209,6 @@ def main():
         st.progress(progress_percentage)
         st.divider()
         
-        # Chat-Verlauf rendern (und dabei das JSON für den Nutzer unsichtbar machen)
         interview_ended = False
         for msg in st.session_state.messages:
             if msg["role"] != "system":
@@ -260,10 +236,10 @@ def main():
 
             if user_input:
                 st.session_state.messages.append({"role": "user", "content": user_input})
+                api_success = False
                 
                 with st.spinner("🤖 Interviewer überlegt..."):
                     try:
-                        # Wir zwingen die API, ein valides JSON-Objekt zurückzugeben
                         response = client.chat.completions.create(
                             model="gpt-4o-mini",
                             messages=st.session_state.messages,
@@ -271,18 +247,20 @@ def main():
                         )
                         ai_msg = response.choices[0].message.content
                         st.session_state.messages.append({"role": "assistant", "content": ai_msg})
+                        api_success = True
                     except Exception as e:
                         st.error(f"KI Fehler: {e}")
                 
-                # Rohdaten für die Cloud vorbereiten
-                full_data = {
-                    "participant_id": st.session_state.participant_id,
-                    "matrikelnummer": st.session_state.matrikelnummer,
-                    "condition": st.session_state.condition,
-                    "research_consent": st.session_state.research_consent,
-                    "chat": st.session_state.messages
-                }
-                threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data), daemon=True).start()
+                # Cloud-Speicherung nur triggern, wenn API erfolgreich war
+                if api_success:
+                    full_data = {
+                        "participant_id": st.session_state.get("participant_id", "unknown"),
+                        "matrikelnummer": st.session_state.get("matrikelnummer", "unknown"),
+                        "condition": st.session_state.condition,
+                        "research_consent": st.session_state.research_consent,
+                        "chat": st.session_state.messages
+                    }
+                    threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data), daemon=True).start()
                 st.rerun()
 
     # --- PHASE 4: AUSWERTUNG ---
@@ -295,7 +273,6 @@ def main():
                 try:
                     client = OpenAI(api_key=st.secrets["openai"]["api_key"])
                     
-                    # Für die Endanalyse säubern wir den Chatverlauf von den JSON-Strukturen
                     clean_messages = []
                     for m in st.session_state.messages:
                         if m["role"] == "system": continue
@@ -312,7 +289,7 @@ def main():
                     res = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": "Analysiere den Chat auf Big Five (1-5). Antworte NUR JSON mit Keys: 'Extraversion', 'Verträglichkeit', 'Gewissenhaftigkeit', 'Neurotizismus', 'Offenheit'."},
+                            {"role": "system", "content": "Analysiere den Chat auf Big Five (1-5). Antworte NUR im JSON-Format mit den exakten Keys: 'Extraversion', 'Verträglichkeit', 'Gewissenhaftigkeit', 'Neurotizismus', 'Offenheit'."},
                             {"role": "user", "content": f"Hier ist der Chatverlauf:\n{chat_text}"}
                         ],
                         response_format={"type": "json_object"}
