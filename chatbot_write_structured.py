@@ -141,7 +141,7 @@ def main():
         st.session_state.default_id = params.get("caseNumber", f"user_{uuid.uuid4().hex[:8]}")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.condition = "unstructured"
+        st.session_state.condition = "structured-write"
 
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
