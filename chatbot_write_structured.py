@@ -180,71 +180,77 @@ def main():
                 st.session_state.step = "consent"
                 st.rerun()
 
-    # --- PHASE 2: EINWILLIGUNG (Studienhinweise, OpenAI & Ethik) ---
+    # --- PHASE 2: EINWILLIGUNG ---
     elif st.session_state.step == "consent":
         st.title("Informationen zur Studie & Datenschutz 📝")
-        
-        st.markdown(f"""
-        ### Beschreibung & Zweck der Studie
-        Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende des Interviews 
-        erhalten Sie eine **automatisierte Einschätzung Ihrer Persönlichkeitsmerkmale (Big Five)** durch die KI angezeigt.
-        
-        **Wichtige Hinweise zur Übungsleistung:**
-        * Die Teilnahme an diesem Interview ist **Teil der Übungsleistung** und dient der Selbsterfahrung.
-        * **Verpflichtung:** Wer nicht teilnimmt, erhält *keinen* Credit für die Übung.
-        * **Ehrlichkeit:** Es müssen im Interview *keine* wahrheitsgemäßen Angaben gemacht werden. Beachten Sie jedoch, dass die Auswertung am Ende bei fiktiven Angaben natürlich nur bedingt sinnvoll ist.
-        * **Ethikvotum:** Diese Untersuchung wurde geprüft und bewilligt unter dem **Ethikantrag [PLATZHALTER: Nummer/ID des Ethikantrags einfügen]**.
-        """)
-        
         st.markdown("""
-        ### Umgang mit Ihren Daten & Datenschutz
-        * **Datenübertragung an OpenAI:** Der Chat-Verlauf wird über eine gesicherte API-Schnittstelle an OpenAI übermittelt, um die Antworten des Interviewers zu generieren. Laut den API-Richtlinien von OpenAI werden diese Daten **nicht** zum Trainieren von Modellen verwendet und nach maximal 30 Tagen gelöscht.
-        * **Anonymität:** Es werden *keine* Klarnamen an OpenAI übermittelt. Die Zuordnung erfolgt rein über Ihren anonymisierten VP-Code.
-        * **Sichere Speicherung:** Die finalen Daten (inklusive Ihrer Matrikelnummer für die Credit-Zuordnung) werden verschlüsselt auf den sicheren Servern der **Universität Ulm (Nextcloud/Cloudstore)** abgelegt.
+        ### Beschreibung & Zweck der Studie
+        Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
+        * **Verpflichtung:** Die Teilnahme ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
+        * **Ehrlichkeit:** Keine Pflicht zur Wahrheit, aber fiktive Angaben verfälschen die Auswertung.
+        * **Ethikvotum:** Bewilligt unter **[PLATZHALTER: Ethikantrag-ID]**.
+        
+        ### Datenschutz
+        * **OpenAI API:** Daten werden verschlüsselt übertragen, nicht zum Training genutzt und nach 30 Tagen gelöscht.
+        * **Speicherung:** Daten landen auf der sicheren Nextcloud der Universität Ulm.
         """)
         
-        st.divider()
-        consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
-        
+        consent_checked = st.checkbox("Ich stimme der anonymisierten Nutzung zu.")
         if st.button("Interview starten"):
             if consent_checked:
-                st.session_state.research_consent = True
                 st.session_state.step = "chat"
                 
-                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal, was Sie gestern so erlebt haben."
+                # Der erste JSON-String, den die Anwendung simuliert
+                init_json = json.dumps({
+                    "aktuelle_facette": 0,
+                    "interviewer_text": "Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Wie leicht fällt es Ihnen im Alltag, generell immer freundlich und höflich zu anderen Menschen zu sein – selbst wenn diese Ihnen unhöflich begegnen?"
+                })
                 
                 st.session_state.messages = [
                     {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "assistant", "content": first_ai_msg}
+                    {"role": "assistant", "content": init_json}
                 ]
                 st.rerun()
             else:
-                st.warning("Bitte bestätigen Sie die Einwilligungserklärung, um fortzufahren.")
+                st.warning("Bitte stimmen Sie zu.")
 
-    # --- PHASE 3: CHAT (inkl. Fortschrittsbalken) ---
+    # --- PHASE 3: CHAT ---
     elif st.session_state.step == "chat":
         st.title("Interview im Dialog 💬")
         
-        # Berechnung des Fortschritts anhand der Assistant-Nachrichten (abzüglich der Begrüßung)
-        ai_messages_count = sum(1 for m in st.session_state.messages if m["role"] == "assistant") - 1
-        st.session_state.current_facet_count = min(max(0, ai_messages_count), TOTAL_FACETS)
-        
+        # Fortschritt exakt aus der letzten Assistant-Nachricht auslesen
+        last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
+        try:
+            msg_data = json.loads(last_ai_msg)
+            st.session_state.current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
+        except:
+            pass # Fallback, falls JSON-Parsing fehlschlägt
+            
         progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
         
-        # Fortschrittsanzeige rendern
         st.markdown(f"**Fortschritt der Diagnostik:** Erfasste Facetten: {st.session_state.current_facet_count} von {TOTAL_FACETS}")
         st.progress(progress_percentage)
         st.divider()
         
-        interview_ended = any("[INTERVIEW_FERTIG]" in m["content"] for m in st.session_state.messages if m["role"] == "assistant")
-        
+        # Chat-Verlauf rendern (und dabei das JSON für den Nutzer unsichtbar machen)
+        interview_ended = False
         for msg in st.session_state.messages:
             if msg["role"] != "system":
                 with st.chat_message(msg["role"]):
-                    st.markdown(msg["content"].replace("[INTERVIEW_FERTIG]", "").strip())
+                    if msg["role"] == "assistant":
+                        try:
+                            data = json.loads(msg["content"])
+                            text_content = data.get("interviewer_text", "")
+                            if "[INTERVIEW_FERTIG]" in text_content:
+                                interview_ended = True
+                            st.markdown(text_content.replace("[INTERVIEW_FERTIG]", "").strip())
+                        except:
+                            st.markdown(msg["content"])
+                    else:
+                        st.markdown(msg["content"])
 
         if interview_ended:
-            st.success("Das Interview wurde von der KI erfolgreich beendet, da alle Facetten erfasst wurden.")
+            st.success("Das Interview wurde erfolgreich beendet.")
             if st.button("Zur Auswertung"):
                 st.session_state.step = "results"
                 st.rerun()
@@ -257,16 +263,18 @@ def main():
                 
                 with st.spinner("🤖 Interviewer überlegt..."):
                     try:
+                        # Wir zwingen die API, ein valides JSON-Objekt zurückzugeben
                         response = client.chat.completions.create(
                             model="gpt-4o-mini",
-                            messages=st.session_state.messages
+                            messages=st.session_state.messages,
+                            response_format={"type": "json_object"}
                         )
                         ai_msg = response.choices[0].message.content
                         st.session_state.messages.append({"role": "assistant", "content": ai_msg})
                     except Exception as e:
                         st.error(f"KI Fehler: {e}")
                 
-                # Payload für Nextcloud inkl. Matrikelnummer
+                # Rohdaten für die Cloud vorbereiten
                 full_data = {
                     "participant_id": st.session_state.participant_id,
                     "matrikelnummer": st.session_state.matrikelnummer,
@@ -286,7 +294,21 @@ def main():
             with st.spinner("KI Analyse läuft..."):
                 try:
                     client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-                    chat_text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.messages if m["role"] != "system"])
+                    
+                    # Für die Endanalyse säubern wir den Chatverlauf von den JSON-Strukturen
+                    clean_messages = []
+                    for m in st.session_state.messages:
+                        if m["role"] == "system": continue
+                        if m["role"] == "assistant":
+                            try:
+                                clean_messages.append(f"Interviewer: {json.loads(m['content']).get('interviewer_text', '')}")
+                            except:
+                                clean_messages.append(f"Interviewer: {m['content']}")
+                        else:
+                            clean_messages.append(f"Teilnehmer: {m['content']}")
+                            
+                    chat_text = "\n".join(clean_messages)
+                    
                     res = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
