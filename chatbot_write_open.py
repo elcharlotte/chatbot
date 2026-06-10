@@ -144,12 +144,7 @@ def main():
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
         st.title("Willkommen zum Interview 🤖")
-        st.write("Bitte geben Sie zunächst Ihre Teilnehmer-ID ein. test, wo steht das hier.
-        
-                 und wo das hier
-                 und das?
-                 
-                 und dies?")
+        st.write("Bitte geben Sie zunächst Ihre Teilnehmer-ID ein. test, wo steht das hier. und das?")
         
         participant_id_input = st.text_input(
             "Teilnehmer-ID (Participant ID)", 
