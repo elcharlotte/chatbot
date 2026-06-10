@@ -117,6 +117,8 @@ INTERVIEW-REGELN:
 * Formuliere die Fragen natürlich und flüssig, passend zu einem psychologischen Gespräch. Vermeide hölzerne Abfragen, bleibe aber rein diagnostisch (keine Ratschläge oder Therapieversuche).
 * Sprich den Nutzer mit 'Sie' an.
 * Wenn du die Antwort auf Facette 14 erhalten hast, verabschiede dich höflich und setze an das Ende deines 'interviewer_text' das Label '[INTERVIEW_FERTIG]'.
+* Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut.
+* Füge eine kurze Überleitung in deine Antwort ein, wenn du zu einer neuen Facette wechselst.
 
 LEITFADEN:
 {TSDI_LEITFADEN}
@@ -137,14 +139,23 @@ def main():
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
         st.title("Willkommen zum Interview 🤖")
-        st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen")
+        st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
         
         st.markdown("""
         **Anleitung zur Generierung Ihres VP-Codes:**
-        * *[PLATZHALTER: Bitte hier die spezifische Anweisung zur Code-Generierung einfügen]*
+        * Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (bspw. 04) 
+        * Geben Sie als zweites die letzten beiden Buchstaben des Mädchen- (Geburts-)namens der Mutter ein (bspw. ER) 
+        * Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (bspw. NS)
+        * Geben Sie als viertes den Tag Ihres Geburtstags ein (bspw. 24)
+
+        Ein Versuchspersonencode könnte also zum Beispiel so aussehen: 04ERNS24
+            Erster Vorname der Mutter: 	Anna (04 Buchstaben)
+            Nachname der Mutter: 	    Müller (er als Endung)
+            Erster Vorname des Vaters: 	Hans (ns als Endung)
+            Eigener Geburtstag: 		24.12.1993 (Tag.Monat.Jahr)
         """)
         
-        vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. AB12XY")
+        vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 04ERNS24")
         matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
         
         if st.button("Weiter zur Studienbeschreibung"):
@@ -309,8 +320,7 @@ def main():
         if not st.session_state.data_saved:
             if st.button("Ergebnisse final speichern & beenden"):
                 final_payload = {
-                    "id": st.session_state.participant_id,
-                    "matrikelnummer": st.session_state.matrikelnummer,
+                    "participant_id": st.session_state.participant_id,
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
                     "ai_assessment": st.session_state.ai_bfi,
