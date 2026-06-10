@@ -147,7 +147,7 @@ def main():
         st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
         
         st.markdown("""
-        ### Anleitung zur Generierung Ihres VP-Codes
+        ##### Anleitung zur Generierung Ihres VP-Codes
         
         1. Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (z.B. 04).
         2. Geben Sie als zweites die letzten beiden Buchstaben des Mädchen-(Geburts-)namens der Mutter ein (z.B. ER).
