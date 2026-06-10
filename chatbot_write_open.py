@@ -27,8 +27,45 @@ def reset_app():
         del st.session_state[key]
     st.rerun()
 
+
 # --- TSDI LEITFADEN ---
-TSDI_LEITFADEN = """
+TSDI_BESCHREIBUNGEN = """
+## Skalen auf Dimensions-Ebene
+
+Extraversion (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreudig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
+Neurotizismus (N) : Neurotizismus erfasst Unterschiede zwischen Personen hinsichtlich ihrer gefühlsmäßigen Robustheit einerseits und ihrer emotionalen Empfindlichkeit bzw. Ansprechbarkeit andererseits. Personen mit hoher Ausprägung in diesem Bereich sind empfindlicher und neigen unter Stress dazu, leichter aus dem Gleichgewicht zu kommen. Sie entwickeln eher unangepasste Formen der Problembewältigung, neigen zu unrealistischen Ideen und sind weniger in der Lage, ihre Bedürfnisse zu kontrollieren. Personen mit niedriger Ausprägung in diesem Bereich beschreiben sich als ausgeglichen, emotional stabil und robust und geraten nicht so leicht aus der Fassung. Charakteristisch für diese Personen ist, dass sie Gefühlszustände nicht so stark erleben.
+Gewissenhaftigkeit (C): Die Grundlage der Gewissenhaftigkeit bilden Unterschiede beim Planen,
+Organisieren und Ausführen von Aufgaben. Personen mit einer hohen Ausprägung beschreiben sich
+als eher zielstrebig, willensstark und entschlossen, während Personen mit einer niedrigen Ausprägung
+ihre Zielsetzungen mit geringerem Engagement verfolgen.
+Verträglichkeit (A): Mit dieser Dimension werden Einstellungen und gewohnheitsmäßige Verhaltensweisen
+in sozialen Beziehungen umschrieben. Personen mit hoher Ausprägung sind hilfsbereit,
+entgegenkommend, vertrauensbereit und bemüht anderen zu helfen. Sie begegnen anderen
+Menschen mit Wohlwollen, neigen zu Gutmütigkeit, sind bereit, in Auseinandersetzungen
+nachzugeben und können im Extremfall als unterwürfig oder abhängig erscheinen. Personen mit
+niedriger Ausprägung beschreiben sich als eher egozentrisch, misstrauisch gegenüber den
+Intentionen anderer, grob, sowie wenig geneigt zu kooperativem Verhalten und mit einer Präferenz für
+wettbewerbsorientiertes Verhalten.
+Offenheit (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen,
+Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie
+negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind
+unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich
+lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und
+Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen
+ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im
+Gegensatz zu Personen mit hoher Ausprägung.
+
+## Skalen auf Facetten-Ebene
+
+
+"""
+
+
+
+
+
+
+TSDI_ITEMS = """
 ## DIMENSION: VERTRÄGLICHKEIT (A)
 Beschreibung: Misst die zwischenmenschliche Orientierung.
 ### Facette: Kooperation / Vertrauen (A-Co)
@@ -101,6 +138,7 @@ Beschreibung: Intellektuelle Neugier, Vorliebe für Abwechslung und Phantasie.
 * Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
 """
 
+# Das Wort 'JSON' MUSS im Prompt stehen, damit der response_format Modus funktioniert.
 SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des unten stehenden 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
 
 TASK OVERVIEW:
@@ -112,7 +150,7 @@ INTERVIEW GUIDELINES & CONSTRAINTS:
 3. Absolutes Verbot von Testfragen: Du darfst die psychometrischen Items nicht wörtlich vorlesen oder direkt als standardisierte Frage stellen.
 4. Indirekte Exploration (Nudging): Nutze offene W-Fragen, um Facetten subtil zu explorieren (z. B. statt das Schüchternheits-Item abzufragen, frage: 'Wie verhalten Sie sich normalerweise, wenn Sie in einer großen Gruppe im Mittelpunkt stehen?').
 
---- NEUE STRUKTUR- & DIAGNOSTIK-REGELN ---
+NEUE STRUKTUR- & DIAGNOSTIK-REGELN
 5. THEMATISCHE KONSISTENZ (DIMENSIONS-BLÖCKE): Springe nicht wild zwischen den großen Dimensionen (A, C, E, N, O) hin und her. Wenn du eine Dimension (z. B. GEWISSENHAFTIGKEIT) beginnst, erkunde nacheinander alle zugehörigen Facetten (Pflichtbewusstsein, dann Ordnung), bevor du zur nächsten Hauptdimension übergehst. Das sorgt für einen natürlichen roten Faden.
 6. DIAGNOSTISCHES ABBRUCHKRITERIUM (QUALITÄT VOR QUANTITÄT): Prüfe nach jeder Antwort des Nutzers kritisch: *Könnte ich anhand dieser Aussage die TSDI-Items dieser Facette bereits einschätzen?*
    - Wenn NEIN (z. B. bei einsilbigen Antworten wie 'ja' oder 'weiß ich nicht'): Frage gezielt weiter nach (z. B. über ein konkretes Alltagsbeispiel).
@@ -123,12 +161,15 @@ INTERVIEW GUIDELINES & CONSTRAINTS:
 10. MAXIMALE KÜRZE: Halte deine Textbeiträge extrem kurz (maximal 1-2 Sätze pro Antwort).
 11. SIEZEN: Sprich den Nutzer im gesamten Interview höflich mit 'Sie' an.
 
----
+
 12. BEENDIGUNG: Sobald du alle Facetten im freien Gespräch diagnostisch ausreichend abgedeckt hast, verabschiede dich freundlich und platziere am Ende deiner allerletzten Nachricht exakt das Wort '[INTERVIEW_FERTIG]' (inklusive der eckigen Klammern).
----
+
 
 # DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
-{TSDI_LEITFADEN}
+
+
+BESCHREIBUNGEN: {TSDI_BESCHREIBUNGEN}
+ITEMS: {TSDI_ITEMS}
 """
 
 def main():
@@ -140,6 +181,8 @@ def main():
         st.session_state.step = "welcome"
         st.session_state.messages = []
         st.session_state.condition = "open-write"
+        st.session_state.current_facet_count = 0
+        st.session_state.research_consent = False
 
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
