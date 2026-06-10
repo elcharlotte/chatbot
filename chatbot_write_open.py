@@ -147,7 +147,7 @@ def main():
         st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
         
         st.markdown("""
-        #### Anleitung zur Generierung Ihres VP-Codes
+        ##### Anleitung zur Generierung Ihres VP-Codes
         
         1. Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (z.B. 04).
         2. Geben Sie als zweites die letzten beiden Buchstaben des Mädchen-(Geburts-)namens der Mutter ein (z.B. ER).
@@ -158,13 +158,13 @@ def main():
 
         Ein Versuchspersonencode könnte beispielsweise so aussehen: **04ERNS24**
         
-        - Erster Vorname der Mutter: Anna (04 Buchstaben)
-        - Nachname der Mutter: Müller (ER als Endung)
-        - Erster Vorname des Vaters: Hans (NS als Endung)
-        - Eigener Geburtstag: 24.12.1993 (Tag.Monat.Jahr)
+        - Erster Vorname der Mutter: *Anna* (04 Buchstaben)
+        - Nachname der Mutter: *Müller* (ER als Endung)
+        - Erster Vorname des Vaters: *Hans* (NS als Endung)
+        - Eigener Geburtstag: *24.12.1993* (Tag.Monat.Jahr)
         """)
         
-        vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 01ABCD02")
+        vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 04ERNS24")
         matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
         
         if st.button("Weiter zur Studienbeschreibung"):
