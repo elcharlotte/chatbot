@@ -154,7 +154,7 @@ def main():
         3. Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (z.B. NS).
         4. Geben Sie als viertes den Tag Ihres Geburtstags ein (z.B. 24).
         
-        **Beispiel**
+        ###### Beispiel:
 
         Ein Versuchspersonencode könnte beispielsweise so aussehen: **04ERNS24**
         
