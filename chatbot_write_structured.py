@@ -187,16 +187,16 @@ def main():
         
         st.markdown("""
         **Anleitung zur Generierung Ihres VP-Codes:**
-        1. Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (bspw. 04) 
-        2. Geben Sie als zweites die letzten beiden Buchstaben des Mädchen- (Geburts-)namens der Mutter ein (bspw. ER) 
-        3. Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (bspw. NS)
-        4. Geben Sie als viertes den Tag Ihres Geburtstags ein (bspw. 24)
+        * Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (bspw. 04) 
+        * Geben Sie als zweites die letzten beiden Buchstaben des Mädchen- (Geburts-)namens der Mutter ein (bspw. ER) 
+        * Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (bspw. NS)
+        * Geben Sie als viertes den Tag Ihres Geburtstags ein (bspw. 24)
 
         Ein Versuchspersonencode könnte also zum Beispiel so aussehen: 04ERNS24
-        \n    Erster Vorname der Mutter: 	*Anna (04 Buchstaben)*
-        \n    Nachname der Mutter: 	        *Müller (er als Endung)*
-        \n    Erster Vorname des Vaters: 	*Hans (ns als Endung)*
-        \n    Eigener Geburtstag: 		    *24.12.1993 (Tag.Monat.Jahr)*
+        * Erster Vorname der Mutter: *Anna (04 Buchstaben)*
+        * Nachname der Mutter: *Müller (er als Endung)*
+        * Erster Vorname des Vaters: *Hans (ns als Endung)*
+        * Eigener Geburtstag: *24.12.1993 (Tag.Monat.Jahr)*
         """)
         
         vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 04ERNS24")
@@ -234,7 +234,7 @@ def main():
                 
                 init_json = json.dumps({
                     "aktuelle_facette": 0,
-                    "interviewer_text": "Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Wie leicht fällt es Ihnen im Alltag, generell immer freundlich und höflich zu anderen Menschen zu sein – selbst wenn diese Ihnen unhöflich begegnen?"
+                    "interviewer_text": "Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Würden Sie sagen, dass Sie andere Leute immer freundlich behandeln?"
                 })
                 
                 st.session_state.messages = [
