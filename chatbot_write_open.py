@@ -148,10 +148,11 @@ def main():
         
         st.markdown("""
         **Anleitung zur Generierung Ihres VP-Codes:**
-        * *[PLATZHALTER: Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (bspw. 04)
+        *[Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (bspw. 04)
 Geben Sie als zweites die letzten beiden Buchstaben des Mädchen- (Geburts-)namens der Mutter ein (bspw. ER) 
 Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (bspw. NS)
 Geben Sie als viertes den Tag Ihres Geburtstags ein (bspw. 24)
+
 Ein Versuchspersonencode könnte also zum Beispiel so aussehen: 04ERNS24
 Erster Vorname der Mutter: Anna (04 Buchstaben)
 Nachname der Mutter: Müller (er als Endung)
