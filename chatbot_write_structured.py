@@ -137,7 +137,7 @@ def main():
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
         st.title("Willkommen zum Interview 🤖")
-        st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
+        st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen")
         
         st.markdown("""
         **Anleitung zur Generierung Ihres VP-Codes:**
