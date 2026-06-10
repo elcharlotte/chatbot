@@ -144,21 +144,26 @@ def main():
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
         st.title("Willkommen zum Interview 🤖")
-        st.write("Bitte geben Sie zunächst Ihre Teilnehmer-ID ein. test, wo steht das hier. und das?")
+        st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
         
-        participant_id_input = st.text_input(
-            "Teilnehmer-ID (Participant ID)", 
-            value=st.session_state.default_id
-        )
+        st.markdown("""
+        **Anleitung zur Generierung Ihres VP-Codes:**
+        * *[PLATZHALTER: Bitte hier die spezifische Anweisung zur Code-Generierung einfügen]*
+        """)
+        
+        vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. AB12XY")
+        matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
         
         if st.button("Weiter zur Studienbeschreibung"):
-            if not participant_id_input.strip():
-                st.error("Bitte geben Sie eine gültige ID ein.")
+            if not vp_code_input.strip() or not matrikel_input.strip():
+                st.error("Bitte füllen Sie beide Felder aus.")
             else:
-                st.session_state.participant_id = participant_id_input.strip()
+                st.session_state.participant_id = vp_code_input.strip()
+                st.session_state.matrikelnummer = matrikel_input.strip()
                 st.session_state.step = "consent"
                 st.rerun()
 
+    
     # --- PHASE 2: EINWILLIGUNG ---
     elif st.session_state.step == "consent":
         st.title("Informationen zur Studie & Datenschutz 📝")
