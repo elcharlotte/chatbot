@@ -28,7 +28,47 @@ def reset_app():
     st.rerun()
 
 # --- TSDI LEITFADEN ---
-TSDI_LEITFADEN = """
+TSDI_BESCHREIBUNGEN = """
+## DIMENSIONEN:
+
+VERTRÄGLICHKEIT (A): Mit dieser Dimension werden Einstellungen und gewohnheitsmäßige Verhaltensweisen in sozialen Beziehungen umschrieben. Personen mit hoher Ausprägung sind hilfsbereit, entgegenkommend, vertrauensbereit und bemüht anderen zu helfen. Sie begegnen anderen Menschen mit Wohlwollen, neigen zu Gutmütigkeit, sind bereit, in Auseinandersetzungen nachzugeben und können im Extremfall als unterwürfig oder abhängig erscheinen. Personen mit niedriger Ausprägung beschreiben sich als eher egozentrisch, misstrauisch gegenüber den Intentionen anderer, grob, sowie wenig geneigt zu kooperativem Verhalten und mit einer Präferenz für wettbewerbsorientiertes Verhalten.
+
+GEWISSENHAFTIGKEIT (C): Die Grundlage der Gewissenhaftigkeit bilden Unterschiede beim Planen, Organisieren und Ausführen von Aufgaben. Personen mit einer hohen Ausprägung beschreiben sich als eher zielstrebig, willensstark und entschlossen, während Personen mit einer niedrigen Ausprägung ihre Zielsetzungen mit geringerem Engagement verfolgen.
+
+EXTRAVERSION (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreudig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
+
+NEUROTIZISMUS (N): Neurotizismus erfasst Unterschiede zwischen Personen hinsichtlich ihrer gefühlsmäßigen Robustheit einerseits und ihrer emotionalen Empfindlichkeit bzw. Ansprechbarkeit andererseits. Personen mit hoher Ausprägung in diesem Bereich sind empfindlicher und neigen unter Stress dazu, leichter aus dem Gleichgewicht zu kommen. Sie entwickeln eher unangepasste Formen der Problembewältigung, neigen zu unrealistischen Ideen und sind weniger in der Lage, ihre Bedürfnisse zu kontrollieren. Personen mit niedriger Ausprägung in diesem Bereich beschreiben sich als ausgeglichen, emotional stabil und robust und geraten nicht so leicht aus der Fassung. Charakteristisch für diese Personen ist, dass sie Gefühlszustände nicht so stark erleben.
+
+OFFENHEIT FÜR ERFAHRUNGEN (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen, Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im Gegensatz zu Personen mit hoher Ausprägung.
+
+## FACETTEN:
+
+### Dimension Verträglichkeit (A)
+- Die Facette „Freundlichkeit“ erfasst die Tendenz sich anderen gegenüber fröhlich und freundlich zu verhalten. Personen mit niedriger Ausprägung kommen mit anderen Menschen eher schlecht zurecht, wohingegen Personen mit hoher Ausprägung als angenehme Personen wahrgenommen werden.
+- Die Facette „Hilfsbereitschaft“ erfasst die Tendenz anderen bei Problemen zu helfen. Personen mit niedriger Ausprägung neigen zu Egoismus, wohingegen Personen mit hoher Ausprägung großzügig und uneigennützig sind.
+- Die Facette „Rücksichtnahme“ erfasst die Tendenz höflich und rücksichtsvoll zu sein. Personen mit niedriger Ausprägung achten nicht auf die Gefühle anderer, wohingegen Personen mit hoher Ausprägung stets versuchen nett zu anderen zu sein.
+
+### Dimension Gewissenhaftigkeit (C)
+- Die Facette „Fleiß“ erfasst die Tendenz hart und fokussiert zu arbeiten. Personen mit niedriger Ausprägung neigen dazu faul zu sein und Aufgaben nicht zu Ende zu bringen, wohingegen Personen mit hoher Ausprägung sich immer bemühen Arbeiten rechtzeitig und vollständig zu erledigen.
+- Die Facette „Organisation“ erfasst die Tendenz ordentlich beim Erledigen von Aufgaben zu sein. Personen mit niedriger Ausprägung sind oft verspätet und halten ihre Umgebung nicht ordentlich, wohingegen Personen mit hoher Ausprägung viel Zeit für Planung und Struktur aufwenden.
+
+### Dimension Extraversion (E)
+- Die Facette „Soziale Aktivität“ erfasst die Tendenz unter Leute zu gehen. Personen mit niedriger Ausprägung bleiben lieber für sich und beschäftigen sich allein, wohingegen Personen mit hoher Ausprägung häufig auf Partys anzutreffen sind.
+- Die Facette „Selbstbewusstsein“ erfasst die Tendenz selbstsicher zu sein. Personen mit niedriger Ausprägung sind schüchtern und meiden es Aufmerksamkeit zu bekommen, wohingegen Personen mit hoher Ausprägung auch gerne mal im Zentrum der Aufmerksamkeit stehen.
+- Die Facette „Durchsetzungsfähigkeit“ erfasst die Tendenz in Gruppen die Führung zu übernehmen. Personen mit niedriger Ausprägung sind in Gruppen eher zurückhaltend, wohingegen Personen mit hoher Ausprägung großen Einfluss innerhalb von Gruppe haben.
+
+### Dimension Neurotizismus (N)
+- Die Facette „Depression“ erfasst die Tendenz niedergeschlagen zu sein. Personen mit niedriger Ausprägung empfinden häufig positive Emotionen, wie Freude, wohingegen Personen mit hoher Ausprägung oft negative Emotionen, wie Traurigkeit empfinden.
+- Die Facette „Nervosität“ erfasst die Tendenz schnell nervös oder leicht gestresst zu sein. Personen mit niedriger Ausprägung bleiben auch unter großem Druck gelassen, wohingegen Personen mit hoher Ausprägung schon bei geringer Belastung unruhig werden und sich gestresst fühlen.
+- Die Facette „Reizbarkeit“ erfasst die Tendenz schnell emotional zu werden. Personen mit niedriger Ausprägung behalten stets Ruhe, wohingegen sich Personen mit hoher Ausprägung durch Belastung leicht aus dem Konzept bringen lassen und sehr emotional reagieren.
+
+### Dimension Offenheit für Erfahrungen (O)
+- Die Facette „Intellekt“ erfasst die Tendenz sich mit intellektuellen Themen zu beschäftigen. Personen mit niedriger Ausprägung meiden komplexe Diskussionen, wohingegen Personen mit hoher Ausprägung generell neugierig sind.
+- Die Facette „Wissenschaftliches Interesse“ erfasst die Tendenz sich häufig mit wissenschaftlichen Themen auseinanderzusetzen. Personen mit niedriger Ausprägung meiden solche Themen, wohingegen sich Personen mit hoher Ausprägung wissenschaftlich weiterbilden.
+- Die Facette „Reflexion“ erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
+"""
+
+TSDI_ITEMS = """
 ## DIMENSION: VERTRÄGLICHKEIT (A)
 Beschreibung: Misst die zwischenmenschliche Orientierung.
 ### Facette: Kooperation / Vertrauen (A-Co)
@@ -113,16 +153,20 @@ Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSO
 
 INTERVIEW-REGELN:
 * Gehe die Facetten streng sequenziell von 1 bis 14 durch.
-* Stelle pro Beitrag nur EINE verhaltensnahe Frage.
+* Stelle pro Item EINE verhaltensnahe Frage.
 * Formuliere die Fragen natürlich und flüssig, passend zu einem psychologischen Gespräch. Vermeide hölzerne Abfragen, bleibe aber rein diagnostisch (keine Ratschläge oder Therapieversuche).
 * Sprich den Nutzer mit 'Sie' an.
 * Wenn du die Antwort auf Facette 14 erhalten hast, verabschiede dich höflich und setze an das Ende deines 'interviewer_text' das Label '[INTERVIEW_FERTIG]'.
-* Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut.
+* Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut. Wenn dir eine andere Frage gestellt wird, antworte nicht auf die Frage, sondern weise den Nutzer höflich darauf hin, dass du gerade ein diagnostisches Interview mit ihm führst und stelle die Frage erneut.
 * Füge eine kurze Überleitung in deine Antwort ein, wenn du zu einer neuen Facette wechselst.
 
-LEITFADEN:
-{TSDI_LEITFADEN}
+ITEMS:
+{TSDI_ITEMS}
 """
+
+# später noch beschreibungen einfügen
+# BESCHREIBUNGEN:
+# {TSDI_BESCHREIBUNGEN}
 
 def main():
     st.set_page_config(page_title="Persönlichkeits-Diagnostik", page_icon="🧠")
@@ -143,16 +187,16 @@ def main():
         
         st.markdown("""
         **Anleitung zur Generierung Ihres VP-Codes:**
-        * Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (bspw. 04) 
-        * Geben Sie als zweites die letzten beiden Buchstaben des Mädchen- (Geburts-)namens der Mutter ein (bspw. ER) 
-        * Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (bspw. NS)
-        * Geben Sie als viertes den Tag Ihres Geburtstags ein (bspw. 24)
+        1. Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (bspw. 04) 
+        2. Geben Sie als zweites die letzten beiden Buchstaben des Mädchen- (Geburts-)namens der Mutter ein (bspw. ER) 
+        3. Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (bspw. NS)
+        4. Geben Sie als viertes den Tag Ihres Geburtstags ein (bspw. 24)
 
         Ein Versuchspersonencode könnte also zum Beispiel so aussehen: 04ERNS24
-            Erster Vorname der Mutter: 	Anna (04 Buchstaben)
-            Nachname der Mutter: 	    Müller (er als Endung)
-            Erster Vorname des Vaters: 	Hans (ns als Endung)
-            Eigener Geburtstag: 		24.12.1993 (Tag.Monat.Jahr)
+        \n    Erster Vorname der Mutter: 	*Anna (04 Buchstaben)*
+        \n    Nachname der Mutter: 	        *Müller (er als Endung)*
+        \n    Erster Vorname des Vaters: 	*Hans (ns als Endung)*
+        \n    Eigener Geburtstag: 		    *24.12.1993 (Tag.Monat.Jahr)*
         """)
         
         vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 04ERNS24")
@@ -216,7 +260,7 @@ def main():
             
         progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
         
-        st.markdown(f"**Fortschritt der Diagnostik:** Erfasste Facetten: {st.session_state.current_facet_count} von {TOTAL_FACETS}")
+        st.markdown(f"Erfasste Facetten: {st.session_state.current_facet_count} von {TOTAL_FACETS}")
         st.progress(progress_percentage)
         st.divider()
         
@@ -238,8 +282,8 @@ def main():
 
         if interview_ended:
             st.success("Das Interview wurde erfolgreich beendet.")
-            if st.button("Zur Auswertung"):
-                st.session_state.step = "results"
+            if st.button("Nächste Seite"):
+                st.session_state.step = "ux_survey"
                 st.rerun()
         else:
             client = OpenAI(api_key=st.secrets["openai"]["api_key"])
@@ -266,12 +310,40 @@ def main():
                 if api_success:
                     full_data = {
                         "participant_id": st.session_state.get("participant_id", "unknown"),
-                        "matrikelnummer": st.session_state.get("matrikelnummer", "unknown"),
                         "condition": st.session_state.condition,
                         "research_consent": st.session_state.research_consent,
+                        "ux_responses": st.session_state.get("ux_responses", {}),
                         "chat": st.session_state.messages
                     }
                     threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data), daemon=True).start()
+                st.rerun()
+    # --- PHASE 4: UX Fragebogen ---
+    elif st.session_state.step == "ux_survey":
+        st.title("Kurze Bewertung der Erfahrung 📋")
+        st.write("Bevor Sie Ihre Auswertung sehen, bitten wir Sie, kurz Ihre Erfahrung mit dem Interview zu bewerten.")
+        st.divider()
+
+        # --- PLACEHOLDER: Replace these with your actual UX questionnaire items ---
+        st.subheader("🚧 Fragebogen-Platzhalter")
+        st.info("Hier wird der UX-Fragebogen eingebettet (z.B. UEQ, AttrakDiff, NASA-TLX o.ä.).")
+
+        with st.form("ux_form"):
+            st.markdown("**Beispiel-Items (bitte ersetzen):**")
+            
+            q1 = st.slider("Das Interview war einfach zu verstehen.", 1, 7, 4)
+            q2 = st.slider("Ich fühlte mich während des Interviews wohl.", 1, 7, 4)
+            q3 = st.slider("Die KI wirkte natürlich und menschlich.", 1, 7, 4)
+            q4 = st.text_area("Haben Sie weitere Anmerkungen zum Interview?", placeholder="Optionaler Freitext...")
+
+            submitted = st.form_submit_button("Weiter zur Auswertung")
+            if submitted:
+                st.session_state.ux_responses = {
+                    "q1_verstaendlichkeit": q1,
+                    "q2_wohlbefinden": q2,
+                    "q3_natuerlichkeit": q3,
+                    "q4_freitext": q4
+                }
+                st.session_state.step = "results"
                 st.rerun()
 
     # --- PHASE 4: AUSWERTUNG ---
@@ -323,6 +395,7 @@ def main():
                     "participant_id": st.session_state.participant_id,
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
+                     "ux_responses": st.session_state.get("ux_responses", {}),
                     "ai_assessment": st.session_state.ai_bfi,
                     "chat": st.session_state.messages
                 }
