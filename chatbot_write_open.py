@@ -30,39 +30,51 @@ def reset_app():
 
 # --- TSDI LEITFADEN ---
 TSDI_BESCHREIBUNGEN = """
-## Skalen auf Dimensions-Ebene
-
+## Skalen auf Dimensions-Ebene:
+Definitionen:
 Extraversion (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreudig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
 Neurotizismus (N) : Neurotizismus erfasst Unterschiede zwischen Personen hinsichtlich ihrer gefühlsmäßigen Robustheit einerseits und ihrer emotionalen Empfindlichkeit bzw. Ansprechbarkeit andererseits. Personen mit hoher Ausprägung in diesem Bereich sind empfindlicher und neigen unter Stress dazu, leichter aus dem Gleichgewicht zu kommen. Sie entwickeln eher unangepasste Formen der Problembewältigung, neigen zu unrealistischen Ideen und sind weniger in der Lage, ihre Bedürfnisse zu kontrollieren. Personen mit niedriger Ausprägung in diesem Bereich beschreiben sich als ausgeglichen, emotional stabil und robust und geraten nicht so leicht aus der Fassung. Charakteristisch für diese Personen ist, dass sie Gefühlszustände nicht so stark erleben.
-Gewissenhaftigkeit (C): Die Grundlage der Gewissenhaftigkeit bilden Unterschiede beim Planen,
-Organisieren und Ausführen von Aufgaben. Personen mit einer hohen Ausprägung beschreiben sich
-als eher zielstrebig, willensstark und entschlossen, während Personen mit einer niedrigen Ausprägung
-ihre Zielsetzungen mit geringerem Engagement verfolgen.
-Verträglichkeit (A): Mit dieser Dimension werden Einstellungen und gewohnheitsmäßige Verhaltensweisen
-in sozialen Beziehungen umschrieben. Personen mit hoher Ausprägung sind hilfsbereit,
-entgegenkommend, vertrauensbereit und bemüht anderen zu helfen. Sie begegnen anderen
-Menschen mit Wohlwollen, neigen zu Gutmütigkeit, sind bereit, in Auseinandersetzungen
-nachzugeben und können im Extremfall als unterwürfig oder abhängig erscheinen. Personen mit
-niedriger Ausprägung beschreiben sich als eher egozentrisch, misstrauisch gegenüber den
-Intentionen anderer, grob, sowie wenig geneigt zu kooperativem Verhalten und mit einer Präferenz für
-wettbewerbsorientiertes Verhalten.
-Offenheit (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen,
-Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie
-negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind
-unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich
-lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und
-Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen
-ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im
-Gegensatz zu Personen mit hoher Ausprägung.
+Gewissenhaftigkeit (C): Die Grundlage der Gewissenhaftigkeit bilden Unterschiede beim Planen, Organisieren und Ausführen von Aufgaben. Personen mit einer hohen Ausprägung beschreiben sich als eher zielstrebig, willensstark und entschlossen, während Personen mit einer niedrigen Ausprägung ihre Zielsetzungen mit geringerem Engagement verfolgen.
+Verträglichkeit (A): Mit dieser Dimension werden Einstellungen und gewohnheitsmäßige Verhaltensweisen in sozialen Beziehungen umschrieben. Personen mit hoher Ausprägung sind hilfsbereit, entgegenkommend, vertrauensbereit und bemüht anderen zu helfen. Sie begegnen anderen Menschen mit Wohlwollen, neigen zu Gutmütigkeit, sind bereit, in Auseinandersetzungen nachzugeben und können im Extremfall als unterwürfig oder abhängig erscheinen. Personen mit niedriger Ausprägung beschreiben sich als eher egozentrisch, misstrauisch gegenüber den Intentionen anderer, grob, sowie wenig geneigt zu kooperativem Verhalten und mit einer Präferenz für wettbewerbsorientiertes Verhalten.
+Offenheit (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen, Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im Gegensatz zu Personen mit hoher Ausprägung.
 
-## Skalen auf Facetten-Ebene
-
-
+## Skalen auf Facetten-Ebene:
+Definitionen:
+### Dimension Extraversion (E)
+- Die Facette „Soziale Aktivität“ erfasst die Tendenz unter Leute zu gehen. Personen mit niedriger Ausprägung bleiben lieber für sich und beschäftigen sich allein, wohingegen Personen mit hoher Ausprägung häufig auf Partys anzutreffen sind.
+- Die Facette „Selbstbewusstsein“ erfasst die Tendenz selbstsicher zu sein. Personen mit niedriger Ausprägung sind schüchtern und meiden es Aufmerksamkeit zu bekommen, wohingegen Personen mit hoher Ausprägung auch gerne mal im Zentrum der Aufmerksamkeit stehen.
+- Die Facette „Durchsetzungsfähigkeit“ erfasst die Tendenz in Gruppen die Führung zu übernehmen. Personen mit niedriger Ausprägung sind in Gruppen eher zurückhaltend, wohingegen Personen mit hoher Ausprägung großen Einfluss innerhalb von Gruppe haben.
+### Dimension Neurotizismus (N)
+- Die Facette „Depression“ erfasst die Tendenz niedergeschlagen zu sein. Personen mit niedriger Ausprägung empfinden häufig positive Emotionen, wie Freude, wohingegen Personen mit hoher Ausprägung oft negative Emotionen, wie Traurigkeit empfinden.
+- Die Facette „Nervosität“ erfasst die Tendenz schnell nervös oder leicht gestresst zu sein. Personen mit niedriger Ausprägung bleiben auch unter großem Druck gelassen, wohingegen Personen mit hoher Ausprägung schon bei geringer Belastung unruhig werden und sich gestresst fühlen.
+- Die Facette „Reizbarkeit“ erfasst die Tendenz schnell emotional zu werden. Personen mit niedriger Ausprägung behalten stets Ruhe, wohingegen sich Personen mit hoher Ausprägung durch Belastung leicht aus dem Konzept bringen lassen und sehr emotional reagieren.
+### Dimension Gewissenhaftigkeit (C)
+- Die Facette „Fleiß“ erfasst die Tendenz hart und fokussiert zu arbeiten. Personen mit niedriger Ausprägung neigen dazu faul zu sein und Aufgaben nicht zu Ende zu bringen, wohingegen Personen mit hoher Ausprägung sich immer bemühen Arbeiten rechtzeitig und vollständig zu erledigen.
+- Die Facette „Organisation“ erfasst die Tendenz ordentlich beim Erledigen von Aufgaben zu sein. Personen mit niedriger Ausprägung sind oft verspätet und halten ihre Umgebung nicht ordentlich, wohingegen Personen mit hoher Ausprägung viel Zeit für Planung und Struktur aufwenden.
+### Dimension Verträglichkeit (A)
+- Die Facette „Freundlichkeit“ erfasst die Tendenz sich anderen gegenüber fröhlich und freundlich zu verhalten. Personen mit niedriger Ausprägung kommen mit anderen Menschen eher schlecht zurecht, wohingegen Personen mit hoher Ausprägung als angenehme Personen wahrgenommen werden.
+- Die Facette „Hilfsbereitschaft“ erfasst die Tendenz anderen bei Problemen zu helfen. Personen mit niedriger Ausprägung neigen zu Egoismus, wohingegen Personen mit hoher Ausprägung großzügig und uneigennützig sind.
+- Die Facette „Rücksichtnahme“ erfasst die Tendenz höflich und rücksichtsvoll zu sein. Personen mit niedriger Ausprägung achten nicht auf die Gefühle anderer, wohingegen Personen mit hoher Ausprägung stets versuchen nett zu anderen zu sein.
+### Dimension Offenheit (O)
+- Die Facette „Intellekt“ erfasst die Tendenz sich mit intellektuellen Themen zu beschäftigen. Personen mit niedriger Ausprägung meiden komplexe Diskussionen, wohingegen Personen mit hoher Ausprägung generell neugierig sind.
+- Die Facette „Wissenschaftliches Interesse“ erfasst die Tendenz sich häufig mit wissenschaftlichen Themen auseinanderzusetzen. Personen mit niedriger Ausprägung meiden solche Themen, wohingegen sich Personen mit hoher Ausprägung wissenschaftlich weiterbilden.
+- Die Facette „Reflexion“ erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
 """
 
+# die items müssen geändert werden
 
+# TSDI_ITEMS = """
+# Skalen auf Facettenebene
+# Dimension Extraversion
+# Facette "Soziale Aktivität":
+# Facette „Selbstbewusstsein“:
+# Facette „Durchsetzungsfähigkeit“:
+# ...
 
-
+# ist das vielleicht relevant:
+# Die zugehörigen Items für den TSDI-42i und den HEXACO-100 auf Facettenebene lauten wie folgt: 
+# Der TSDI-42i umfasst xxx Items pro Facette.
+# Die TSDI-42i-Items lauten:
 
 
 TSDI_ITEMS = """
@@ -168,16 +180,22 @@ NEUE STRUKTUR- & DIAGNOSTIK-REGELN
 # DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
 
 
-BESCHREIBUNGEN: {TSDI_BESCHREIBUNGEN}
+
 ITEMS: {TSDI_ITEMS}
 """
+
+# ergänzen, wenn abgeklärt:
+# BESCHREIBUNGEN: {TSDI_BESCHREIBUNGEN}
+
+# # DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory: diesbezüglich beschreibungstext sinnvoll; und wieso ist dieser punkt im prompt so wichtig? herausfinden
+
 
 def main():
     st.set_page_config(page_title="Persönlichkeits-Diagnostik (Unstrukturiert)", page_icon="🧠")
     
     if "step" not in st.session_state:
         params = st.query_params
-        st.session_state.default_id = params.get("caseNumber", f"user_{uuid.uuid4().hex[:8]}")
+        st.session_state.default_id = params.get("caseNumber", f"user_{uuid.uuid4().hex[:8]}") # muss das hier stehen, oder kann das weg, also kann casenumber leer bleiben: st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
         st.session_state.condition = "open-write"
