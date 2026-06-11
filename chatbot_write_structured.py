@@ -215,7 +215,7 @@ CONDITION_CONFIGS = {
         "system_prompt": SYSTEM_PROMPT_OPEN,
         "init_message": json.dumps({
             "aktuelle_facette": 0,
-            "interviewer_text": "Hallo! Erzählen Sie mir einfach etwas über sich."
+            "interviewer_text": "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?"
         })
     }
 }
@@ -228,7 +228,7 @@ def main():
         st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.condition = random.choice(["structured-write", "structured-write"])
+        st.session_state.condition = random.choice(["open-write", "open-write"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
 
@@ -316,15 +316,11 @@ def main():
         st.markdown("""
         <style>
         .chat-container {
-            height: 40vh;
+            height: 30vh;
             overflow-y: auto;
             display: flex;
-            flex-direction: column;
-            padding: 1rem;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background-color: #fafafa;
-            margin-bottom: 1rem;
+            flex-direction: column-reverse;
+            ...
         }
         .chat-bubble-user {
             align-self: flex-end;
@@ -355,7 +351,7 @@ def main():
         chat_html = '<div class="chat-container" id="chat-box">'
         interview_ended = False
 
-        for msg in st.session_state.messages:
+        for msg in reversed(list(st.session_state.messages)):
             if msg["role"] == "system":
                 continue
             if msg["role"] == "assistant":
