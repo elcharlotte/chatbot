@@ -4,8 +4,9 @@ import json
 import requests
 import uuid
 import threading
+import random
 
-# --- KONFIGURATION & HELPER ---
+# --- KONFIGURATION & HELPER ------------------------------------------------------------------
 def save_to_nextcloud(participant_id, data_dict):
     try:
         base_url = "https://cloudstore.uni-ulm.de/remote.php/dav/files/ffg79"
@@ -27,146 +28,197 @@ def reset_app():
         del st.session_state[key]
     st.rerun()
 
-# --- TSDI LEITFADEN ---
+# --- TSDI LEITFADEN --------------------------------------------------------------------------
 TSDI_BESCHREIBUNGEN = """
 ## DIMENSIONEN:
 
-VERTRÄGLICHKEIT (A): Mit dieser Dimension werden Einstellungen und gewohnheitsmäßige Verhaltensweisen in sozialen Beziehungen umschrieben. Personen mit hoher Ausprägung sind hilfsbereit, entgegenkommend, vertrauensbereit und bemüht anderen zu helfen. Sie begegnen anderen Menschen mit Wohlwollen, neigen zu Gutmütigkeit, sind bereit, in Auseinandersetzungen nachzugeben und können im Extremfall als unterwürfig oder abhängig erscheinen. Personen mit niedriger Ausprägung beschreiben sich als eher egozentrisch, misstrauisch gegenüber den Intentionen anderer, grob, sowie wenig geneigt zu kooperativem Verhalten und mit einer Präferenz für wettbewerbsorientiertes Verhalten.
-
-GEWISSENHAFTIGKEIT (C): Die Grundlage der Gewissenhaftigkeit bilden Unterschiede beim Planen, Organisieren und Ausführen von Aufgaben. Personen mit einer hohen Ausprägung beschreiben sich als eher zielstrebig, willensstark und entschlossen, während Personen mit einer niedrigen Ausprägung ihre Zielsetzungen mit geringerem Engagement verfolgen.
-
-EXTRAVERSION (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreudig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
-
-NEUROTIZISMUS (N): Neurotizismus erfasst Unterschiede zwischen Personen hinsichtlich ihrer gefühlsmäßigen Robustheit einerseits und ihrer emotionalen Empfindlichkeit bzw. Ansprechbarkeit andererseits. Personen mit hoher Ausprägung in diesem Bereich sind empfindlicher und neigen unter Stress dazu, leichter aus dem Gleichgewicht zu kommen. Sie entwickeln eher unangepasste Formen der Problembewältigung, neigen zu unrealistischen Ideen und sind weniger in der Lage, ihre Bedürfnisse zu kontrollieren. Personen mit niedriger Ausprägung in diesem Bereich beschreiben sich als ausgeglichen, emotional stabil und robust und geraten nicht so leicht aus der Fassung. Charakteristisch für diese Personen ist, dass sie Gefühlszustände nicht so stark erleben.
-
-OFFENHEIT FÜR ERFAHRUNGEN (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen, Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im Gegensatz zu Personen mit hoher Ausprägung.
+- VERTRÄGLICHKEIT (A): Mit dieser Dimension werden Einstellungen und gewohnheitsmäßige Verhaltensweisen in sozialen Beziehungen umschrieben. Personen mit hoher Ausprägung sind hilfsbereit, entgegenkommend, vertrauensbereit und bemüht anderen zu helfen. Sie begegnen anderen Menschen mit Wohlwollen, neigen zu Gutmütigkeit, sind bereit, in Auseinandersetzungen nachzugeben und können im Extremfall als unterwürfig oder abhängig erscheinen. Personen mit niedriger Ausprägung beschreiben sich als eher egozentrisch, misstrauisch gegenüber den Intentionen anderer, grob, sowie wenig geneigt zu kooperativem Verhalten und mit einer Präferenz für wettbewerbsorientiertes Verhalten.
+- GEWISSENHAFTIGKEIT (C): Die Grundlage der Gewissenhaftigkeit bilden Unterschiede beim Planen, Organisieren und Ausführen von Aufgaben. Personen mit einer hohen Ausprägung beschreiben sich als eher zielstrebig, willensstark und entschlossen, während Personen mit einer niedrigen Ausprägung ihre Zielsetzungen mit geringerem Engagement verfolgen.
+- EXTRAVERSION (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreudig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
+- NEUROTIZISMUS (N): Neurotizismus erfasst Unterschiede zwischen Personen hinsichtlich ihrer gefühlsmäßigen Robustheit einerseits und ihrer emotionalen Empfindlichkeit bzw. Ansprechbarkeit andererseits. Personen mit hoher Ausprägung in diesem Bereich sind empfindlicher und neigen unter Stress dazu, leichter aus dem Gleichgewicht zu kommen. Sie entwickeln eher unangepasste Formen der Problembewältigung, neigen zu unrealistischen Ideen und sind weniger in der Lage, ihre Bedürfnisse zu kontrollieren. Personen mit niedriger Ausprägung in diesem Bereich beschreiben sich als ausgeglichen, emotional stabil und robust und geraten nicht so leicht aus der Fassung. Charakteristisch für diese Personen ist, dass sie Gefühlszustände nicht so stark erleben.
+- OFFENHEIT FÜR ERFAHRUNGEN (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen, Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im Gegensatz zu Personen mit hoher Ausprägung.
 
 ## FACETTEN:
 
 ### Dimension Verträglichkeit (A)
-- Die Facette „Freundlichkeit“ erfasst die Tendenz sich anderen gegenüber fröhlich und freundlich zu verhalten. Personen mit niedriger Ausprägung kommen mit anderen Menschen eher schlecht zurecht, wohingegen Personen mit hoher Ausprägung als angenehme Personen wahrgenommen werden.
-- Die Facette „Hilfsbereitschaft“ erfasst die Tendenz anderen bei Problemen zu helfen. Personen mit niedriger Ausprägung neigen zu Egoismus, wohingegen Personen mit hoher Ausprägung großzügig und uneigennützig sind.
-- Die Facette „Rücksichtnahme“ erfasst die Tendenz höflich und rücksichtsvoll zu sein. Personen mit niedriger Ausprägung achten nicht auf die Gefühle anderer, wohingegen Personen mit hoher Ausprägung stets versuchen nett zu anderen zu sein.
+- Die Facette „Freundlichkeit (A-Fr)“ erfasst die Tendenz sich anderen gegenüber fröhlich und freundlich zu verhalten. Personen mit niedriger Ausprägung kommen mit anderen Menschen eher schlecht zurecht, wohingegen Personen mit hoher Ausprägung als angenehme Personen wahrgenommen werden.
+- Die Facette „Rücksichtnahme (A-Co)“ erfasst die Tendenz höflich und rücksichtsvoll zu sein. Personen mit niedriger Ausprägung achten nicht auf die Gefühle anderer, wohingegen Personen mit hoher Ausprägung stets versuchen nett zu anderen zu sein.
+- Die Facette „Hilfsbereitschaft (A-H)“ erfasst die Tendenz anderen bei Problemen zu helfen. Personen mit niedriger Ausprägung neigen zu Egoismus, wohingegen Personen mit hoher Ausprägung großzügig und uneigennützig sind.
 
 ### Dimension Gewissenhaftigkeit (C)
-- Die Facette „Fleiß“ erfasst die Tendenz hart und fokussiert zu arbeiten. Personen mit niedriger Ausprägung neigen dazu faul zu sein und Aufgaben nicht zu Ende zu bringen, wohingegen Personen mit hoher Ausprägung sich immer bemühen Arbeiten rechtzeitig und vollständig zu erledigen.
-- Die Facette „Organisation“ erfasst die Tendenz ordentlich beim Erledigen von Aufgaben zu sein. Personen mit niedriger Ausprägung sind oft verspätet und halten ihre Umgebung nicht ordentlich, wohingegen Personen mit hoher Ausprägung viel Zeit für Planung und Struktur aufwenden.
+- Die Facette „Fleiß (C-Hw)“ erfasst die Tendenz hart und fokussiert zu arbeiten. Personen mit niedriger Ausprägung neigen dazu faul zu sein und Aufgaben nicht zu Ende zu bringen, wohingegen Personen mit hoher Ausprägung sich immer bemühen Arbeiten rechtzeitig und vollständig zu erledigen.
+- Die Facette „Organisation (C-O)“ erfasst die Tendenz ordentlich beim Erledigen von Aufgaben zu sein. Personen mit niedriger Ausprägung sind oft verspätet und halten ihre Umgebung nicht ordentlich, wohingegen Personen mit hoher Ausprägung viel Zeit für Planung und Struktur aufwenden.
 
 ### Dimension Extraversion (E)
-- Die Facette „Soziale Aktivität“ erfasst die Tendenz unter Leute zu gehen. Personen mit niedriger Ausprägung bleiben lieber für sich und beschäftigen sich allein, wohingegen Personen mit hoher Ausprägung häufig auf Partys anzutreffen sind.
-- Die Facette „Selbstbewusstsein“ erfasst die Tendenz selbstsicher zu sein. Personen mit niedriger Ausprägung sind schüchtern und meiden es Aufmerksamkeit zu bekommen, wohingegen Personen mit hoher Ausprägung auch gerne mal im Zentrum der Aufmerksamkeit stehen.
-- Die Facette „Durchsetzungsfähigkeit“ erfasst die Tendenz in Gruppen die Führung zu übernehmen. Personen mit niedriger Ausprägung sind in Gruppen eher zurückhaltend, wohingegen Personen mit hoher Ausprägung großen Einfluss innerhalb von Gruppe haben.
+- Die Facette „Durchsetzungsfähigkeit (E-A)“ erfasst die Tendenz in Gruppen die Führung zu übernehmen. Personen mit niedriger Ausprägung sind in Gruppen eher zurückhaltend, wohingegen Personen mit hoher Ausprägung großen Einfluss innerhalb von Gruppe haben.
+- Die Facette „Selbstbewusstsein (E-SB)“ erfasst die Tendenz selbstsicher zu sein. Personen mit niedriger Ausprägung sind schüchtern und meiden es Aufmerksamkeit zu bekommen, wohingegen Personen mit hoher Ausprägung auch gerne mal im Zentrum der Aufmerksamkeit stehen.
+- Die Facette „Soziale Aktivität (E-So)“ erfasst die Tendenz unter Leute zu gehen. Personen mit niedriger Ausprägung bleiben lieber für sich und beschäftigen sich allein, wohingegen Personen mit hoher Ausprägung häufig auf Partys anzutreffen sind.
 
 ### Dimension Neurotizismus (N)
-- Die Facette „Depression“ erfasst die Tendenz niedergeschlagen zu sein. Personen mit niedriger Ausprägung empfinden häufig positive Emotionen, wie Freude, wohingegen Personen mit hoher Ausprägung oft negative Emotionen, wie Traurigkeit empfinden.
-- Die Facette „Nervosität“ erfasst die Tendenz schnell nervös oder leicht gestresst zu sein. Personen mit niedriger Ausprägung bleiben auch unter großem Druck gelassen, wohingegen Personen mit hoher Ausprägung schon bei geringer Belastung unruhig werden und sich gestresst fühlen.
-- Die Facette „Reizbarkeit“ erfasst die Tendenz schnell emotional zu werden. Personen mit niedriger Ausprägung behalten stets Ruhe, wohingegen sich Personen mit hoher Ausprägung durch Belastung leicht aus dem Konzept bringen lassen und sehr emotional reagieren.
+- Die Facette „Depression (N-D)“ erfasst die Tendenz niedergeschlagen zu sein. Personen mit niedriger Ausprägung empfinden häufig positive Emotionen, wie Freude, wohingegen Personen mit hoher Ausprägung oft negative Emotionen, wie Traurigkeit empfinden.
+- Die Facette „Reizbarkeit (N-Ir)“ erfasst die Tendenz schnell emotional zu werden. Personen mit niedriger Ausprägung behalten stets Ruhe, wohingegen sich Personen mit hoher Ausprägung durch Belastung leicht aus dem Konzept bringen lassen und sehr emotional reagieren.
+- Die Facette „Nervosität (N-St)“ erfasst die Tendenz schnell nervös oder leicht gestresst zu sein. Personen mit niedriger Ausprägung bleiben auch unter großem Druck gelassen, wohingegen Personen mit hoher Ausprägung schon bei geringer Belastung unruhig werden und sich gestresst fühlen.
 
 ### Dimension Offenheit für Erfahrungen (O)
-- Die Facette „Intellekt“ erfasst die Tendenz sich mit intellektuellen Themen zu beschäftigen. Personen mit niedriger Ausprägung meiden komplexe Diskussionen, wohingegen Personen mit hoher Ausprägung generell neugierig sind.
-- Die Facette „Wissenschaftliches Interesse“ erfasst die Tendenz sich häufig mit wissenschaftlichen Themen auseinanderzusetzen. Personen mit niedriger Ausprägung meiden solche Themen, wohingegen sich Personen mit hoher Ausprägung wissenschaftlich weiterbilden.
-- Die Facette „Reflexion“ erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
+- Die Facette „Intellekt (O-In)“ erfasst die Tendenz sich mit intellektuellen Themen zu beschäftigen. Personen mit niedriger Ausprägung meiden komplexe Diskussionen, wohingegen Personen mit hoher Ausprägung generell neugierig sind.
+- Die Facette „Reflexion (O-R)“ erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
+- Die Facette „Wissenschaftliches Interesse (O-Sc)“ erfasst die Tendenz sich häufig mit wissenschaftlichen Themen auseinanderzusetzen. Personen mit niedriger Ausprägung meiden solche Themen, wohingegen sich Personen mit hoher Ausprägung wissenschaftlich weiterbilden.
 """
 
 TSDI_ITEMS = """
-## DIMENSION: VERTRÄGLICHKEIT (A)
-Beschreibung: Misst die zwischenmenschliche Orientierung.
-### Facette: Kooperation / Vertrauen (A-Co)
-* Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
-* Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
-* Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
-### Facette: Freundlichkeit / Mitgefühl (A-Fr)
-* Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
-* Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
-* Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
-### Facette: Hilfsbereitschaft (A-H)
-* Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
-* Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
-* Item tsdi42_39_A_H213: Ich bin immer großzügig, wenn es darum geht, anderen zu helfen.
+<ITEMS>
+## Dimension Verträglichkeit (A)
+### Facette "Freundlichkeit" (A-Fr):
+- Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
+- Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
+- Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
+### Facette "Rücksichtnahme" (A-Co):
+- Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
+- Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
+- Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
+### Facette "Hilfsbereitschaft" (A-H):
+- Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
+- Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
+- Item tsdi42_39_A_H213: Ich bin immer großzügig, wenn es darum geht, anderen zu helfen.
 
-## DIMENSION: GEWISSENHAFTIGKEIT (C)
-Beschreibung: Grad an Selbstkontrolle, Genauigkeit, Zielstrebigkeit und Organisation.
-### Facette: Pflichtbewusstsein / Fleiß (C-Hw)
-* Item tsdi42_04_C_Hw126: Wenn ich mich zu etwas verpflichte, führe ich es immer zu Ende aus.
-* Item tsdi42_25_C_Hw137: Ich würde mich selbst als sehr ausdauernden Arbeiter einschätzen.
-* Item tsdi42_37_C_Hw167: Wenn ich etwas anfange, arbeite ich, bis es zu meiner Zufriedenheit beendet ist.
-### Facette: Ordnung / Besonnenheit (C-O)
-* Item tsdi42_14_C_O0153: Ich halte meine persönlichen Sachen gerne ordentlich und organisiert.
-* Item tsdi42_41_C_O0157: Ich versuche einen Plan für Aufgaben zu entwickeln und halte mich daran.
-* Item tsdi42_32_C_O0162: Ich versuche vollständig vorbereitet zu sein, bevor ich eine Aufgabe anpacke.
+## Dimension Gewissenhaftigkeit (C)
+### Facette "Fleiß" (C-Hw):
+- Item tsdi42_04_C_Hw126: Wenn ich mich zu etwas verpflichte, führe ich es immer zu Ende aus.
+- Item tsdi42_25_C_Hw137: Ich würde mich selbst als sehr ausdauernden Arbeiter einschätzen.
+- Item tsdi42_37_C_Hw167: Wenn ich etwas anfange, arbeite ich, bis es zu meiner Zufriedenheit beendet ist.
+### Facette "Organisation" (C-O):
+- Item tsdi42_14_C_O0153: Ich halte meine persönlichen Sachen gerne ordentlich und organisiert.
+- Item tsdi42_41_C_O0157: Ich versuche einen Plan für Aufgaben zu entwickeln und halte mich daran.
+- Item tsdi42_32_C_O0162: Ich versuche vollständig vorbereitet zu sein, bevor ich eine Aufgabe anpacke.
 
-## DIMENSION: EXTRAVERSION (E)
-Beschreibung: Aktivität und zwischenmenschliches Verhalten.
-### Facette: Aktivität / Durchsetzungsvermögen (E-A)
-* Item tsdi42_35_E_A002: Ich spreche lauter, wenn ich meine, einen Beitrag liefern zu können.
-* Item tsdi42_28_E_A004: Ich neige dazu, in Gruppen die Führung zu übernehmen.
-* Item tsdi42_03_E_A009: Ich habe eine menge Einfluss auf andere Leute.
-### Facette: Schüchternheit (E-SB)
-* Item tsdi42_19_E_SB010: Ich bin eine sehr schüchterne Person.
-* Item tsdi42_08_E_SB014: Meine Freunde halten mich für schüchtern.
-* Item tsdi42_18_E_SB026: Ich fühle mich nicht wohl, wenn ich im Zentrum der Aufmerksamkeit stehe.
-### Facette: Geselligkeit / Herzlichkeit (E-So)
-* Item tsdi42_33_E_So007: Ich bin gerne wo viel los ist.
-* Item tsdi42_26_E_So012: Ich gebe mir große Mühe Leute kennen zu lernen.
-* Item tsdi42_16_E_So028: Ich mag Partys auf denen viele Leute sind.
+## Dimension Extraversion (E)
+### Facette "Durchsetzungsfähigkeit" (E-A):
+- Item tsdi42_35_E_A002: Ich spreche lauter, wenn ich meine, einen Beitrag liefern zu können.
+- Item tsdi42_28_E_A004: Ich neige dazu, in Gruppen die Führung zu übernehmen.
+- Item tsdi42_03_E_A009: Ich habe eine menge Einfluss auf andere Leute.
+### Facette "Selbstbewusstsein" (E-SB):
+- Item tsdi42_19_E_SB010: Ich bin eine sehr schüchterne Person.
+- Item tsdi42_08_E_SB014: Meine Freunde halten mich für schüchtern.
+- Item tsdi42_18_E_SB026: Ich fühle mich nicht wohl, wenn ich im Zentrum der Aufmerksamkeit stehe.
+### Facette "Soziale Aktivität" (E-So):
+- Item tsdi42_33_E_So007: Ich bin gerne wo viel los ist.
+- Item tsdi42_26_E_So012: Ich gebe mir große Mühe Leute kennen zu lernen.
+- Item tsdi42_16_E_So028: Ich mag Partys auf denen viele Leute sind.
 
-## DIMENSION: NEUROTIZISMUS (N)
-Beschreibung: Emotionale Labilität vs. Stabilität.
-### Facette: Depressivität / Dysthymie (N-D)
-* Item tsdi42_07_N_D039: Es gibt Zeiten in denen ich mich selbst bedaure.
-* Item tsdi42_15_N_D054: Manchmal bin ich entmutigt und möchte am liebsten aufgeben.
-* Item tsdi42_30_N_D055: Ich fürchte oft, dass ich meine Ziele nicht erreichen könnte.
-### Facette: Reizbarkeit / Irritierbarkeit (N-Ir)
-* Item tsdi42_09_N_Ir034: Manchmal rege ich mich so auf, dass es mir auf den Magen schlägt.
-* Item tsdi42_05_N_Ir058: Wenn ich aufgebracht bin, kann ich nicht mehr klar denken.
-* Item tsdi42_06_N_Ir070: Ich kann Kritik nicht sehr gut akzeptieren.
-### Facette: Stressanfälligkeit / Ängstlichkeit (N-St)
-* Item tsdi42_29_N_St037: Ich fühle mich oft müde und erschöpft.
-* Item tsdi42_38_N_St040: Wenn ich unter großem Stress stehe, bin ich oft kurz davor zusammenzubrechen.
-* Item tsdi42_11_N_St043: Ich bin oft zittrig und angespannt.
+## Dimension Neurotizismus (N)
+### Facette "Depression" (N-D):
+- Item tsdi42_07_N_D039: Es gibt Zeiten in denen ich mich selbst bedaure.
+- Item tsdi42_15_N_D054: Manchmal bin ich entmutigt und möchte am liebsten aufgeben.
+- Item tsdi42_30_N_D055: Ich fürchte oft, dass ich meine Ziele nicht erreichen könnte.
+### Facette "Reizbarkeit" (N-Ir):
+- Item tsdi42_09_N_Ir034: Manchmal rege ich mich so auf, dass es mir auf den Magen schlägt.
+- Item tsdi42_05_N_Ir058: Wenn ich aufgebracht bin, kann ich nicht mehr klar denken.
+- Item tsdi42_06_N_Ir070: Ich kann Kritik nicht sehr gut akzeptieren.
+### Facette "Nervosität" (N-St):
+- Item tsdi42_29_N_St037: Ich fühle mich oft müde und erschöpft.
+- Item tsdi42_38_N_St040: Wenn ich unter großem Stress stehe, bin ich oft kurz davor zusammenzubrechen.
+- Item tsdi42_11_N_St043: Ich bin oft zittrig und angespannt.
 
-## DIMENSION: OFFENHEIT FÜR ERFAHRUNGEN (O)
-Beschreibung: Intellektuelle Neugier, Vorliebe für Abwechslung und Phantasie.
-### Facette: Intellekt / Ideen (O-In)
-* Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
-* Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
-* Item tsdi47_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
-### Facette: Reflexion / Phantasie (O-R)
-* Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
-* Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
-* Item tsdi42_34_O_R120: Ich lese gerne Gedichte.
-### Facette: wissenschaftliches Interesse (O-Sc)
-* Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
-* Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
-* Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
+## Dimension Offenheit (O)
+### Facette "Intellekt" (O-In):
+- Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
+- Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
+- Item tsdi42_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
+### Facette "Reflexion" (O-R):
+- Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
+- Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
+- Item tsdi42_34_O_R120: Ich lese gerne Gedichte.
+### Facette "Wissenschaftliches Interesse" (O-Sc):
+- Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
+- Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
+- Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
+</ITEMS>
 """
 
 TOTAL_FACETS = 14 
 
-# Das Wort 'JSON' MUSS im Prompt stehen, damit der response_format Modus funktioniert.
-SYSTEM_PROMPT = f"""Du bist ein psychologischer Interviewerin. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 14 Facetten des TSDI systematisch zu erfassen.
-
-DEINE ANTWORT-STRUKTUR:
-Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
-1. "aktuelle_facette": Eine Zahl von 0 bis 14. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 0. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 1, u.s.w.
-2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
+#--- System Prompt Structured ------------------------------------------------------------------------
+SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein psychologischer Interviewerin. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 14 Facetten des TSDI systematisch zu erfassen.
 
 INTERVIEW-REGELN:
 * Gehe die Facetten streng sequenziell von 1 bis 14 durch.
-* Stelle pro Item EINE verhaltensnahe Frage.
+* Stelle pro Item EINE verhaltensnahe Frage. Die Items findest du zwischen den Tags <ITEMS> und </ITEMS>
 * Formuliere die Fragen natürlich und flüssig, passend zu einem psychologischen Gespräch. Vermeide hölzerne Abfragen, bleibe aber rein diagnostisch (keine Ratschläge oder Therapieversuche).
 * Sprich den Nutzer mit 'Sie' an.
 * Wenn du die Antwort auf Facette 14 erhalten hast, verabschiede dich höflich und setze an das Ende deines 'interviewer_text' das Label '[INTERVIEW_FERTIG]'.
 * Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut. Wenn dir eine andere Frage gestellt wird, antworte nicht auf die Frage, sondern weise den Nutzer höflich darauf hin, dass du gerade ein diagnostisches Interview mit ihm führst und stelle die Frage erneut.
 * Füge eine kurze Überleitung in deine Antwort ein, wenn du zu einer neuen Facette wechselst.
 
-ITEMS:
+LEITFADEN:
+{TSDI_BESCHREIBUNGEN}
+
 {TSDI_ITEMS}
+
+DEINE ANTWORT-STRUKTUR:
+Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
+1. "aktuelle_facette": Eine Zahl von 0 bis 14. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 0. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 1, u.s.w.
+2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
 """
 
-# später noch beschreibungen einfügen
-# BESCHREIBUNGEN:
-# {TSDI_BESCHREIBUNGEN}
+#--- System Prompt Open -----------------------------------------------------------------------------
+SYSTEM_PROMPT_OPEN = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des unten stehenden 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
+
+TASK OVERVIEW:
+Erforsche die Dimensionen im Gesprächsverlauf. Du musst im Laufe des Gesprächs jede Facette so weit explorieren, dass du eine verlässliche Einschätzung auf den TSDI-Items dieser Facette treffen könntest. Das Gespräch muss sich natürlich, reaktiv und logisch aufgebaut anfühlen.
+
+INTERVIEW GUIDELINES & CONSTRAINTS:
+1. Einstieg: Beginne das Interview mit einer sehr offenen Einladung (z. B. 'Erzählen Sie mir ein bisschen von sich – Wie würden Sie sich selbst als Person beschreiben?').
+2. Reaktive Gesprächsführung: Beziehe dich kurz auf das, was der Nutzer sagt, aber halte den Bezug extrem komprimiert (direkt die Antwort aufgreifen und die nächste Frage einleiten).
+3. Absolutes Verbot von Testfragen: Du darfst die psychometrischen Items nicht wörtlich vorlesen oder direkt als standardisierte Frage stellen.
+4. Indirekte Exploration (Nudging): Nutze offene W-Fragen, um Facetten subtil zu explorieren (z. B. statt das Schüchternheits-Item abzufragen, frage: 'Wie verhalten Sie sich normalerweise, wenn Sie in einer großen Gruppe im Mittelpunkt stehen?').
+
+NEUE STRUKTUR- & DIAGNOSTIK-REGELN
+5. THEMATISCHE KONSISTENZ (DIMENSIONS-BLÖCKE): Springe nicht wild zwischen den großen Dimensionen (A, C, E, N, O) hin und her. Wenn du eine Dimension (z. B. GEWISSENHAFTIGKEIT) beginnst, erkunde nacheinander alle zugehörigen Facetten (Pflichtbewusstsein, dann Ordnung), bevor du zur nächsten Hauptdimension übergehst. Das sorgt für einen natürlichen roten Faden.
+6. DIAGNOSTISCHES ABBRUCHKRITERIUM (QUALITÄT VOR QUANTITÄT): Prüfe nach jeder Antwort des Nutzers kritisch: *Könnte ich anhand dieser Aussage die TSDI-Items dieser Facette bereits einschätzen?*
+   - Wenn NEIN (z. B. bei einsilbigen Antworten wie 'ja' oder 'weiß ich nicht'): Frage gezielt weiter nach (z. B. über ein konkretes Alltagsbeispiel).
+   - Wenn JA (der Datenpunkt ist gesättigt): Höre sofort auf, in dieser Facette weiterzubohren, und leite elegant zur nächsten Facette oder zur nächsten Dimension über.
+7. REINE DIAGNOSTIK – KEINE LÖSUNGEN/STRATEGIEN: Frage NIEMALS nach Lösungen, Hilfsmitteln, Bewältigungsstrategien oder Eisbrechern. Dich interessiert NUR der Ist-Zustand des Verhaltens.
+8. ABSOLUTES FLOSKEL-VERBOT: Nutze NIEMALS Phrasen wie 'Das verstehe ich', 'Das macht Sinn', 'Das klingt interessant', 'Spannend', 'Kein Problem' oder 'Ich möchte lediglich...'.
+9. UMGANG MIT RÜCKFRAGEN / WIDERSTAND: Wenn der Nutzer Fragen stellt oder den Sinn hinterfragt, antworte extrem kurz und sachlich (z. B. 'Es hilft mir, Ihr Verhalten besser einzuordnen.') und stelle direkt die nächste Frage.
+10. MAXIMALE KÜRZE: Halte deine Textbeiträge extrem kurz (maximal 1-2 Sätze pro Antwort).
+11. SIEZEN: Sprich den Nutzer im gesamten Interview höflich mit 'Sie' an.
+
+
+12. BEENDIGUNG: Sobald du alle Facetten im freien Gespräch diagnostisch ausreichend abgedeckt hast, verabschiede dich freundlich und platziere am Ende deiner allerletzten Nachricht exakt das Wort '[INTERVIEW_FERTIG]' (inklusive der eckigen Klammern).
+
+
+# DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
+
+
+BESCHREIBUNGEN:
+{TSDI_BESCHREIBUNGEN}
+
+ITEMS:
+{TSDI_ITEMS}
+
+DEINE ANTWORT-STRUKTUR:
+Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
+1. "aktuelle_facette": Eine Zahl von 0 bis 14. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 0. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 1, u.s.w.
+2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
+"""
+
+#--- Condition Configs --------------------------------------------------------------------------------------
+CONDITION_CONFIGS = {
+    "structured-write": {
+        "system_prompt": SYSTEM_PROMPT_STRUCTURED,
+        "init_message": json.dumps({
+            "aktuelle_facette": 0,
+            "interviewer_text": "Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Würden Sie sagen, dass Sie andere Leute immer freundlich behandeln?"
+        })
+    },
+    "open-write": {
+        "system_prompt": SYSTEM_PROMPT_OPEN,
+        "init_message": json.dumps({
+            "aktuelle_facette": 0,
+            "interviewer_text": "Hallo! Erzählen Sie mir einfach etwas über sich."
+        })
+    }
+}
 
 def main():
     st.set_page_config(page_title="Persönlichkeits-Diagnostik", page_icon="🧠")
@@ -176,7 +228,7 @@ def main():
         st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.condition = "structured-write"
+        st.session_state.condition = random.choice(["structured-write", "structured-write"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
 
@@ -232,14 +284,11 @@ def main():
                 st.session_state.research_consent = True
                 st.session_state.step = "chat"
                 
-                init_json = json.dumps({
-                    "aktuelle_facette": 0,
-                    "interviewer_text": "Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Würden Sie sagen, dass Sie andere Leute immer freundlich behandeln?"
-                })
-                
+                config = CONDITION_CONFIGS[st.session_state.condition]
+                                
                 st.session_state.messages = [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "assistant", "content": init_json}
+                    {"role": "system", "content": config["system_prompt"]},
+                    {"role": "assistant", "content": config["init_message"]}
                 ]
                 st.rerun()
             else:
@@ -248,8 +297,8 @@ def main():
     # --- PHASE 3: CHAT ---
     elif st.session_state.step == "chat":
         st.title("Interview im Dialog 💬")
-        
-        # Fortschritt exakt aus der letzten Assistant-Nachricht auslesen
+
+        # Read facet progress
         if st.session_state.messages:
             last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
             try:
@@ -257,28 +306,82 @@ def main():
                 st.session_state.current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
             except:
                 pass
-            
+
         progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
-        
         st.markdown(f"Erfasste Facetten: {st.session_state.current_facet_count} von {TOTAL_FACETS}")
         st.progress(progress_percentage)
         st.divider()
-        
+
+        # Inject CSS for scrollable chat container
+        st.markdown("""
+        <style>
+        .chat-container {
+            height: 55vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+            margin-bottom: 1rem;
+        }
+        .chat-bubble-user {
+            align-self: flex-end;
+            background-color: #DCF8C6;
+            color: #000;
+            padding: 0.6rem 1rem;
+            border-radius: 16px 16px 2px 16px;
+            max-width: 75%;
+            margin: 0.3rem 0;
+            font-size: 0.95rem;
+        }
+        .chat-bubble-ai {
+            align-self: flex-start;
+            background-color: #FFFFFF;
+            color: #000;
+            padding: 0.6rem 1rem;
+            border-radius: 16px 16px 16px 2px;
+            max-width: 75%;
+            margin: 0.3rem 0;
+            font-size: 0.95rem;
+            border: 1px solid #e0e0e0;
+        }
+        .chat-scroll-anchor { height: 1px; }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # Build chat HTML
+        chat_html = '<div class="chat-container" id="chat-box">'
         interview_ended = False
+
         for msg in st.session_state.messages:
-            if msg["role"] != "system":
-                with st.chat_message(msg["role"]):
-                    if msg["role"] == "assistant":
-                        try:
-                            data = json.loads(msg["content"])
-                            text_content = data.get("interviewer_text", "")
-                            if "[INTERVIEW_FERTIG]" in text_content:
-                                interview_ended = True
-                            st.markdown(text_content.replace("[INTERVIEW_FERTIG]", "").strip())
-                        except:
-                            st.markdown(msg["content"])
-                    else:
-                        st.markdown(msg["content"])
+            if msg["role"] == "system":
+                continue
+            if msg["role"] == "assistant":
+                try:
+                    data = json.loads(msg["content"])
+                    text_content = data.get("interviewer_text", "")
+                    if "[INTERVIEW_FERTIG]" in text_content:
+                        interview_ended = True
+                    text_content = text_content.replace("[INTERVIEW_FERTIG]", "").strip()
+                except:
+                    text_content = msg["content"]
+                chat_html += f'<div class="chat-bubble-ai">🤖 {text_content}</div>'
+            else:
+                chat_html += f'<div class="chat-bubble-user">{msg["content"]}</div>'
+
+        chat_html += '<div class="chat-scroll-anchor" id="bottom"></div></div>'
+
+        # Auto-scroll to bottom
+        chat_html += """
+        <script>
+            const chatBox = document.getElementById("chat-box");
+            if (chatBox) { chatBox.scrollTop = chatBox.scrollHeight; }
+        </script>
+        """
+
+        st.markdown(chat_html, unsafe_allow_html=True)
 
         if interview_ended:
             st.success("Das Interview wurde erfolgreich beendet.")
