@@ -316,7 +316,7 @@ def main():
         st.markdown("""
         <style>
         .chat-container {
-            height: 55vh;
+            height: 40vh;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -374,14 +374,21 @@ def main():
         chat_html += '<div class="chat-scroll-anchor" id="bottom"></div></div>'
 
         # Auto-scroll to bottom
-        chat_html += """
-        <script>
-            const chatBox = document.getElementById("chat-box");
-            if (chatBox) { chatBox.scrollTop = chatBox.scrollHeight; }
-        </script>
-        """
-
         st.markdown(chat_html, unsafe_allow_html=True)
+
+        st.components.v1.html("""
+        <script>
+            function scrollChat() {
+                const frames = window.parent.document.querySelectorAll('#chat-box');
+                if (frames.length > 0) {
+                    frames[0].scrollTop = frames[0].scrollHeight;
+                }
+            }
+            scrollChat();
+            setTimeout(scrollChat, 100);
+            setTimeout(scrollChat, 400);
+        </script>
+        """, height=0)
 
         if interview_ended:
             st.success("Das Interview wurde erfolgreich beendet.")
