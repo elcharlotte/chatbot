@@ -41,34 +41,25 @@ Offenheit (O): Personen mit hoher Ausprägung in diesem Bereich sind interessier
 ## Skalen auf Facetten-Ebene:
 Definitionen:
 ### Dimension Extraversion (E)
-- Die Facette „Soziale Aktivität“ erfasst die Tendenz unter Leute zu gehen. Personen mit niedriger Ausprägung bleiben lieber für sich und beschäftigen sich allein, wohingegen Personen mit hoher Ausprägung häufig auf Partys anzutreffen sind.
-- Die Facette „Selbstbewusstsein“ erfasst die Tendenz selbstsicher zu sein. Personen mit niedriger Ausprägung sind schüchtern und meiden es Aufmerksamkeit zu bekommen, wohingegen Personen mit hoher Ausprägung auch gerne mal im Zentrum der Aufmerksamkeit stehen.
-- Die Facette „Durchsetzungsfähigkeit“ erfasst die Tendenz in Gruppen die Führung zu übernehmen. Personen mit niedriger Ausprägung sind in Gruppen eher zurückhaltend, wohingegen Personen mit hoher Ausprägung großen Einfluss innerhalb von Gruppe haben.
+- Die Facette „Soziale Aktivität (E-So)“ erfasst die Tendenz unter Leute zu gehen. Personen mit niedriger Ausprägung bleiben lieber für sich und beschäftigen sich allein, wohingegen Personen mit hoher Ausprägung häufig auf Partys anzutreffen sind.
+- Die Facette „Selbstbewusstsein (E-SB)“ erfasst die Tendenz selbstsicher zu sein. Personen mit niedriger Ausprägung sind schüchtern und meiden es Aufmerksamkeit zu bekommen, wohingegen Personen mit hoher Ausprägung auch gerne mal im Zentrum der Aufmerksamkeit stehen.
+- Die Facette „Durchsetzungsfähigkeit (E-A)“ erfasst die Tendenz in Gruppen die Führung zu übernehmen. Personen mit niedriger Ausprägung sind in Gruppen eher zurückhaltend, wohingegen Personen mit hoher Ausprägung großen Einfluss innerhalb von Gruppe haben.
 ### Dimension Neurotizismus (N)
-- Die Facette „Depression“ erfasst die Tendenz niedergeschlagen zu sein. Personen mit niedriger Ausprägung empfinden häufig positive Emotionen, wie Freude, wohingegen Personen mit hoher Ausprägung oft negative Emotionen, wie Traurigkeit empfinden.
-- Die Facette „Nervosität“ erfasst die Tendenz schnell nervös oder leicht gestresst zu sein. Personen mit niedriger Ausprägung bleiben auch unter großem Druck gelassen, wohingegen Personen mit hoher Ausprägung schon bei geringer Belastung unruhig werden und sich gestresst fühlen.
-- Die Facette „Reizbarkeit“ erfasst die Tendenz schnell emotional zu werden. Personen mit niedriger Ausprägung behalten stets Ruhe, wohingegen sich Personen mit hoher Ausprägung durch Belastung leicht aus dem Konzept bringen lassen und sehr emotional reagieren.
+- Die Facette „Depression (N-D)“ erfasst die Tendenz niedergeschlagen zu sein. Personen mit niedriger Ausprägung empfinden häufig positive Emotionen, wie Freude, wohingegen Personen mit hoher Ausprägung oft negative Emotionen, wie Traurigkeit empfinden.
+- Die Facette „Nervosität (N-St)“ erfasst die Tendenz schnell nervös oder leicht gestresst zu sein. Personen mit niedriger Ausprägung bleiben auch unter großem Druck gelassen, wohingegen Personen mit hoher Ausprägung schon bei geringer Belastung unruhig werden und sich gestresst fühlen.
+- Die Facette „Reizbarkeit (N-Ir)“ erfasst die Tendenz schnell emotional zu werden. Personen mit niedriger Ausprägung behalten stets Ruhe, wohingegen sich Personen mit hoher Ausprägung durch Belastung leicht aus dem Konzept bringen lassen und sehr emotional reagieren.
 ### Dimension Gewissenhaftigkeit (C)
-- Die Facette „Fleiß“ erfasst die Tendenz hart und fokussiert zu arbeiten. Personen mit niedriger Ausprägung neigen dazu faul zu sein und Aufgaben nicht zu Ende zu bringen, wohingegen Personen mit hoher Ausprägung sich immer bemühen Arbeiten rechtzeitig und vollständig zu erledigen.
-- Die Facette „Organisation“ erfasst die Tendenz ordentlich beim Erledigen von Aufgaben zu sein. Personen mit niedriger Ausprägung sind oft verspätet und halten ihre Umgebung nicht ordentlich, wohingegen Personen mit hoher Ausprägung viel Zeit für Planung und Struktur aufwenden.
+- Die Facette „Fleiß (C-Hw)“ erfasst die Tendenz hart und fokussiert zu arbeiten. Personen mit niedriger Ausprägung neigen dazu faul zu sein und Aufgaben nicht zu Ende zu bringen, wohingegen Personen mit hoher Ausprägung sich immer bemühen Arbeiten rechtzeitig und vollständig zu erledigen.
+- Die Facette „Organisation (C-O)“ erfasst die Tendenz ordentlich beim Erledigen von Aufgaben zu sein. Personen mit niedriger Ausprägung sind oft verspätet und halten ihre Umgebung nicht ordentlich, wohingegen Personen mit hoher Ausprägung viel Zeit für Planung und Struktur aufwenden.
 ### Dimension Verträglichkeit (A)
-- Die Facette „Freundlichkeit“ erfasst die Tendenz sich anderen gegenüber fröhlich und freundlich zu verhalten. Personen mit niedriger Ausprägung kommen mit anderen Menschen eher schlecht zurecht, wohingegen Personen mit hoher Ausprägung als angenehme Personen wahrgenommen werden.
-- Die Facette „Hilfsbereitschaft“ erfasst die Tendenz anderen bei Problemen zu helfen. Personen mit niedriger Ausprägung neigen zu Egoismus, wohingegen Personen mit hoher Ausprägung großzügig und uneigennützig sind.
-- Die Facette „Rücksichtnahme“ erfasst die Tendenz höflich und rücksichtsvoll zu sein. Personen mit niedriger Ausprägung achten nicht auf die Gefühle anderer, wohingegen Personen mit hoher Ausprägung stets versuchen nett zu anderen zu sein.
+- Die Facette „Freundlichkeit (A-Fr)“ erfasst die Tendenz sich anderen gegenüber fröhlich und freundlich zu verhalten. Personen mit niedriger Ausprägung kommen mit anderen Menschen eher schlecht zurecht, wohingegen Personen mit hoher Ausprägung als angenehme Personen wahrgenommen werden.
+- Die Facette „Hilfsbereitschaft (A-H)“ erfasst die Tendenz anderen bei Problemen zu helfen. Personen mit niedriger Ausprägung neigen zu Egoismus, wohingegen Personen mit hoher Ausprägung großzügig und uneigennützig sind.
+- Die Facette „Rücksichtnahme (A-Co)“ erfasst die Tendenz höflich und rücksichtsvoll zu sein. Personen mit niedriger Ausprägung achten nicht auf die Gefühle anderer, wohingegen Personen mit hoher Ausprägung stets versuchen nett zu anderen zu sein.
 ### Dimension Offenheit (O)
-- Die Facette „Intellekt“ erfasst die Tendenz sich mit intellektuellen Themen zu beschäftigen. Personen mit niedriger Ausprägung meiden komplexe Diskussionen, wohingegen Personen mit hoher Ausprägung generell neugierig sind.
-- Die Facette „Wissenschaftliches Interesse“ erfasst die Tendenz sich häufig mit wissenschaftlichen Themen auseinanderzusetzen. Personen mit niedriger Ausprägung meiden solche Themen, wohingegen sich Personen mit hoher Ausprägung wissenschaftlich weiterbilden.
-- Die Facette „Reflexion“ erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
+- Die Facette „Intellekt (O-In)" erfasst die Tendenz sich mit intellektuellen Themen zu beschäftigen. Personen mit niedriger Ausprägung meiden komplexe Diskussionen, wohingegen Personen mit hoher Ausprägung generell neugierig sind.
+- Die Facette „Wissenschaftliches Interesse (O-Sc)" erfasst die Tendenz sich häufig mit wissenschaftlichen Themen auseinanderzusetzen. Personen mit niedriger Ausprägung meiden solche Themen, wohingegen sich Personen mit hoher Ausprägung wissenschaftlich weiterbilden.
+- Die Facette „Reflexion (O-R)" erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
 """
-
-
-# wollen wir das? hilft das?
-# TSDI_def = """Der Trait Self-Description Inventory (TSDI) ist ein Big Five-Messverfahren und misst die Persönlichkeit in den fünf Dimensionen. Dabei umfasst der TSDI Informationen auf Dimensions- und Facettenebene. Jede Dimension umfasst zwei oder drei Skalen auf Facettenebene.
-# """
-
-# Trait Self-Descriptive Inventory (TSDI)
-
-# schauen, ob irgendwo TSDI_LEITFADEN auftaucht, soll nicht
 
 
 TSDI_ITEMS = """
@@ -136,25 +127,55 @@ TSDI_ITEMS = """
 - Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
 """
 
-TOTAL_FACETS = 14
+
+# --- HEXACO_HH LEITFADEN ---
+HEXACO_HH_BESCHREIBUNGEN = """
+## Skalen auf Dimensions-Ebene:
+Definitionen:
+Ehrlichkeit-Bescheidenheit (HH): Personen mit sehr niedrigen Werten in der Skala "Ehrlichkeit-Bescheidenheit" neigen dazu, sich zu verstellen, um ihre Ziele zu erreichen. Sie nehmen Regeln häufig nicht so genau, streben nach materiellem Reichtum und Ansehen und neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit sehr hohen Werten in dieser Skala hingegen verhalten sich stets authentisch und ehrlich. Sie vermeiden es, andere zu ihren eigenen Gunsten zu beeinflussen, und handeln stets fair. Sie streben weder Luxusgüter noch einen hohen sozialen Status an, noch haben sie den Anspruch, bevorzugt behandelt zu werden.
+
+## Skalen auf Facetten-Ebene:
+Definitionen:
+### Dimension Ehrlichkeit-Bescheidenheit (HH)
+- Die Facette „Aufrichtigkeit (HH-Si)“ zeigt auf, wie authentisch eine Person im zwischenmenschlichen Kontakt ist. Personen mit niedriger Ausprägung in dieser Skala verstellen sich manchmal, um persönliche Ziele zu erreichen. Personen mit hoher Ausprägung verhalten sich hingegen stets aufrichtig und unverstellt. Sie beeinflussen andere nicht zu ihrem eigenen Vorteil.
+- Die Facette "Fairness (HH-Fa)" beschreibt, wie ehrlich und regelkonform das Verhalten einer Person ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, Regeln nicht so genau zu nehmen oder sogar zu brechen, um sich einen Vorteil zu verschaffen. Für Personen mit hoher Ausprägung geht Ehrlichkeit gegenüber ihren Mitmenschen und der Gesellschaft über alles und sie bereichern sich nicht auf Kosten anderer.
+- Die Facette "Bescheidenheit (HH-Mo)" zeigt, wie bescheiden jemand in Bezug auf sich selbst ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit hoher Ausprägung betrachten sich und andere Menschen als gleichwertig und beanspruchen für sich keine besondere Behandlung.
+"""
+
+
+HEXACO_HH_ITEMS = """
+## Skalen auf Facettenebene
+### Ehrlichkeit-Bescheidenheit (HH)
+#### Facette "Aufrichtigkeit" (HH-Si):
+- Item x42i47_hh_si001_t2: Wenn ich von einer Person, die ich nicht mag, etwas will, verhalte ich mich dieser Person gegenüber sehr nett um es zu bekommen.
+- Item x42i15_hh_si005_t2: Ich würde keine Schmeicheleien benutzen, um eine Gehaltserhöhung zu bekommen oder befördert zu werden, auch wenn ich wüsste, dass es erfolgreich wäre.
+- Item x42i04_hh_si009_t2: Wenn ich von jemandem etwas will, lache ich auch noch über dessen schlechteste Witze.
+#### Facette "Fairness" (HH-Fa):
+- Item x42i31_hh_fa006_t2: Ich würde in Versuchung geraten, Diebesgut zu kaufen, wenn ich knapp bei Kasse wäre.
+- Item x42i17_hh_fa010_t2: Ich würde niemals Bestechungsgeld annehmen, auch wenn es sehr viel wäre.
+- Item x42i08_hh_fa002_t2: Wenn ich wüsste, dass ich niemals erwischt werde, wäre ich bereit, eine Million zu stehlen.
+#### Facette "Bescheidenheit" (HH-Mo):
+- Item x42i51_hh_mo008_t2: Ich will nicht, dass andere Leute mich behandeln, als ob ich ihnen überlegen sei.
+- Item x42i34_hh_mo004_t2: Ich bin eine ganz normale Person, die nicht besser ist als andere.
+- Item x42i24_hh_mo016_t2: Ich will, dass alle wissen, dass ich eine wichtige angesehene Person bin.
+"""
+
+
+TOTAL_FACETS = 17
 
 
 # zu sehr über bewältigungsstrategien und umgangsweisen geredet
 # nicht irgendwas gefragt zu früheren erlebnissen, sondern immer nur bezogen auf umgang mit schwierigen situationen
 
- # todo: instruktion, dass er da ruhig mal eins verwenden kann, tut er gerade ja irgendwie nicht so sondern nimmt eher die facettenbeschreibungen zur hilfe nur???
  ## vielleicht sinnvoll, fragenpool zu erstellen für fragen aus früheren erlebnissen, die nicht auf bewältigung hinauslaufen
  ## wenn alle abänderungen immer nur trotzdem zu bewältigung führen und  nicht passen, elisa fragen, was sie davon hält
  # todo: wenn durch prompt abgeändert, dass nicht auf bewältigung strategien fokus, wie verhält ki sich dann, erstellt es bessere fragen in denen man erlebnisse beschreibt erzählt? was ist sinnvoll hier und hilfreich für persönlichkeitsmessung?
 
-# wechsel der facetten immer nach so 6-8 fragen der ki aber nochmal nachschauen
-# dauer war 33min
-
 # Das Wort 'JSON' MUSS im Prompt stehen, damit der response_format Modus funktioniert.
-SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
+SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des 'Trait Self-Descriptive Inventory (TSDI)' und 'HEXACO' effizient zu erfassen.
 
 TASK OVERVIEW:
-Erforsche die Dimensionen im Gesprächsverlauf. Du musst im Laufe des Gesprächs jede Facette so weit explorieren, dass du eine verlässliche Einschätzung auf den TSDI-Items dieser Facette treffen könntest. Das Gespräch muss sich natürlich, reaktiv und logisch aufgebaut anfühlen.
+Erforsche die Dimensionen im Gesprächsverlauf. Du musst im Laufe des Gesprächs jede Facette so weit explorieren, dass du eine verlässliche Einschätzung auf den TSDI-Items und HEXACO-Items dieser Facette treffen könntest. Das Gespräch muss sich natürlich, reaktiv und logisch aufgebaut anfühlen.
 
 INTERVIEW GUIDELINES & CONSTRAINTS:
 1. Einstieg: Beginne das Interview mit einer sehr offenen Einladung (z. B. 'Erzählen Sie mir ein bisschen von sich – Wie würden Sie sich selbst als Person beschreiben?').
@@ -163,8 +184,8 @@ INTERVIEW GUIDELINES & CONSTRAINTS:
 4. Indirekte Exploration (Nudging): Nutze offene W-Fragen, um Facetten subtil zu explorieren (z. B. statt das Schüchternheits-Item abzufragen, frage: 'Wie verhalten Sie sich normalerweise, wenn Sie in einer großen Gruppe im Mittelpunkt stehen?').
 
 NEUE STRUKTUR- & DIAGNOSTIK-REGELN:
-5. Thematische Konsistenz (Dimensions-Blöcke): Springe nicht wild zwischen den großen Dimensionen (A, C, E, N, O) hin und her. Wenn du eine Dimension (z. B. Gewissenhaftigkeit) beginnst, erkunde nacheinander alle zugehörigen Facetten (Pflichtbewusstsein, dann Ordnung), bevor du zur nächsten Hauptdimension übergehst. Das sorgt für einen natürlichen roten Faden.
-6. Diagnostisches Abbruchkriterium (Qualität vor Quantität): Prüfe nach jeder Antwort des Nutzers kritisch: *Könnte ich anhand dieser Aussage die TSDI-Items dieser Facette bereits einschätzen?*
+5. Thematische Konsistenz (Dimensions-Blöcke): Springe nicht wild zwischen den großen Dimensionen (A, C, E, N, O, HH) hin und her. Wenn du eine Dimension (z. B. Gewissenhaftigkeit) beginnst, erkunde nacheinander alle zugehörigen Facetten (Pflichtbewusstsein, dann Ordnung), bevor du zur nächsten Hauptdimension übergehst. Das sorgt für einen natürlichen roten Faden.
+6. Diagnostisches Abbruchkriterium (Qualität vor Quantität): Prüfe nach jeder Antwort des Nutzers kritisch: *Könnte ich anhand dieser Aussage die TSDI-Items und HEXACO-Items dieser Facette bereits einschätzen?*
    - Wenn NEIN (z. B. bei einsilbigen Antworten wie 'ja' oder 'weiß ich nicht'): Frage gezielt weiter nach (z. B. über ein konkretes Alltagsbeispiel).
    - Wenn JA (der Datenpunkt ist gesättigt): Höre sofort auf, in dieser Facette weiterzubohren, und leite elegant zur nächsten Facette oder zur nächsten Dimension über.
 7. Reine Diagnostik – keine Lösungen/Strategien: Frage NIEMALS nach Lösungen, Hilfsmitteln, Bewältigungsstrategien oder Eisbrechern. Dich interessiert NUR der Ist-Zustand des Verhaltens.
@@ -177,11 +198,15 @@ NEUE STRUKTUR- & DIAGNOSTIK-REGELN:
 12. Beendigung: Sobald du alle Facetten im freien Gespräch diagnostisch ausreichend abgedeckt hast, bedanke dich für das Gespräch, verabschiede dich freundlich und platziere am Ende deiner allerletzten Nachricht exakt das Wort '[INTERVIEW_FERTIG]' (inklusive der eckigen Klammern).
 
 
-# Diagnostik-Leitfaden: Trait Self-Descriptive Inventory (TSDI)
+# Diagnostik-Leitfaden: Trait Self-Descriptive Inventory (TSDI) und HEXACO Ehrlichkeit-Bescheidenheit (HH)
 
 
-BESCHREIBUNGEN: {TSDI_BESCHREIBUNGEN}
-ITEMS: {TSDI_ITEMS}
+BESCHREIBUNGEN:
+{TSDI_BESCHREIBUNGEN} 
+{HEXACO_HH_BESCHREIBUNGEN}
+ITEMS:
+{TSDI_ITEMS}
+{HEXACO_HH_ITEMS}
 """
 
 # Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut. Wenn dir eine andere Frage gestellt wird, antworte nicht auf die Frage, sondern weise den Nutzer höflich darauf hin, dass du gerade ein diagnostisches Interview mit ihm führst und stelle die Frage erneut.
