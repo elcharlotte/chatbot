@@ -228,7 +228,7 @@ def main():
         st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.condition = random.choice(["structured-write", "open-write"])
+        st.session_state.condition = random.choice(["structured-write", "structured-write"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
 
