@@ -208,14 +208,14 @@ CONDITION_CONFIGS = {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 0,
-            "interviewer_text": "Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Würden Sie sagen, dass Sie andere Leute immer freundlich behandeln?"
+            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Würden Sie sagen, dass Sie andere Leute immer freundlich behandeln?" # Condition label löschen
         })
     },
     "open-write": {
         "system_prompt": SYSTEM_PROMPT_OPEN,
         "init_message": json.dumps({
             "aktuelle_facette": 0,
-            "interviewer_text": "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?"
+            "interviewer_text": "[Open] Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?" # Condition label löschen
         })
     }
 }
@@ -228,7 +228,7 @@ def main():
         st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.condition = random.choice(["structured-write", "structured-write"])
+        st.session_state.condition = random.choice(["structured-write", "open-write"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
 
