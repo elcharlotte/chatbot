@@ -61,22 +61,17 @@ Definitionen:
 - Die Facette „Reflexion“ erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
 """
 
-# wo soll das hingeschrieben werden: in Beschreibungen oder Items?
- # TOTAL_FACETS = 14 
+
+# wollen wir das? hilft das?
+# TSDI_def = """Der Trait-Self Description Inventory (TSDI) ist ein Big Five-Messverfahren und misst die Persönlichkeit in den fünf Dimensionen. Dabei umfasst der TSDI Informationen auf Dimensions- und Facettenebene. Jede Dimension umfasst zwei oder drei Skalen auf Facettenebene.
+# """
+
+
 
 # schauen, ob irgendwo TSDI_LEITFADEN auftaucht, soll nicht
 
 
-# die items müssen geändert werden
-
-# TSDI_ITEMS = """
-# Skalen auf Facettenebene
-# Dimension Extraversion
-# Facette "Soziale Aktivität":
-# Facette „Selbstbewusstsein“:
-# Facette „Durchsetzungsfähigkeit“:
-# ...
-
+# items:
 # ist das vielleicht relevant:
 # Die zugehörigen Items für den TSDI-42i und den HEXACO-100 auf Facettenebene lauten wie folgt: 
 # Der TSDI-42i umfasst xxx Items pro Facette.
@@ -84,77 +79,71 @@ Definitionen:
 
 
 TSDI_ITEMS = """
-## DIMENSION: VERTRÄGLICHKEIT (A)
-Beschreibung: Misst die zwischenmenschliche Orientierung.
-### Facette: Kooperation / Vertrauen (A-Co)
-* Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
-* Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
-* Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
-### Facette: Freundlichkeit / Mitgefühl (A-Fr)
-* Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
-* Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
-* Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
-### Facette: Hilfsbereitschaft (A-H)
-* Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
-* Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
-* Item tsdi42_39_A_H213: Ich bin immer großzügig, wenn es darum geht, anderen zu helfen.
-
-## DIMENSION: GEWISSENHAFTIGKEIT (C)
-Beschreibung: Grad an Selbstkontrolle, Genauigkeit, Zielstrebigkeit und Organisation.
-### Facette: Pflichtbewusstsein / Fleiß (C-Hw)
-* Item tsdi42_04_C_Hw126: Wenn ich mich zu etwas verpflichte, führe ich es immer zu Ende aus.
-* Item tsdi42_25_C_Hw137: Ich würde mich selbst als sehr ausdauernden Arbeiter einschätzen.
-* Item tsdi42_37_C_Hw167: Wenn ich etwas anfange, arbeite ich, bis es zu meiner Zufriedenheit beendet ist.
-### Facette: Ordnung / Besonnenheit (C-O)
-* Item tsdi42_14_C_O0153: Ich halte meine persönlichen Sachen gerne ordentlich und organisiert.
-* Item tsdi42_41_C_O0157: Ich versuche einen Plan für Aufgaben zu entwickeln und halte mich daran.
-* Item tsdi42_32_C_O0162: Ich versuche vollständig vorbereitet zu sein, bevor ich eine Aufgabe anpacke.
-
-## DIMENSION: EXTRAVERSION (E)
-Beschreibung: Aktivität und zwischenmenschliches Verhalten.
-### Facette: Aktivität / Durchsetzungsvermögen (E-A)
-* Item tsdi42_35_E_A002: Ich spreche lauter, wenn ich meine, einen Beitrag liefern zu können.
-* Item tsdi42_28_E_A004: Ich neige dazu, in Gruppen die Führung zu übernehmen.
-* Item tsdi42_03_E_A009: Ich habe eine menge Einfluss auf andere Leute.
-### Facette: Schüchternheit (E-SB)
-* Item tsdi42_19_E_SB010: Ich bin eine sehr schüchterne Person.
-* Item tsdi42_08_E_SB014: Meine Freunde halten mich für schüchtern.
-* Item tsdi42_18_E_SB026: Ich fühle mich nicht wohl, wenn ich im Zentrum der Aufmerksamkeit stehe.
-### Facette: Geselligkeit / Herzlichkeit (E-So)
-* Item tsdi42_33_E_So007: Ich bin gerne wo viel los ist.
-* Item tsdi42_26_E_So012: Ich gebe mir große Mühe Leute kennen zu lernen.
-* Item tsdi42_16_E_So028: Ich mag Partys auf denen viele Leute sind.
-
-## DIMENSION: NEUROTIZISMUS (N)
-Beschreibung: Emotionale Labilität vs. Stabilität.
-### Facette: Depressivität / Dysthymie (N-D)
-* Item tsdi42_07_N_D039: Es gibt Zeiten in denen ich mich selbst bedaure.
-* Item tsdi42_15_N_D054: Manchmal bin ich entmutigt und möchte am liebsten aufgeben.
-* Item tsdi42_30_N_D055: Ich fürchte oft, dass ich meine Ziele nicht erreichen könnte.
-### Facette: Reizbarkeit / Irritierbarkeit (N-Ir)
-* Item tsdi42_09_N_Ir034: Manchmal rege ich mich so auf, dass es mir auf den Magen schlägt.
-* Item tsdi42_05_N_Ir058: Wenn ich aufgebracht bin, kann ich nicht mehr klar denken.
-* Item tsdi42_06_N_Ir070: Ich kann Kritik nicht sehr gut akzeptieren.
-### Facette: Stressanfälligkeit / Ängstlichkeit (N-St)
-* Item tsdi42_29_N_St037: Ich fühle mich oft müde und erschöpft.
-* Item tsdi42_38_N_St040: Wenn ich unter großem Stress stehe, bin ich oft kurz davor zusammenzubrechen.
-* Item tsdi42_11_N_St043: Ich bin oft zittrig und angespannt.
-
-## DIMENSION: OFFENHEIT FÜR ERFAHRUNGEN (O)
-Beschreibung: Intellektuelle Neugier, Vorliebe für Abwechslung und Phantasie.
-### Facette: Intellekt / Ideen (O-In)
-* Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
-* Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
-* Item tsdi42_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
-### Facette: Reflexion / Phantasie (O-R)
-* Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
-* Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
-* Item tsdi42_34_O_R120: Ich lese gerne Gedichte.
-### Facette: wissenschaftliches Interesse (O-Sc)
-* Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
-* Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
-* Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
+## Skalen auf Facettenebene
+### Dimension Verträglichkeit (A)
+#### Facette "Rücksichtnahme" (A-Co):
+- Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
+- Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
+- Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
+#### Facette "Freundlichkeit" (A-Fr):
+- Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
+- Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
+- Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
+#### Facette "Hilfsbereitschaft" (A-H):
+- Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
+- Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
+- Item tsdi42_39_A_H213: Ich bin immer großzügig, wenn es darum geht, anderen zu helfen.
+### Dimension Gewissenhaftigkeit (C)
+#### Facette "Fleiß" (C-Hw):
+- Item tsdi42_04_C_Hw126: Wenn ich mich zu etwas verpflichte, führe ich es immer zu Ende aus.
+- Item tsdi42_25_C_Hw137: Ich würde mich selbst als sehr ausdauernden Arbeiter einschätzen.
+- Item tsdi42_37_C_Hw167: Wenn ich etwas anfange, arbeite ich, bis es zu meiner Zufriedenheit beendet ist.
+#### Facette "Organisation" (C-O):
+- Item tsdi42_14_C_O0153: Ich halte meine persönlichen Sachen gerne ordentlich und organisiert.
+- Item tsdi42_41_C_O0157: Ich versuche einen Plan für Aufgaben zu entwickeln und halte mich daran.
+- Item tsdi42_32_C_O0162: Ich versuche vollständig vorbereitet zu sein, bevor ich eine Aufgabe anpacke.
+### Dimension Extraversion (E)
+#### Facette "Durchsetzungsfähigkeit" (E-A):
+- Item tsdi42_35_E_A002: Ich spreche lauter, wenn ich meine, einen Beitrag liefern zu können.
+- Item tsdi42_28_E_A004: Ich neige dazu, in Gruppen die Führung zu übernehmen.
+- Item tsdi42_03_E_A009: Ich habe eine menge Einfluss auf andere Leute.
+#### Facette "Selbstbewusstsein" (E-SB):
+- Item tsdi42_19_E_SB010: Ich bin eine sehr schüchterne Person.
+- Item tsdi42_08_E_SB014: Meine Freunde halten mich für schüchtern.
+- Item tsdi42_18_E_SB026: Ich fühle mich nicht wohl, wenn ich im Zentrum der Aufmerksamkeit stehe.
+#### Facette "Soziale Aktivität" (E-So):
+- Item tsdi42_33_E_So007: Ich bin gerne wo viel los ist.
+- Item tsdi42_26_E_So012: Ich gebe mir große Mühe Leute kennen zu lernen.
+- Item tsdi42_16_E_So028: Ich mag Partys auf denen viele Leute sind.
+### Dimension Neurotizismus (N)
+#### Facette "Depression" (N-D):
+- Item tsdi42_07_N_D039: Es gibt Zeiten in denen ich mich selbst bedaure.
+- Item tsdi42_15_N_D054: Manchmal bin ich entmutigt und möchte am liebsten aufgeben.
+- Item tsdi42_30_N_D055: Ich fürchte oft, dass ich meine Ziele nicht erreichen könnte.
+#### Facette "Reizbarkeit" (N-Ir):
+- Item tsdi42_09_N_Ir034: Manchmal rege ich mich so auf, dass es mir auf den Magen schlägt.
+- Item tsdi42_05_N_Ir058: Wenn ich aufgebracht bin, kann ich nicht mehr klar denken.
+- Item tsdi42_06_N_Ir070: Ich kann Kritik nicht sehr gut akzeptieren.
+#### Facette "Nervosität" (N-St):
+- Item tsdi42_29_N_St037: Ich fühle mich oft müde und erschöpft.
+- Item tsdi42_38_N_St040: Wenn ich unter großem Stress stehe, bin ich oft kurz davor zusammenzubrechen.
+- Item tsdi42_11_N_St043: Ich bin oft zittrig und angespannt.
+### Dimension Offenheit (O)
+#### Facette "Intellekt" (O-In):
+- Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
+- Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
+- Item tsdi42_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
+#### Facette "Reflexion" (O-R):
+- Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
+- Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
+- Item tsdi42_34_O_R120: Ich lese gerne Gedichte.
+#### Facette "Wissenschaftliches Interesse" (O-Sc):
+- Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
+- Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
+- Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
 """
+
+TOTAL_FACETS = 14
 
 # Das Wort 'JSON' MUSS im Prompt stehen, damit der response_format Modus funktioniert.
 SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des unten stehenden 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
@@ -186,12 +175,10 @@ NEUE STRUKTUR- & DIAGNOSTIK-REGELN
 # DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
 
 
-
+BESCHREIBUNGEN: {TSDI_BESCHREIBUNGEN}
 ITEMS: {TSDI_ITEMS}
 """
 
-# ergänzen, wenn abgeklärt:
-# BESCHREIBUNGEN: {TSDI_BESCHREIBUNGEN}
 
 # # DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory: diesbezüglich beschreibungstext sinnvoll; und wieso ist dieser punkt im prompt so wichtig? herausfinden
 
@@ -266,6 +253,14 @@ def main():
                 st.session_state.step = "chat"
                 
                 first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?"
+
+# hmm, macht es sowas lockerer und was erzählt ein wenig mehr, traut sich mehr??
+# Vielen Dank!
+#Ich freue mich, Sie etwas näher kennenlernen zu dürfen.
+#Dies wird ein ungezwungenes und lockeres Gespräch. Ich werde Sie nie für irgendetwas verurteilen oder Sie moralisch bewerten. 
+#Erzählen Sie mir, was Ihnen als Erstes in den Sinn kommt und denken Sie nicht zu sehr nach. Es gibt keine richtigen oder falschen Antworten. Schließlich geht es hier um Ihre persönlichen Erfahrungen und Ihr Empfinden.
+#Erzählen Sie doch mal: Was haben Sie gestern so gemacht?
+
                 
                 st.session_state.messages = [
                     {"role": "system", "content": SYSTEM_PROMPT},
