@@ -145,6 +145,19 @@ TSDI_ITEMS = """
 
 TOTAL_FACETS = 14
 
+
+# zu sehr über bewältigungsstrategien und umgangsweisen geredet
+# nicht irgendwas gefragt zu früheren erlebnissen, sondern immer nur bezogen auf umgang mit schwierigen situationen
+# keinen schimmer, ob er mal ein item zum abfragen genutzt hatte
+ # todo: items anschauen
+ # todo: instruktion, dass er da ruhig mal eins verwenden kann, tut er gerade ja irgendwie nicht so sondern nimmt eher die facettenbeschreibungen zur hilfe nur???
+ ## vielleicht sinnvoll, fragenpool zu erstellen für fragen aus früheren erlebnissen, die nicht auf bewältigung hinauslaufen
+ ## wenn alle abänderungen immer nur trotzdem zu bewältigung führen und  nicht passen, elisa fragen, was sie davon hält
+ # todo: wenn durch prompt abgeändert, dass nicht auf bewältigung strategien fokus, wie verhält ki sich dann, erstellt es bessere fragen in denen man erlebnisse beschreibt erzählt? was ist sinnvoll hier und hilfreich für persönlichkeitsmessung?
+
+# wechsel der facetten immer nach so 6-8 fragen der ki aber nochmal nachschauen
+# dauer war 33min
+
 # Das Wort 'JSON' MUSS im Prompt stehen, damit der response_format Modus funktioniert.
 SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des unten stehenden 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
 
