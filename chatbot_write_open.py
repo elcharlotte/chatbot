@@ -61,6 +61,12 @@ Definitionen:
 - Die Facette „Reflexion“ erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
 """
 
+# wo soll das hingeschrieben werden: in Beschreibungen oder Items?
+ # TOTAL_FACETS = 14 
+
+# schauen, ob irgendwo TSDI_LEITFADEN auftaucht, soll nicht
+
+
 # die items müssen geändert werden
 
 # TSDI_ITEMS = """
