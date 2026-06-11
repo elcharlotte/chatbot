@@ -189,6 +189,9 @@ BESCHREIBUNGEN: {TSDI_BESCHREIBUNGEN}
 ITEMS: {TSDI_ITEMS}
 """
 
+# Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut. Wenn dir eine andere Frage gestellt wird, antworte nicht auf die Frage, sondern weise den Nutzer höflich darauf hin, dass du gerade ein diagnostisches Interview mit ihm führst und stelle die Frage erneut.
+# recyceln/umschreiben, wenn oben neues nicht geht
+
 
 def main():
     st.set_page_config(page_title="Persönlichkeits-Diagnostik (Unstrukturiert)", page_icon="🧠")
