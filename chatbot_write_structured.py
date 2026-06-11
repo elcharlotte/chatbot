@@ -316,7 +316,7 @@ def main():
         st.markdown("""
         <style>
         .chat-container {
-            height: 30vh;
+            height: 40vh;
             overflow-y: auto;
             display: flex;
             flex-direction: column-reverse;
