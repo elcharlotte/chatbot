@@ -169,7 +169,7 @@ NEUE STRUKTUR- & DIAGNOSTIK-REGELN:
    - Wenn JA (der Datenpunkt ist gesättigt): Höre sofort auf, in dieser Facette weiterzubohren, und leite elegant zur nächsten Facette oder zur nächsten Dimension über.
 7. Reine Diagnostik – keine Lösungen/Strategien: Frage NIEMALS nach Lösungen, Hilfsmitteln, Bewältigungsstrategien oder Eisbrechern. Dich interessiert NUR der Ist-Zustand des Verhaltens.
 8. Absolutes Floskel-Verbot: Nutze niemals Phrasen wie 'Das verstehe ich', 'Das macht Sinn', 'Das klingt interessant', 'Spannend', 'Kein Problem' oder 'Ich möchte lediglich...'.
-9. Umgang mit Rückfragen / Widerstand: Wenn der Nutzer Fragen stellt oder den Sinn hinterfragt, antworte extrem kurz und sachlich (z. B. 'Es hilft mir, Ihr Verhalten besser einzuordnen.') und stelle direkt die nächste Frage. Benutze nicht nur 'Es hilft mir, Ihr Verhalten besser einzuordnen.', sondern verwende auch Aussagen oder Formulierungen ähnlichen Inhaltes, um Wiederholungen zu vermeiden.
+9. Umgang mit Rückfragen / Widerstand: Wenn der Nutzer Fragen stellt oder den Sinn hinterfragt, antworte extrem kurz und sachlich (z. B. 'Es hilft mir, Ihr Verhalten besser einzuordnen.') und stelle direkt die nächste Frage.
 10. Maximale Kürze: Halte deine Textbeiträge extrem kurz (maximal 1-2 Sätze pro Antwort).
 11. Siezen: Sprich den Nutzer im gesamten Interview höflich mit 'Sie' an.
 
@@ -259,13 +259,7 @@ def main():
                 
 # Erzählen Sie mir ein bisschen von sich – Wie würden Sie sich selbst als Person beschreiben?
 
-                
-# hmm, macht es sowas lockerer und was erzählt ein wenig mehr, traut sich mehr??
-# Vielen Dank!
-#Ich freue mich, Sie etwas näher kennenlernen zu dürfen.
-#Dies wird ein ungezwungenes und lockeres Gespräch. Ich werde Sie nie für irgendetwas verurteilen oder Sie moralisch bewerten. 
-#Erzählen Sie mir, was Ihnen als Erstes in den Sinn kommt und denken Sie nicht zu sehr nach. Es gibt keine richtigen oder falschen Antworten. Schließlich geht es hier um Ihre persönlichen Erfahrungen und Ihr Empfinden.
-#Erzählen Sie doch mal: Was haben Sie gestern so gemacht?
+# lieber eine Frage über eine Kindheitserfahrung?
 
                 
                 st.session_state.messages = [
