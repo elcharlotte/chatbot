@@ -63,19 +63,12 @@ Definitionen:
 
 
 # wollen wir das? hilft das?
-# TSDI_def = """Der Trait-Self Description Inventory (TSDI) ist ein Big Five-Messverfahren und misst die Persönlichkeit in den fünf Dimensionen. Dabei umfasst der TSDI Informationen auf Dimensions- und Facettenebene. Jede Dimension umfasst zwei oder drei Skalen auf Facettenebene.
+# TSDI_def = """Der Trait Self-Description Inventory (TSDI) ist ein Big Five-Messverfahren und misst die Persönlichkeit in den fünf Dimensionen. Dabei umfasst der TSDI Informationen auf Dimensions- und Facettenebene. Jede Dimension umfasst zwei oder drei Skalen auf Facettenebene.
 # """
 
-
+# Trait Self-Descriptive Inventory (TSDI)
 
 # schauen, ob irgendwo TSDI_LEITFADEN auftaucht, soll nicht
-
-
-# items:
-# ist das vielleicht relevant:
-# Die zugehörigen Items für den TSDI-42i und den HEXACO-100 auf Facettenebene lauten wie folgt: 
-# Der TSDI-42i umfasst xxx Items pro Facette.
-# Die TSDI-42i-Items lauten:
 
 
 TSDI_ITEMS = """
@@ -148,8 +141,7 @@ TOTAL_FACETS = 14
 
 # zu sehr über bewältigungsstrategien und umgangsweisen geredet
 # nicht irgendwas gefragt zu früheren erlebnissen, sondern immer nur bezogen auf umgang mit schwierigen situationen
-# keinen schimmer, ob er mal ein item zum abfragen genutzt hatte
- # todo: items anschauen
+
  # todo: instruktion, dass er da ruhig mal eins verwenden kann, tut er gerade ja irgendwie nicht so sondern nimmt eher die facettenbeschreibungen zur hilfe nur???
  ## vielleicht sinnvoll, fragenpool zu erstellen für fragen aus früheren erlebnissen, die nicht auf bewältigung hinauslaufen
  ## wenn alle abänderungen immer nur trotzdem zu bewältigung führen und  nicht passen, elisa fragen, was sie davon hält
@@ -159,7 +151,7 @@ TOTAL_FACETS = 14
 # dauer war 33min
 
 # Das Wort 'JSON' MUSS im Prompt stehen, damit der response_format Modus funktioniert.
-SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des unten stehenden 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
+SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
 
 TASK OVERVIEW:
 Erforsche die Dimensionen im Gesprächsverlauf. Du musst im Laufe des Gesprächs jede Facette so weit explorieren, dass du eine verlässliche Einschätzung auf den TSDI-Items dieser Facette treffen könntest. Das Gespräch muss sich natürlich, reaktiv und logisch aufgebaut anfühlen.
@@ -170,30 +162,27 @@ INTERVIEW GUIDELINES & CONSTRAINTS:
 3. Absolutes Verbot von Testfragen: Du darfst die psychometrischen Items nicht wörtlich vorlesen oder direkt als standardisierte Frage stellen.
 4. Indirekte Exploration (Nudging): Nutze offene W-Fragen, um Facetten subtil zu explorieren (z. B. statt das Schüchternheits-Item abzufragen, frage: 'Wie verhalten Sie sich normalerweise, wenn Sie in einer großen Gruppe im Mittelpunkt stehen?').
 
-NEUE STRUKTUR- & DIAGNOSTIK-REGELN
-5. THEMATISCHE KONSISTENZ (DIMENSIONS-BLÖCKE): Springe nicht wild zwischen den großen Dimensionen (A, C, E, N, O) hin und her. Wenn du eine Dimension (z. B. GEWISSENHAFTIGKEIT) beginnst, erkunde nacheinander alle zugehörigen Facetten (Pflichtbewusstsein, dann Ordnung), bevor du zur nächsten Hauptdimension übergehst. Das sorgt für einen natürlichen roten Faden.
-6. DIAGNOSTISCHES ABBRUCHKRITERIUM (QUALITÄT VOR QUANTITÄT): Prüfe nach jeder Antwort des Nutzers kritisch: *Könnte ich anhand dieser Aussage die TSDI-Items dieser Facette bereits einschätzen?*
+NEUE STRUKTUR- & DIAGNOSTIK-REGELN:
+5. Thematische Konsistenz (Dimensions-Blöcke): Springe nicht wild zwischen den großen Dimensionen (A, C, E, N, O) hin und her. Wenn du eine Dimension (z. B. Gewissenhaftigkeit) beginnst, erkunde nacheinander alle zugehörigen Facetten (Pflichtbewusstsein, dann Ordnung), bevor du zur nächsten Hauptdimension übergehst. Das sorgt für einen natürlichen roten Faden.
+6. Diagnostisches Abbruchkriterium (Qualität vor Quantität): Prüfe nach jeder Antwort des Nutzers kritisch: *Könnte ich anhand dieser Aussage die TSDI-Items dieser Facette bereits einschätzen?*
    - Wenn NEIN (z. B. bei einsilbigen Antworten wie 'ja' oder 'weiß ich nicht'): Frage gezielt weiter nach (z. B. über ein konkretes Alltagsbeispiel).
    - Wenn JA (der Datenpunkt ist gesättigt): Höre sofort auf, in dieser Facette weiterzubohren, und leite elegant zur nächsten Facette oder zur nächsten Dimension über.
-7. REINE DIAGNOSTIK – KEINE LÖSUNGEN/STRATEGIEN: Frage NIEMALS nach Lösungen, Hilfsmitteln, Bewältigungsstrategien oder Eisbrechern. Dich interessiert NUR der Ist-Zustand des Verhaltens.
-8. ABSOLUTES FLOSKEL-VERBOT: Nutze NIEMALS Phrasen wie 'Das verstehe ich', 'Das macht Sinn', 'Das klingt interessant', 'Spannend', 'Kein Problem' oder 'Ich möchte lediglich...'.
-9. UMGANG MIT RÜCKFRAGEN / WIDERSTAND: Wenn der Nutzer Fragen stellt oder den Sinn hinterfragt, antworte extrem kurz und sachlich (z. B. 'Es hilft mir, Ihr Verhalten besser einzuordnen.') und stelle direkt die nächste Frage.
-10. MAXIMALE KÜRZE: Halte deine Textbeiträge extrem kurz (maximal 1-2 Sätze pro Antwort).
-11. SIEZEN: Sprich den Nutzer im gesamten Interview höflich mit 'Sie' an.
+7. Reine Diagnostik – keine Lösungen/Strategien: Frage NIEMALS nach Lösungen, Hilfsmitteln, Bewältigungsstrategien oder Eisbrechern. Dich interessiert NUR der Ist-Zustand des Verhaltens.
+8. Absolutes Floskel-Verbot: Nutze niemals Phrasen wie 'Das verstehe ich', 'Das macht Sinn', 'Das klingt interessant', 'Spannend', 'Kein Problem' oder 'Ich möchte lediglich...'.
+9. Umgang mit Rückfragen / Widerstand: Wenn der Nutzer Fragen stellt oder den Sinn hinterfragt, antworte extrem kurz und sachlich (z. B. 'Es hilft mir, Ihr Verhalten besser einzuordnen.') und stelle direkt die nächste Frage. Benutze nicht nur 'Es hilft mir, Ihr Verhalten besser einzuordnen.', sondern verwende auch Aussagen oder Formulierungen ähnlichen Inhaltes, um Wiederholungen zu vermeiden.
+10. Maximale Kürze: Halte deine Textbeiträge extrem kurz (maximal 1-2 Sätze pro Antwort).
+11. Siezen: Sprich den Nutzer im gesamten Interview höflich mit 'Sie' an.
 
 
-12. BEENDIGUNG: Sobald du alle Facetten im freien Gespräch diagnostisch ausreichend abgedeckt hast, verabschiede dich freundlich und platziere am Ende deiner allerletzten Nachricht exakt das Wort '[INTERVIEW_FERTIG]' (inklusive der eckigen Klammern).
+12. Beendigung: Sobald du alle Facetten im freien Gespräch diagnostisch ausreichend abgedeckt hast, bedanke dich für das Gespräch, verabschiede dich freundlich und platziere am Ende deiner allerletzten Nachricht exakt das Wort '[INTERVIEW_FERTIG]' (inklusive der eckigen Klammern).
 
 
-# DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
+# Diagnostik-Leitfaden: Trait Self-Descriptive Inventory (TSDI)
 
 
 BESCHREIBUNGEN: {TSDI_BESCHREIBUNGEN}
 ITEMS: {TSDI_ITEMS}
 """
-
-
-# # DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory: diesbezüglich beschreibungstext sinnvoll; und wieso ist dieser punkt im prompt so wichtig? herausfinden
 
 
 def main():
@@ -267,6 +256,10 @@ def main():
                 
                 first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?"
 
+                
+# Erzählen Sie mir ein bisschen von sich – Wie würden Sie sich selbst als Person beschreiben?
+
+                
 # hmm, macht es sowas lockerer und was erzählt ein wenig mehr, traut sich mehr??
 # Vielen Dank!
 #Ich freue mich, Sie etwas näher kennenlernen zu dürfen.
