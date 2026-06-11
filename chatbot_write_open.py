@@ -254,11 +254,13 @@ def main():
                 st.session_state.research_consent = True
                 st.session_state.step = "chat"
                 
-                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?"
+                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie mir doch zu Beginn einfach mal ein bisschen von sich und Ihrem Alltag. Was beschäftigt Sie derzeit (besonders)?"
 
                 
 # Erzählen Sie mir ein bisschen von sich – Wie würden Sie sich selbst als Person beschreiben?
 
+# „Erzählen Sie mir von sich und Ihrem Alltag. Was beschäftigt Sie derzeit besonders?“
+                
 # lieber eine Frage über eine Kindheitserfahrung?
 
                 
