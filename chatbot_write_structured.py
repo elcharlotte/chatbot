@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import streamlit as st
 from openai import OpenAI
 import json
@@ -69,13 +70,13 @@ TSDI_ITEMS = """
 <ITEMS>
 ## Dimension Verträglichkeit (A)
 ### Facette "Freundlichkeit" (A-Fr):
-- Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
-- Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
-- Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
-### Facette "Rücksichtnahme" (A-Co):
 - Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
 - Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
 - Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
+### Facette "Rücksichtnahme" (A-Co):
+- Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
+- Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
+- Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
 ### Facette "Hilfsbereitschaft" (A-H):
 - Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
 - Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
@@ -348,7 +349,7 @@ def main():
         """, unsafe_allow_html=True)
 
         # Build chat HTML
-        chat_html = '<div class="chat-container" id="chat-box">'
+        chat_html = '<meta charset="UTF-8"><div class="chat-container" id="chat-box">'
         interview_ended = False
 
         for msg in reversed(list(st.session_state.messages)):
@@ -478,7 +479,7 @@ def main():
                     res = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": "Analysiere den Chat auf Big Five (1-5). Antworte NUR im JSON-Format mit den exakten Keys: 'Extraversion', 'Verträglichkeit', 'Gewissenhaftigkeit', 'Neurotizismus', 'Offenheit'."},
+                            {"role": "system", "content": "Analysiere den Chat auf Big Five (1-5) auf Facettenebene. Antworte NUR im JSON-Format mit den exakten Keys: 'Durchsetzungsfähigkeit', 'Selbstbewusstsein', 'Soziale Aktivität', 'Freundlichkeit', 'Rücksichtnahme', 'Hilfsbereitschaft', 'Fleiß', 'Organisation', 'Depression', 'Reizbarkeit', 'Nervosität', 'Intellekt', 'Reflexion', 'Wissenschaftliches Interesse'."},
                             {"role": "user", "content": f"Hier ist der Chatverlauf:\n{chat_text}"}
                         ],
                         response_format={"type": "json_object"}
@@ -486,14 +487,29 @@ def main():
                     st.session_state.ai_bfi = json.loads(res.choices[0].message.content)
                 except Exception as e:
                     st.error(f"Fehler bei der Analyse: {e}")
-                    st.session_state.ai_bfi = {t: 0 for t in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]}
+                    st.session_state.ai_bfi = {t: 0 for t in [
+                        "Freundlichkeit", "Rücksichtnahme", "Hilfsbereitschaft",
+                        "Fleiß", "Organisation",
+                        "Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität",
+                        "Depression", "Reizbarkeit", "Nervosität",
+                        "Intellekt", "Reflexion", "Wissenschaftliches Interesse"
+                    ]}
 
-        for t in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
-            ki_wert = st.session_state.ai_bfi.get(t, 0)
-            st.metric(f"Geschätzte Ausprägung: {t}", f"{ki_wert} / 5")
-            st.progress(float(ki_wert) / 5.0 if ki_wert else 0.0)
+        DIMENSION_FACETS = {
+            "Verträglichkeit": ["Freundlichkeit", "Rücksichtnahme", "Hilfsbereitschaft"],
+            "Gewissenhaftigkeit": ["Fleiß", "Organisation"],
+            "Extraversion": ["Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität"],
+            "Neurotizismus": ["Depression", "Reizbarkeit", "Nervosität"],
+            "Offenheit": ["Intellekt", "Reflexion", "Wissenschaftliches Interesse"],
+        }
 
-        st.divider()
+        for dimension, facets in DIMENSION_FACETS.items():
+            st.subheader(dimension)
+            for t in facets:
+                ki_wert = st.session_state.ai_bfi.get(t, 0)
+                st.metric(f"{t}", f"{ki_wert} / 5")
+                st.progress(float(ki_wert) / 5.0 if ki_wert else 0.0)
+            st.divider()
 
         if not st.session_state.data_saved:
             if st.button("Ergebnisse final speichern & beenden"):
