@@ -69,67 +69,67 @@ TSDI_BESCHREIBUNGEN = """
 TSDI_ITEMS = """
 <ITEMS>
 ## Dimension Verträglichkeit (A)
-### Facette "Freundlichkeit" (A-Fr):
+### 1. Facette "Freundlichkeit" (A-Fr):
 - Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
 - Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
 - Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
-### Facette "Rücksichtnahme" (A-Co):
+### 2. Facette "Rücksichtnahme" (A-Co):
 - Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
 - Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
 - Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
-### Facette "Hilfsbereitschaft" (A-H):
+### 3. Facette "Hilfsbereitschaft" (A-H):
 - Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
 - Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
 - Item tsdi42_39_A_H213: Ich bin immer großzügig, wenn es darum geht, anderen zu helfen.
 
 ## Dimension Gewissenhaftigkeit (C)
-### Facette "Fleiß" (C-Hw):
+### 4. Facette "Fleiß" (C-Hw):
 - Item tsdi42_04_C_Hw126: Wenn ich mich zu etwas verpflichte, führe ich es immer zu Ende aus.
 - Item tsdi42_25_C_Hw137: Ich würde mich selbst als sehr ausdauernden Arbeiter einschätzen.
 - Item tsdi42_37_C_Hw167: Wenn ich etwas anfange, arbeite ich, bis es zu meiner Zufriedenheit beendet ist.
-### Facette "Organisation" (C-O):
+### 5. Facette "Organisation" (C-O):
 - Item tsdi42_14_C_O0153: Ich halte meine persönlichen Sachen gerne ordentlich und organisiert.
 - Item tsdi42_41_C_O0157: Ich versuche einen Plan für Aufgaben zu entwickeln und halte mich daran.
 - Item tsdi42_32_C_O0162: Ich versuche vollständig vorbereitet zu sein, bevor ich eine Aufgabe anpacke.
 
 ## Dimension Extraversion (E)
-### Facette "Durchsetzungsfähigkeit" (E-A):
+### 6. Facette "Durchsetzungsfähigkeit" (E-A):
 - Item tsdi42_35_E_A002: Ich spreche lauter, wenn ich meine, einen Beitrag liefern zu können.
 - Item tsdi42_28_E_A004: Ich neige dazu, in Gruppen die Führung zu übernehmen.
 - Item tsdi42_03_E_A009: Ich habe eine menge Einfluss auf andere Leute.
-### Facette "Selbstbewusstsein" (E-SB):
+### 7. Facette "Selbstbewusstsein" (E-SB):
 - Item tsdi42_19_E_SB010: Ich bin eine sehr schüchterne Person.
 - Item tsdi42_08_E_SB014: Meine Freunde halten mich für schüchtern.
 - Item tsdi42_18_E_SB026: Ich fühle mich nicht wohl, wenn ich im Zentrum der Aufmerksamkeit stehe.
-### Facette "Soziale Aktivität" (E-So):
+### 8. Facette "Soziale Aktivität" (E-So):
 - Item tsdi42_33_E_So007: Ich bin gerne wo viel los ist.
 - Item tsdi42_26_E_So012: Ich gebe mir große Mühe Leute kennen zu lernen.
 - Item tsdi42_16_E_So028: Ich mag Partys auf denen viele Leute sind.
 
 ## Dimension Neurotizismus (N)
-### Facette "Depression" (N-D):
+### 9. Facette "Depression" (N-D):
 - Item tsdi42_07_N_D039: Es gibt Zeiten in denen ich mich selbst bedaure.
 - Item tsdi42_15_N_D054: Manchmal bin ich entmutigt und möchte am liebsten aufgeben.
 - Item tsdi42_30_N_D055: Ich fürchte oft, dass ich meine Ziele nicht erreichen könnte.
-### Facette "Reizbarkeit" (N-Ir):
+### 10. Facette "Reizbarkeit" (N-Ir):
 - Item tsdi42_09_N_Ir034: Manchmal rege ich mich so auf, dass es mir auf den Magen schlägt.
 - Item tsdi42_05_N_Ir058: Wenn ich aufgebracht bin, kann ich nicht mehr klar denken.
 - Item tsdi42_06_N_Ir070: Ich kann Kritik nicht sehr gut akzeptieren.
-### Facette "Nervosität" (N-St):
+### 11. Facette "Nervosität" (N-St):
 - Item tsdi42_29_N_St037: Ich fühle mich oft müde und erschöpft.
 - Item tsdi42_38_N_St040: Wenn ich unter großem Stress stehe, bin ich oft kurz davor zusammenzubrechen.
 - Item tsdi42_11_N_St043: Ich bin oft zittrig und angespannt.
 
 ## Dimension Offenheit (O)
-### Facette "Intellekt" (O-In):
+### 12. Facette "Intellekt" (O-In):
 - Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
 - Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
 - Item tsdi42_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
-### Facette "Reflexion" (O-R):
+### 13. Facette "Reflexion" (O-R):
 - Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
 - Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
 - Item tsdi42_34_O_R120: Ich lese gerne Gedichte.
-### Facette "Wissenschaftliches Interesse" (O-Sc):
+### 14. Facette "Wissenschaftliches Interesse" (O-Sc):
 - Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
 - Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
 - Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
@@ -157,7 +157,7 @@ LEITFADEN:
 
 DEINE ANTWORT-STRUKTUR:
 Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
-1. "aktuelle_facette": Eine Zahl von 0 bis 14. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 0. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 1, u.s.w.
+1. "aktuelle_facette": Eine Zahl von 1 bis 14. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 1. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 2, u.s.w.
 2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
 """
 
@@ -209,7 +209,7 @@ CONDITION_CONFIGS = {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 0,
-            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Würden Sie sagen, dass Sie andere Leute immer freundlich behandeln?" # Condition label löschen
+            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Würden Sie sagen, dass man Sie für jemanden hält, mit dem man einfach gut auskommt?" # Condition label löschen
         })
     },
     "open-write": {
@@ -309,7 +309,7 @@ def main():
                 pass
 
         progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
-        st.markdown(f"Erfasste Facetten: {st.session_state.current_facet_count} von {TOTAL_FACETS}")
+        st.markdown(f"Facette: {st.session_state.current_facet_count} von {TOTAL_FACETS}")
         st.progress(progress_percentage)
         st.divider()
 
