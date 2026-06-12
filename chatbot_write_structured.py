@@ -38,6 +38,7 @@ TSDI_BESCHREIBUNGEN = """
 - EXTRAVERSION (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreudig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
 - NEUROTIZISMUS (N): Neurotizismus erfasst Unterschiede zwischen Personen hinsichtlich ihrer gefühlsmäßigen Robustheit einerseits und ihrer emotionalen Empfindlichkeit bzw. Ansprechbarkeit andererseits. Personen mit hoher Ausprägung in diesem Bereich sind empfindlicher und neigen unter Stress dazu, leichter aus dem Gleichgewicht zu kommen. Sie entwickeln eher unangepasste Formen der Problembewältigung, neigen zu unrealistischen Ideen und sind weniger in der Lage, ihre Bedürfnisse zu kontrollieren. Personen mit niedriger Ausprägung in diesem Bereich beschreiben sich als ausgeglichen, emotional stabil und robust und geraten nicht so leicht aus der Fassung. Charakteristisch für diese Personen ist, dass sie Gefühlszustände nicht so stark erleben.
 - OFFENHEIT FÜR ERFAHRUNGEN (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen, Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im Gegensatz zu Personen mit hoher Ausprägung.
+- EHRLICHKEIT-BESCHEIDENHEIT (HH): Personen mit sehr niedrigen Werten in der Skala "Ehrlichkeit-Bescheidenheit" neigen dazu, sich zu verstellen, um ihre Ziele zu erreichen. Sie nehmen Regeln häufig nicht so genau, streben nach materiellem Reichtum und Ansehen und neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit sehr hohen Werten in dieser Skala hingegen verhalten sich stets authentisch und ehrlich. Sie vermeiden es, andere zu ihren eigenen Gunsten zu beeinflussen, und handeln stets fair. Sie streben weder Luxusgüter noch einen hohen sozialen Status an, noch haben sie den Anspruch, bevorzugt behandelt zu werden.
 
 ## FACETTEN:
 
@@ -64,6 +65,11 @@ TSDI_BESCHREIBUNGEN = """
 - Die Facette „Intellekt (O-In)“ erfasst die Tendenz sich mit intellektuellen Themen zu beschäftigen. Personen mit niedriger Ausprägung meiden komplexe Diskussionen, wohingegen Personen mit hoher Ausprägung generell neugierig sind.
 - Die Facette „Reflexion (O-R)“ erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
 - Die Facette „Wissenschaftliches Interesse (O-Sc)“ erfasst die Tendenz sich häufig mit wissenschaftlichen Themen auseinanderzusetzen. Personen mit niedriger Ausprägung meiden solche Themen, wohingegen sich Personen mit hoher Ausprägung wissenschaftlich weiterbilden.
+
+### Dimension Ehrlichkeit-Bescheidenheit (HH)
+- Die Facette „Aufrichtigkeit (HH-Si)“ zeigt auf, wie authentisch eine Person im zwischenmenschlichen Kontakt ist. Personen mit niedriger Ausprägung in dieser Skala verstellen sich manchmal, um persönliche Ziele zu erreichen. Personen mit hoher Ausprägung verhalten sich hingegen stets aufrichtig und unverstellt. Sie beeinflussen andere nicht zu ihrem eigenen Vorteil.
+- Die Facette "Fairness (HH-Fa)" beschreibt, wie ehrlich und regelkonform das Verhalten einer Person ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, Regeln nicht so genau zu nehmen oder sogar zu brechen, um sich einen Vorteil zu verschaffen. Für Personen mit hoher Ausprägung geht Ehrlichkeit gegenüber ihren Mitmenschen und der Gesellschaft über alles und sie bereichern sich nicht auf Kosten anderer.
+- Die Facette "Bescheidenheit (HH-Mo)" zeigt, wie bescheiden jemand in Bezug auf sich selbst ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit hoher Ausprägung betrachten sich und andere Menschen als gleichwertig und beanspruchen für sich keine besondere Behandlung.
 """
 
 TSDI_ITEMS = """
@@ -133,22 +139,37 @@ TSDI_ITEMS = """
 - Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
 - Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
 - Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
+
+## Dimension Ehrlichkeit-Bescheidenheit (HH)
+### 15. Facette "Aufrichtigkeit" (HH-Si):
+- Item x42i47_hh_si001_t2: Wenn ich von einer Person, die ich nicht mag, etwas will, verhalte ich mich dieser Person gegenüber sehr nett um es zu bekommen.
+- Item x42i15_hh_si005_t2: Ich würde keine Schmeicheleien benutzen, um eine Gehaltserhöhung zu bekommen oder befördert zu werden, auch wenn ich wüsste, dass es erfolgreich wäre.
+- Item x42i04_hh_si009_t2: Wenn ich von jemandem etwas will, lache ich auch noch über dessen schlechteste Witze.
+### 16. Facette "Fairness" (HH-Fa):
+- Item x42i31_hh_fa006_t2: Ich würde in Versuchung geraten, Diebesgut zu kaufen, wenn ich knapp bei Kasse wäre.
+- Item x42i17_hh_fa010_t2: Ich würde niemals Bestechungsgeld annehmen, auch wenn es sehr viel wäre.
+- Item x42i08_hh_fa002_t2: Wenn ich wüsste, dass ich niemals erwischt werde, wäre ich bereit, eine Million zu stehlen.
+### 17. Facette "Bescheidenheit" (HH-Mo):
+- Item x42i51_hh_mo008_t2: Ich will nicht, dass andere Leute mich behandeln, als ob ich ihnen überlegen sei.
+- Item x42i34_hh_mo004_t2: Ich bin eine ganz normale Person, die nicht besser ist als andere.
+- Item x42i24_hh_mo016_t2: Ich will, dass alle wissen, dass ich eine wichtige angesehene Person bin.
 </ITEMS>
 """
 
-TOTAL_FACETS = 14 
+TOTAL_FACETS = 17
 
 #--- System Prompt Structured ------------------------------------------------------------------------
-SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein psychologischer Interviewerin. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 14 Facetten des TSDI systematisch zu erfassen.
+SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein psychologischer Interviewerin. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 17 Facetten des erweiterten TSDI systematisch zu erfassen.
 
 INTERVIEW-REGELN:
-* Gehe die Facetten streng sequenziell von 1 bis 14 durch.
+* Gehe die Facetten streng sequenziell von 1 bis 17 durch.
 * Stelle pro Item EINE verhaltensnahe Frage. Die Items findest du zwischen den Tags <ITEMS> und </ITEMS>
-* Formuliere die Fragen natürlich und flüssig, passend zu einem psychologischen Gespräch. Vermeide hölzerne Abfragen, bleibe aber rein diagnostisch (keine Ratschläge oder Therapieversuche).
+* Formuliere die Fragen natürlich und flüssig, passend zu einem psychologischen Gespräch.
 * Sprich den Nutzer mit 'Sie' an.
-* Wenn du die Antwort auf Facette 14 erhalten hast, verabschiede dich höflich und setze an das Ende deines 'interviewer_text' das Label '[INTERVIEW_FERTIG]'.
-* Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut. Wenn dir eine andere Frage gestellt wird, antworte nicht auf die Frage, sondern weise den Nutzer höflich darauf hin, dass du gerade ein diagnostisches Interview mit ihm führst und stelle die Frage erneut.
-* Füge eine kurze Überleitung in deine Antwort ein, wenn du zu einer neuen Facette wechselst.
+* Wenn du die Antwort auf das letzte Item erhalten hast, verabschiede dich und setze an das Ende der Nachricht unbedingt das Label '[INTERVIEW_FERTIG]'.
+* Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut.
+* Wenn dir eine andere Frage gestellt wird, antworte nicht auf die Frage, sondern weise den Nutzer höflich darauf hin, dass du gerade ein diagnostisches Interview mit ihm führst. Stelle die vorherige Frage dann erneut.
+* Füge eine kurze Überleitung in deine Antwort ein, wenn du zu einer neuen Dimension wechselst.
 
 LEITFADEN:
 {TSDI_BESCHREIBUNGEN}
@@ -157,7 +178,7 @@ LEITFADEN:
 
 DEINE ANTWORT-STRUKTUR:
 Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
-1. "aktuelle_facette": Eine Zahl von 1 bis 14. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 1. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 2, u.s.w.
+1. "aktuelle_facette": Eine Zahl von 1 bis 17. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 1. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 2, u.s.w.
 2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
 """
 
@@ -190,10 +211,6 @@ NEUE STRUKTUR- & DIAGNOSTIK-REGELN
 
 # DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
 
-
-BESCHREIBUNGEN:
-{TSDI_BESCHREIBUNGEN}
-
 ITEMS:
 {TSDI_ITEMS}
 
@@ -208,14 +225,14 @@ CONDITION_CONFIGS = {
     "structured-write": {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
-            "aktuelle_facette": 0,
+            "aktuelle_facette": 1,
             "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Würden Sie sagen, dass man Sie für jemanden hält, mit dem man einfach gut auskommt?" # Condition label löschen
         })
     },
     "open-write": {
         "system_prompt": SYSTEM_PROMPT_OPEN,
         "init_message": json.dumps({
-            "aktuelle_facette": 0,
+            "aktuelle_facette": 1,
             "interviewer_text": "[Open] Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?" # Condition label löschen
         })
     }
@@ -309,7 +326,7 @@ def main():
                 pass
 
         progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
-        st.markdown(f"Facette: {st.session_state.current_facet_count} von {TOTAL_FACETS}")
+        st.markdown(f"Facette {st.session_state.current_facet_count} von {TOTAL_FACETS}")
         st.progress(progress_percentage)
         st.divider()
 
@@ -479,7 +496,7 @@ def main():
                     res = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": "Analysiere den Chat auf Big Five (1-5) auf Facettenebene. Antworte NUR im JSON-Format mit den exakten Keys: 'Durchsetzungsfähigkeit', 'Selbstbewusstsein', 'Soziale Aktivität', 'Freundlichkeit', 'Rücksichtnahme', 'Hilfsbereitschaft', 'Fleiß', 'Organisation', 'Depression', 'Reizbarkeit', 'Nervosität', 'Intellekt', 'Reflexion', 'Wissenschaftliches Interesse'."},
+                            {"role": "system", "content": "Analysiere den Chat auf Big Five (1-5) auf Facettenebene. Antworte NUR im JSON-Format mit den exakten Keys: 'Freundlichkeit', 'Rücksichtnahme', 'Hilfsbereitschaft', 'Fleiß', 'Organisation', 'Durchsetzungsfähigkeit', 'Selbstbewusstsein', 'Soziale Aktivität',  'Depression', 'Reizbarkeit', 'Nervosität', 'Intellekt', 'Reflexion', 'Wissenschaftliches Interesse', Aufrichtigkeit, Fairness, Bescheidenheit."},
                             {"role": "user", "content": f"Hier ist der Chatverlauf:\n{chat_text}"}
                         ],
                         response_format={"type": "json_object"}
@@ -492,14 +509,16 @@ def main():
                         "Fleiß", "Organisation",
                         "Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität",
                         "Depression", "Reizbarkeit", "Nervosität",
-                        "Intellekt", "Reflexion", "Wissenschaftliches Interesse"
+                        "Intellekt", "Reflexion", "Wissenschaftliches Interesse",
+                        "Aufrichtigkeit", "Fairness", "Bescheidenheit"
                     ]}
 
         DIMENSION_FACETS = {
+            "Ehrlichkeit-Bescheidenheit": ["Aufrichtigkeit", "Fairness", "Bescheidenheit"],
+            "Neurotizismus": ["Depression", "Reizbarkeit", "Nervosität"],
+            "Extraversion": ["Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität"],
             "Verträglichkeit": ["Freundlichkeit", "Rücksichtnahme", "Hilfsbereitschaft"],
             "Gewissenhaftigkeit": ["Fleiß", "Organisation"],
-            "Extraversion": ["Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität"],
-            "Neurotizismus": ["Depression", "Reizbarkeit", "Nervosität"],
             "Offenheit": ["Intellekt", "Reflexion", "Wissenschaftliches Interesse"],
         }
 
