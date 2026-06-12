@@ -6,13 +6,15 @@ import requests
 import uuid
 import threading
 import random
+import time
+from datetime import datetime
 
 # --- KONFIGURATION & HELPER ------------------------------------------------------------------
 def save_to_nextcloud(participant_id, data_dict):
     try:
         base_url = "https://cloudstore.uni-ulm.de/remote.php/dav/files/ffg79"
         folder = "Forschungsdaten"
-        filename = f"interview_{participant_id}.json"
+        filename = f"interview_{participant_id}_{end_time}.json"
         upload_url = f"{base_url}/{folder}/{filename}"
         
         data = json.dumps(data_dict, indent=2, ensure_ascii=False).encode('utf-8')
@@ -164,7 +166,7 @@ SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein erfahrener psychologischer Interviewe
 INTERVIEW-REGELN:
 * Gehe die Facetten streng sequenziell von 1 bis 17 durch.
 * Stelle pro Item EINE verhaltensnahe Frage. Die Items findest du zwischen den Tags <ITEMS> und </ITEMS>
-* Formuliere die Fragen natürlich und flüssig, passend zu einem psychologischen Gespräch.
+* Formuliere die Fragen natürlich und gesprächsnah. Vermeide repetitive Phrasen wie 'Nun zur nächsten Frage:', 'Vielen Dank', 'Das freut mich zu hören', 'interessant' oder 'Das tut mir leid'.
 * Sprich den Nutzer mit 'Sie' an.
 * Wenn du die Antwort auf das letzte Item erhalten hast, verabschiede dich und setze an das Ende der Nachricht unbedingt das Label '[INTERVIEW_FERTIG]'.
 * Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut.
@@ -228,7 +230,7 @@ CONDITION_CONFIGS = {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! Lassen Sie uns direkt beginnen. Würden Sie sagen, dass man Sie für jemanden hält, mit dem man einfach gut auskommt?" # Condition label löschen
+            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Würden Sie sagen, dass man Sie für jemanden hält, mit dem man einfach gut auskommt?" # Condition label löschen
         })
     },
     "open-write": {
@@ -538,7 +540,7 @@ def main():
                     "participant_id": st.session_state.participant_id,
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
-                     "ux_responses": st.session_state.get("ux_responses", {}),
+                    "ux_responses": st.session_state.get("ux_responses", {}),
                     "ai_assessment": st.session_state.ai_bfi,
                     "chat": st.session_state.messages
                 }
