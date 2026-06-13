@@ -289,7 +289,7 @@ def main():
 
     # --- PHASE 2: EINWILLIGUNG ---
     elif st.session_state.step == "consent":
-        st.title("Informationen zur Studie & Datenschutz 📝")
+        st.title("Informationen zum Ablauf & Datenschutz 📝")
         st.markdown("""
         ### Beschreibung & Ablauf der Übungssitzung
         Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
