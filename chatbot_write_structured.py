@@ -469,7 +469,7 @@ def main():
 
     # --- PHASE 4: UX Fragebogen Interview ---
     elif st.session_state.step == "ux_survey1":
-        st.title("Kurze Bewertung der Erfahrung 📋")
+        st.title("Wie war das Interview? 📋")
         st.write("Bevor Sie Ihre Auswertung sehen, bitten wir Sie, kurz Ihre Erfahrung mit dem Interview zu bewerten.")
         st.divider()
 
@@ -555,14 +555,13 @@ def main():
                 st.progress(float(ki_wert) / 5.0 if ki_wert else 0.0)
             st.divider()
 
-        st.divider()
         if st.button("Weiter zum Abschlussfragebogen"):
             st.session_state.step = "ux_survey2"
             st.rerun()
 
     # --- PHASE 6: UX Fragebogen Auswertung ---
     elif st.session_state.step == "ux_survey2":
-        st.title("Kurze Bewertung der Erfahrung 📋")
+        st.title("Wie war die Auswertung? 📋")
         st.write("Bitte bewerten Sie Ihre Erfahrung mit der Auswertung.")
         st.divider()
 
