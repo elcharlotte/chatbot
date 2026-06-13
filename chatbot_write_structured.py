@@ -258,7 +258,7 @@ def main():
 
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
-        st.title("Willkommen zum Interview 🤖")
+        st.title("Willkommen zum KI-Interview 🤖")
         st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
         
         st.markdown("""
@@ -278,7 +278,7 @@ def main():
         vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 04ERNS24")
         matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
         
-        if st.button("Weiter zur Studienbeschreibung"):
+        if st.button("Weiter zur Beschreibung"):
             if not vp_code_input.strip() or not matrikel_input.strip():
                 st.error("Bitte füllen Sie beide Felder aus.")
             else:
@@ -291,15 +291,15 @@ def main():
     elif st.session_state.step == "consent":
         st.title("Informationen zur Studie & Datenschutz 📝")
         st.markdown("""
-        ### Beschreibung & Zweck der Studie
+        ### Beschreibung & Ablauf der Übungssitzung
         Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
-        * **Verpflichtung:** Die Teilnahme ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
-        * **Ehrlichkeit:** Keine Pflicht zur Wahrheit, aber fiktive Angaben verfälschen die Auswertung.
+        * **Verpflichtung:** Die Teilnahme am Interview ist der erste Teil der Übungsleistung für diese Woche. Wer nicht teilnimmt, erhält keinen Credit.
+        * **Ehrlichkeit:** Es besteht keine Pflicht zu wahrheitsgemäßen Antworten, aber fiktive Angaben verfälschen natürlich die finale Auswertung Ihrer Big Five.
         * **Ethikvotum:** Bewilligt unter **[PLATZHALTER: Ethikantrag-ID]**.
         
         ### Datenschutz
-        * **OpenAI API:** Daten werden verschlüsselt übertragen, nicht zum Training genutzt und nach 30 Tagen gelöscht.
-        * **Speicherung:** Daten landen auf der sicheren Nextcloud der Universität Ulm.
+        * **OpenAI API:** Die Daten werden verschlüsselt via API an OpenAI übertragen (der KI-Interviewer beruht auf einem OpenAI Modell). OpenAI nutzt die übermittelten Daten NICHT zum Training und löscht die Daten nach 30 Tagen.
+        * **Speicherung:** Die Interviewtranskripte werden auf sicheren Servern der Universität Ulm gespeichert.
         """)
         
         consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
@@ -480,9 +480,9 @@ def main():
         with st.form("ux_form"):
             st.markdown("**Beispiel-Items (bitte ersetzen):**")
             
-            q1 = st.slider("Das Interview war einfach zu verstehen.", 1, 7, 4)
-            q2 = st.slider("Ich fühlte mich während des Interviews wohl.", 1, 7, 4)
-            q3 = st.slider("Die KI wirkte natürlich und menschlich.", 1, 7, 4)
+            q1 = st.slider("Das Interview war einfach zu verstehen.", 1, 5, 4)
+            q2 = st.slider("Ich fühlte mich während des Interviews wohl.", 1, 5, 4)
+            q3 = st.slider("Die KI wirkte natürlich und menschlich.", 1, 5, 4)
             q4 = st.text_area("Haben Sie weitere Anmerkungen zum Interview?", placeholder="Optionaler Freitext...")
 
             submitted = st.form_submit_button("Weiter zur Auswertung")
@@ -615,7 +615,7 @@ def main():
     elif st.session_state.step == "farewell":
         st.title("Vielen Dank! 🎉")
         st.success("Ihre Daten wurden erfolgreich gespeichert.")
-        st.write("Sie haben die Studie erfolgreich abgeschlossen. Ihre Teilnahme wird für die Übungsleistung angerechnet.")
+        st.write("Sie haben das Interview erfolgreich abgeschlossen. Ihre Teilnahme wird für die Übungsleistung angerechnet.")
         st.divider()
         st.link_button("Zur Uni-Webseite", "https://www.uni-ulm.de/in/psy-dia/forschung/an-studien-teilnehmen/")
 
