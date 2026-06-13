@@ -34,19 +34,31 @@ ERGEBNIS_ORDNER = st.secrets["nextcloud"]["folder_results"]
 def load_transcript_list():
     """Liest alle .json Dateien aus dem Nextcloud-Transkriptordner."""
     try:
-        ordner_pfad = f"{TRANSKRIPT_ORDNER}/"
-        files = client.list(ordner_pfad)
+        # Wir säubern den Ordnernamen von eventuellen Schrägstrichen am Anfang/Ende
+        clean_folder = TRANSKRIPT_ORDNER.strip("/")
+        
+        # Einige WebDAV-Versionen brauchen den relativen Pfad ohne führenden Slash
+        files = client.list(clean_folder)
+        
         # Nur .json Dateien filtern
         transcripts = [f for f in files if f.endswith('.json')]
         return transcripts
     except Exception as e:
-        st.error(f"Fehler beim Laden der Transkriptliste: {e}")
-        return []
+        # Wenn es fehlschlägt, testen wir einen alternativen absoluten WebDAV-Aufruf
+        try:
+            files = client.list(f"/{TRANSKRIPT_ORDNER.strip('/')}")
+            return [f for f in files if f.endswith('.json')]
+        except:
+            st.error(f"Fehler beim Laden der Transkriptliste: {e}")
+            return []
 
 def read_and_format_json_transcript(filename):
     """Lädt die JSON-Datei, extrahiert die ID sowie den formatierten Chat-Verlauf."""
     clean_filename = filename.split("/")[-1]
-    remote_path = f"{TRANSKRIPT_ORDNER}/{clean_filename}"
+    
+    # Pfad absolut und sauber zusammensetzen
+    clean_folder = TRANSKRIPT_ORDNER.strip("/")
+    remote_path = f"{clean_folder}/{clean_filename}"
     
     buffer = io.BytesIO()
     client.download_from(remote_path=remote_path, file_to=buffer)
@@ -54,10 +66,8 @@ def read_and_format_json_transcript(filename):
     json_text = buffer.getvalue().decode('utf-8')
     data = json.loads(json_text)
     
-    # VP-Code extrahieren (Fällt zurück auf den Dateinamen, falls 'id' fehlt)
     vp_code = data.get("id", clean_filename.replace(".json", ""))
     
-    # Chat-Verlauf zu einem sauberen Text-Transkript zusammenbauen
     formatted_chat = []
     chat_verlauf = data.get("chat", [])
     
@@ -65,11 +75,9 @@ def read_and_format_json_transcript(filename):
         role = message.get("role")
         content = message.get("content", "").strip()
         
-        # System-Prompts überspringen, da diese nur Instruktionen für die KI enthalten
         if role == "system":
             continue
             
-        # Labels für die Anzeige vergeben
         if role == "assistant":
             label = "Interviewer (KI)"
         elif role == "user":
@@ -79,14 +87,13 @@ def read_and_format_json_transcript(filename):
             
         formatted_chat.append(f"{label}:\n{content}\n")
         
-    # Alle Nachrichten mit einer Leerzeile Abstand verbinden
     full_transcript_text = "\n".join(formatted_chat)
-    
     return vp_code, full_transcript_text
 
 def upload_results_to_nextcloud(filename, csv_data):
     """Lädt die CSV-Ergebnisdatei in den Ergebnisordner der Nextcloud hoch."""
-    remote_path = f"{ERGEBNIS_ORDNER}/{filename}"
+    clean_folder = ERGEBNIS_ORDNER.strip("/")
+    remote_path = f"{clean_folder}/{filename}"
     buffer = io.BytesIO(csv_data.encode('utf-8'))
     client.upload_to(remote_path=remote_path, file_to=buffer)
 
