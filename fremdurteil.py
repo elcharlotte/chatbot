@@ -9,7 +9,7 @@ from requests.auth import HTTPBasicAuth
 import xml.etree.ElementTree as ET
 
 # 1. SEITEN-KONFIGURATION
-st.set_page_config(page_title="Forschungsstudie: Transkript-Bewertung", page_icon="📝", layout="centered")
+st.set_page_config(page_title="Teil 2 Übung: Transkript-Bewertung", page_icon="📝", layout="centered")
 
 # Zugangsdaten aus Secrets laden & bereinigen
 NC_USER = st.secrets["nextcloud"]["username"].strip()
@@ -123,11 +123,11 @@ if 'abgesendet' not in st.session_state:
     st.session_state.abgesendet = False
 
 # 5. BENUTZEROBERFLÄCHE (UI)
-st.title("📝 Wissenschaftliche Untersuchung: KI-Interviews")
+st.title("📝 Fremdbeurteilung")
 st.write("""
-Willkommen zu unserer Studie! 
-Im ersten Schritt wird dir ein zufälliges Transkript eines KI-Interviews zugelost. 
-Bitte lies dir dieses aufmerksam durch und fülle im Anschluss den kurzen Persönlichkeitsfragebogen aus.
+Willkommen zum zweiten Teil der Übungssitzung! 
+Im ersten Schritt wird Ihnen ein zufälliges Transkript eines KI-Interviews zugelost. 
+Bitte lesen Sie sich dieses aufmerksam durch und füllen Sie im Anschluss den Persönlichkeitsfragebogen über die Person, deren Transkript Sie gelesen haben, aus.
 """)
 
 st.write("---")
@@ -137,7 +137,7 @@ if st.session_state.aktuelles_transkript_file is None:
     st.subheader("Schritt 1: Transkript erhalten")
     
     if not st.session_state.urne:
-        st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer. Bitte den Studienleiter kontaktieren.")
+        st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer. Bitte kontaktiere elisa.altgassen@uni-ulm.de.")
     else:
         if st.button("🎲 Transkript zufällig zulosen", type="primary"):
             gezogenes_file = random.choice(st.session_state.urne)
@@ -157,7 +157,7 @@ if st.session_state.aktuelles_transkript_file is None:
 # SCHRITT 2 & 3: ANZEIGEN & BEWERTEN
 else:
     if not st.session_state.abgesendet:
-        st.success("Dir wurde erfolgreich ein Interview-Transkript zugelost!")
+        st.success("Ihnen wurde erfolgreich ein Interview-Transkript zugelost!")
         
         st.subheader("Schritt 2: Transkript lesen")
         st.text_area(
@@ -170,7 +170,7 @@ else:
         st.write("---")
         
         st.subheader("Schritt 3: Persönlichkeitseinschätzung")
-        st.write("Bitte schätze die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
+        st.write("Bitte schätzen Sie die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
         
         with st.form("fragebogen_form"):
             extraversion = st.slider("Die Person wirkt extravertiert, gesellig und gesprächig.", 1, 5, 3)
@@ -185,7 +185,7 @@ else:
             submit_button = st.form_submit_button("Formular absenden", type="primary")
             
             if submit_button:
-                with st.spinner("Deine Antworten werden sicher übertragen..."):
+                with st.spinner("Ihre Antworten werden sicher übertragen..."):
                     # Nutzereinschätzungen zwischenspeichern für den Feedback-Bildschirm
                     st.session_state.user_scores = {
                         "Extraversion": extraversion,
@@ -230,12 +230,12 @@ else:
     # DER NEUE RÜCKMELDUNGS-BILDSCHIRM
     else:
         st.balloons()
-        st.subheader("🎉 Vielen Dank für deine Teilnahme!")
-        st.write("Deine Antworten wurden erfolgreich und sicher in der Nextcloud gespeichert.")
+        st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
+        st.write("Ihre Antworten wurden erfolgreich und sicher in der Nextcloud gespeichert.")
         
         st.write("---")
-        st.subheader("🤖 Dein Urteil im Vergleich zur KI-Bewertung")
-        st.write("Hier siehst du, wie nah deine Einschätzung an der algorithmischen Auswertung der KI lag:")
+        st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
+        st.write("Hier sehen Sie, wie nah Ihre Einschätzung an der Einschäzung der KI lag:")
         
         # Tabelle für den visuellen Vergleich bauen
         vergleichs_daten = []
@@ -271,11 +271,11 @@ else:
         # Gesamt-Fazit ziehen
         st.write("")
         if gesamte_abweichung <= 2:
-            st.info(f"🧠 **Fazit:** Du hast eine extreme Ähnlichkeit zur KI-Auswertung! Deine Gesamtabweichung liegt bei nur **{gesamte_abweichung}** Punkten über alle 5 Dimensionen hinweg.")
+            st.info(f"🧠 **Fazit:** Sie haben eine extreme Ähnlichkeit zur KI-Auswertung! Die Gesamtabweichung liegt bei nur **{gesamte_abweichung}** Punkten über alle 5 Dimensionen hinweg.")
         elif gesamte_abweichung <= 5:
-            st.info(f"📊 **Fazit:** Gute Übereinstimmung. Du hast das Profil im Wesentlichen genau so wahrgenommen wie der Algorithmus (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            st.info(f"📊 **Fazit:** Gute Übereinstimmung. Sie haben das Profil im Wesentlichen genau so wahrgenommen wie der Algorithmus (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
         else:
-            st.info(f"👥 **Fazit:** Spannend! Deine menschliche Intuition weicht in einigen Punkten von der KI ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte). Genau diese Unterschiede untersuchen wir in dieser Forschungsarbeit.")
+            st.info(f"👥 **Fazit:** Spannend! Ihre menschliche Intuition weicht in einigen Punkten von der KI ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte). Genau diese Unterschiede untersuchen wir in dieser Forschungsarbeit.")
 
         st.write("---")
         
