@@ -147,15 +147,8 @@ TSDI_ITEMS = """
 TOTAL_FACETS = 17
 
 
-# zu sehr über bewältigungsstrategien und umgangsweisen geredet
-# nicht irgendwas gefragt zu früheren erlebnissen, sondern immer nur bezogen auf umgang mit schwierigen situationen
-
- ## vielleicht sinnvoll, fragenpool zu erstellen für fragen aus früheren erlebnissen, die nicht auf bewältigung hinauslaufen
- ## wenn alle abänderungen immer nur trotzdem zu bewältigung führen und  nicht passen, elisa fragen, was sie davon hält
- # todo: wenn durch prompt abgeändert, dass nicht auf bewältigung strategien fokus, wie verhält ki sich dann, erstellt es bessere fragen in denen man erlebnisse beschreibt erzählt? was ist sinnvoll hier und hilfreich für persönlichkeitsmessung?
-
 # Das Wort 'JSON' MUSS im Prompt stehen, damit der response_format Modus funktioniert.
-SYSTEM_PROMPT = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des 'Trait Self-Descriptive Inventory (TSDI)' und 'HEXACO' effizient zu erfassen.
+SYSTEM_PROMPT = f"""Role: Du bist ein erfahrener psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des 'Trait Self-Descriptive Inventory (TSDI)' und 'HEXACO' effizient zu erfassen.
 
 TASK OVERVIEW:
 Erforsche die Dimensionen im Gesprächsverlauf. Du musst im Laufe des Gesprächs jede Facette so weit explorieren, dass du eine verlässliche Einschätzung auf den TSDI-Items und HEXACO-Items dieser Facette treffen könntest. Das Gespräch muss sich natürlich, reaktiv und logisch aufgebaut anfühlen.
@@ -181,19 +174,14 @@ NEUE STRUKTUR- & DIAGNOSTIK-REGELN:
 12. BEENDIGUNG: Sobald du alle Facetten im freien Gespräch diagnostisch ausreichend abgedeckt hast, bedanke dich für das Gespräch, verabschiede dich freundlich und platziere am Ende deiner allerletzten Nachricht exakt das Wort '[INTERVIEW_FERTIG]' (inklusive der eckigen Klammern).
 
 
-# DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory (TSDI) und HEXACO Ehrlichkeit-Bescheidenheit (HH)
+# DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory (TSDI)
 
 
 BESCHREIBUNGEN:
 {TSDI_BESCHREIBUNGEN} 
-{HEXACO_HH_BESCHREIBUNGEN}
-ITEMS:
-{TSDI_ITEMS}
-{HEXACO_HH_ITEMS}
-"""
 
-# Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut. Wenn dir eine andere Frage gestellt wird, antworte nicht auf die Frage, sondern weise den Nutzer höflich darauf hin, dass du gerade ein diagnostisches Interview mit ihm führst und stelle die Frage erneut.
-# recyceln/umschreiben, wenn oben neues nicht geht
+{TSDI_ITEMS}
+"""
 
 
 def main():
