@@ -192,7 +192,7 @@ else:
                         "Verträglichkeit": vertraeglichkeit,
                         "Gewissenhaftigkeit": gewissenhaftigkeit,
                         "Neurotizismus": neurotizismus,
-                        "Offenheit": openness
+                        "Offenheit": offenheit
                     }
                     
                     # Für die CSV-Datei vorbereiten (wir speichern auch direkt die KI-Werte zum Vergleich mit ab!)
