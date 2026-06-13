@@ -250,7 +250,7 @@ elif st.session_state.step == "evaluation":
                         "Verträglichkeit": vertraeglichkeit,
                         "Gewissenhaftigkeit": gewissenhaftigkeit,
                         "Neurotizismus": neurotizismus,
-                        "Offenheit": openness
+                        "Offenheit": offenheit
                     }
                     
                     # 2. Daten für die CSV strukturieren (Inklusive RATER-Infos!)
@@ -264,7 +264,7 @@ elif st.session_state.step == "evaluation":
                         "USER_Vertraeglichkeit": vertraeglichkeit,
                         "USER_Gewissenhaftigkeit": gewissenhaftigkeit,
                         "USER_Neurotizismus": neurotizismus,
-                        "USER_Offenheit": openness,
+                        "USER_Offenheit": offenheit,
                         "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
                         "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
                         "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
