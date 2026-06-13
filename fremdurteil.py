@@ -204,7 +204,7 @@ else:
                         "USER_Vertraeglichkeit": vertraeglichkeit,
                         "USER_Gewissenhaftigkeit": gewissenhaftigkeit,
                         "USER_Neurotizismus": neurotizismus,
-                        "USER_Offenheit": openness,
+                        "USER_Offenheit": offenheit,
                         "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
                         "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
                         "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
