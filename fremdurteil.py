@@ -33,9 +33,12 @@ ERGEBNIS_ORDNER = st.secrets["nextcloud"]["folder_results"]
 def load_transcript_list():
     """Liest alle .txt Dateien aus dem Nextcloud-Transkriptordner."""
     try:
-        # list() gibt eine Liste von Dateinamen/Pfaden zurück
-        files = client.list(TRANSKRIPT_ORDNER)
-        # Nur .txt Dateien herausfiltern und bereinigen
+        # .list() benötigt den Ordnernamen. Wir hängen ein '/' an, 
+        # damit WebDAV weiß, dass es ein Verzeichnis ist.
+        ordner_pfad = f"{TRANSKRIPT_ORDNER}/"
+        files = client.list(ordner_pfad)
+        
+        # Nur .txt Dateien herausfiltern
         transcripts = [f for f in files if f.endswith('.txt')]
         return transcripts
     except Exception as e:
@@ -44,17 +47,20 @@ def load_transcript_list():
 
 def read_transcript_content(filename):
     """Lädt den Textinhalt einer spezifischen Datei aus der Nextcloud."""
-    remote_path = f"{TRANSKRIPT_ORDNER}/{filename}"
-    # Datei in den Speicher laden
+    # Falls der filename vom Server schon den Ordnerpfad enthält, bereinigen wir ihn
+    clean_filename = filename.split("/")[-1]
+    remote_path = f"{TRANSKRIPT_ORDNER}/{clean_filename}"
+    
     buffer = io.BytesIO()
-    client.download_from(remote_path, buffer)
+    # Nutze die offizielle WebDAV-Methode zum direkten Download in den Speicher
+    client.download_from(remote_path=remote_path, file_to=buffer)
     return buffer.getvalue().decode('utf-8')
 
 def upload_results_to_nextcloud(filename, csv_data):
     """Lädt die CSV-Ergebnisdatei in den Ergebnisordner der Nextcloud hoch."""
     remote_path = f"{ERGEBNIS_ORDNER}/{filename}"
     buffer = io.BytesIO(csv_data.encode('utf-8'))
-    client.upload_to(remote_path, buffer)
+    client.upload_to(remote_path=remote_path, file_to=buffer)
 
 # 4. SESSION STATE INITIALISIERUNG (Zustandsverwaltung)
 if 'urne' not in st.session_state:
