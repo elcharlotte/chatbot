@@ -131,7 +131,7 @@ if 'user_scores' not in st.session_state:
 
 # --- PHASE 1: WILLKOMMEN & DATENEINGABE ---
 if st.session_state.step == "welcome":
-    st.title("Willkommen zur Transkript-Bewertung 📝")
+    st.title("Willkommen zu Teil 2 der Übung: Transkript-Bewertung 📝")
     st.write("Bitte geben Sie Ihre Daten ein, um mit der Zulosung und Bewertung zu beginnen.")
     
     st.markdown("""
