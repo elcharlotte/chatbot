@@ -30,16 +30,15 @@ def reset_app():
 
 # --- TSDI LEITFADEN ---
 TSDI_BESCHREIBUNGEN = """
-## Skalen auf Dimensions-Ebene:
-Definitionen:
+DIMENSIONEN:
 Extraversion (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreudig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
 Neurotizismus (N) : Neurotizismus erfasst Unterschiede zwischen Personen hinsichtlich ihrer gefühlsmäßigen Robustheit einerseits und ihrer emotionalen Empfindlichkeit bzw. Ansprechbarkeit andererseits. Personen mit hoher Ausprägung in diesem Bereich sind empfindlicher und neigen unter Stress dazu, leichter aus dem Gleichgewicht zu kommen. Sie entwickeln eher unangepasste Formen der Problembewältigung, neigen zu unrealistischen Ideen und sind weniger in der Lage, ihre Bedürfnisse zu kontrollieren. Personen mit niedriger Ausprägung in diesem Bereich beschreiben sich als ausgeglichen, emotional stabil und robust und geraten nicht so leicht aus der Fassung. Charakteristisch für diese Personen ist, dass sie Gefühlszustände nicht so stark erleben.
 Gewissenhaftigkeit (C): Die Grundlage der Gewissenhaftigkeit bilden Unterschiede beim Planen, Organisieren und Ausführen von Aufgaben. Personen mit einer hohen Ausprägung beschreiben sich als eher zielstrebig, willensstark und entschlossen, während Personen mit einer niedrigen Ausprägung ihre Zielsetzungen mit geringerem Engagement verfolgen.
 Verträglichkeit (A): Mit dieser Dimension werden Einstellungen und gewohnheitsmäßige Verhaltensweisen in sozialen Beziehungen umschrieben. Personen mit hoher Ausprägung sind hilfsbereit, entgegenkommend, vertrauensbereit und bemüht anderen zu helfen. Sie begegnen anderen Menschen mit Wohlwollen, neigen zu Gutmütigkeit, sind bereit, in Auseinandersetzungen nachzugeben und können im Extremfall als unterwürfig oder abhängig erscheinen. Personen mit niedriger Ausprägung beschreiben sich als eher egozentrisch, misstrauisch gegenüber den Intentionen anderer, grob, sowie wenig geneigt zu kooperativem Verhalten und mit einer Präferenz für wettbewerbsorientiertes Verhalten.
 Offenheit (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen, Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im Gegensatz zu Personen mit hoher Ausprägung.
+Ehrlichkeit-Bescheidenheit (HH): Personen mit sehr niedrigen Werten in der Skala "Ehrlichkeit-Bescheidenheit" neigen dazu, sich zu verstellen, um ihre Ziele zu erreichen. Sie nehmen Regeln häufig nicht so genau, streben nach materiellem Reichtum und Ansehen und neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit sehr hohen Werten in dieser Skala hingegen verhalten sich stets authentisch und ehrlich. Sie vermeiden es, andere zu ihren eigenen Gunsten zu beeinflussen, und handeln stets fair. Sie streben weder Luxusgüter noch einen hohen sozialen Status an, noch haben sie den Anspruch, bevorzugt behandelt zu werden.
 
-## Skalen auf Facetten-Ebene:
-Definitionen:
+FACETTEN:
 ### Dimension Extraversion (E)
 - Die Facette „Soziale Aktivität (E-So)“ erfasst die Tendenz unter Leute zu gehen. Personen mit niedriger Ausprägung bleiben lieber für sich und beschäftigen sich allein, wohingegen Personen mit hoher Ausprägung häufig auf Partys anzutreffen sind.
 - Die Facette „Selbstbewusstsein (E-SB)“ erfasst die Tendenz selbstsicher zu sein. Personen mit niedriger Ausprägung sind schüchtern und meiden es Aufmerksamkeit zu bekommen, wohingegen Personen mit hoher Ausprägung auch gerne mal im Zentrum der Aufmerksamkeit stehen.
@@ -59,6 +58,10 @@ Definitionen:
 - Die Facette „Intellekt (O-In)" erfasst die Tendenz sich mit intellektuellen Themen zu beschäftigen. Personen mit niedriger Ausprägung meiden komplexe Diskussionen, wohingegen Personen mit hoher Ausprägung generell neugierig sind.
 - Die Facette „Wissenschaftliches Interesse (O-Sc)" erfasst die Tendenz sich häufig mit wissenschaftlichen Themen auseinanderzusetzen. Personen mit niedriger Ausprägung meiden solche Themen, wohingegen sich Personen mit hoher Ausprägung wissenschaftlich weiterbilden.
 - Die Facette „Reflexion (O-R)" erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
+### Dimension Ehrlichkeit-Bescheidenheit (HH)
+- Die Facette „Aufrichtigkeit (HH-Si)“ zeigt auf, wie authentisch eine Person im zwischenmenschlichen Kontakt ist. Personen mit niedriger Ausprägung in dieser Skala verstellen sich manchmal, um persönliche Ziele zu erreichen. Personen mit hoher Ausprägung verhalten sich hingegen stets aufrichtig und unverstellt. Sie beeinflussen andere nicht zu ihrem eigenen Vorteil.
+- Die Facette "Fairness (HH-Fa)" beschreibt, wie ehrlich und regelkonform das Verhalten einer Person ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, Regeln nicht so genau zu nehmen oder sogar zu brechen, um sich einen Vorteil zu verschaffen. Für Personen mit hoher Ausprägung geht Ehrlichkeit gegenüber ihren Mitmenschen und der Gesellschaft über alles und sie bereichern sich nicht auf Kosten anderer.
+- Die Facette "Bescheidenheit (HH-Mo)" zeigt, wie bescheiden jemand in Bezug auf sich selbst ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit hoher Ausprägung betrachten sich und andere Menschen als gleichwertig und beanspruchen für sich keine besondere Behandlung.
 """
 
 
@@ -125,27 +128,7 @@ TSDI_ITEMS = """
 - Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
 - Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
 - Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
-"""
-
-
-# --- HEXACO_HH LEITFADEN ---
-HEXACO_HH_BESCHREIBUNGEN = """
-## Skalen auf Dimensions-Ebene:
-Definitionen:
-Ehrlichkeit-Bescheidenheit (HH): Personen mit sehr niedrigen Werten in der Skala "Ehrlichkeit-Bescheidenheit" neigen dazu, sich zu verstellen, um ihre Ziele zu erreichen. Sie nehmen Regeln häufig nicht so genau, streben nach materiellem Reichtum und Ansehen und neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit sehr hohen Werten in dieser Skala hingegen verhalten sich stets authentisch und ehrlich. Sie vermeiden es, andere zu ihren eigenen Gunsten zu beeinflussen, und handeln stets fair. Sie streben weder Luxusgüter noch einen hohen sozialen Status an, noch haben sie den Anspruch, bevorzugt behandelt zu werden.
-
-## Skalen auf Facetten-Ebene:
-Definitionen:
 ### Dimension Ehrlichkeit-Bescheidenheit (HH)
-- Die Facette „Aufrichtigkeit (HH-Si)“ zeigt auf, wie authentisch eine Person im zwischenmenschlichen Kontakt ist. Personen mit niedriger Ausprägung in dieser Skala verstellen sich manchmal, um persönliche Ziele zu erreichen. Personen mit hoher Ausprägung verhalten sich hingegen stets aufrichtig und unverstellt. Sie beeinflussen andere nicht zu ihrem eigenen Vorteil.
-- Die Facette "Fairness (HH-Fa)" beschreibt, wie ehrlich und regelkonform das Verhalten einer Person ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, Regeln nicht so genau zu nehmen oder sogar zu brechen, um sich einen Vorteil zu verschaffen. Für Personen mit hoher Ausprägung geht Ehrlichkeit gegenüber ihren Mitmenschen und der Gesellschaft über alles und sie bereichern sich nicht auf Kosten anderer.
-- Die Facette "Bescheidenheit (HH-Mo)" zeigt, wie bescheiden jemand in Bezug auf sich selbst ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit hoher Ausprägung betrachten sich und andere Menschen als gleichwertig und beanspruchen für sich keine besondere Behandlung.
-"""
-
-
-HEXACO_HH_ITEMS = """
-## Skalen auf Facettenebene
-### Ehrlichkeit-Bescheidenheit (HH)
 #### Facette "Aufrichtigkeit" (HH-Si):
 - Item x42i47_hh_si001_t2: Wenn ich von einer Person, die ich nicht mag, etwas will, verhalte ich mich dieser Person gegenüber sehr nett um es zu bekommen.
 - Item x42i15_hh_si005_t2: Ich würde keine Schmeicheleien benutzen, um eine Gehaltserhöhung zu bekommen oder befördert zu werden, auch wenn ich wüsste, dass es erfolgreich wäre.
