@@ -14,7 +14,8 @@ def save_to_nextcloud(participant_id, data_dict):
     try:
         base_url = "https://cloudstore.uni-ulm.de/remote.php/dav/files/ffg79"
         folder = "Forschungsdaten"
-        filename = f"interview_{participant_id}_{end_time}.json"
+        # save_time = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H:%M:%S")
+        filename = f"interview_{participant_id}.json"
         upload_url = f"{base_url}/{folder}/{filename}"
         
         data = json.dumps(data_dict, indent=2, ensure_ascii=False).encode('utf-8')
@@ -253,6 +254,7 @@ def main():
         st.session_state.condition = random.choice(["structured-write", "open-write"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
+        st.session_state.experiment_start_time = time.time()
 
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
@@ -304,6 +306,7 @@ def main():
         if st.button("Interview starten"):
             if consent_checked:
                 st.session_state.research_consent = True
+                st.session_state.interview_start_time = time.time()
                 st.session_state.step = "chat"
                 
                 config = CONDITION_CONFIGS[st.session_state.condition]
@@ -342,7 +345,11 @@ def main():
             overflow-y: auto;
             display: flex;
             flex-direction: column-reverse;
-            ...
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+            margin-bottom: 1rem;
         }
         .chat-bubble-user {
             align-self: flex-end;
@@ -409,27 +416,38 @@ def main():
         """, height=0)
 
         if interview_ended:
+            if "interview_end_time" not in st.session_state:
+                st.session_state.interview_end_time = time.time()
             st.success("Das Interview wurde erfolgreich beendet.")
             if st.button("Nächste Seite"):
-                st.session_state.step = "ux_survey"
+                st.session_state.step = "ux_survey1"
                 st.rerun()
         else:
             client = OpenAI(api_key=st.secrets["openai"]["api_key"])
             user_input = st.chat_input("Ihre Antwort hier tippen...")
 
             if user_input:
-                st.session_state.messages.append({"role": "user", "content": user_input})
+                st.session_state.messages.append({
+                    "role": "user",
+                    "content": user_input,
+                    "timestamp": datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H:%M:%S")
+                })
                 api_success = False
                 
                 with st.spinner("🤖 Interviewer überlegt..."):
                     try:
+                        api_messages = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
                         response = client.chat.completions.create(
                             model="gpt-4o-mini",
-                            messages=st.session_state.messages,
+                            messages=api_messages,
                             response_format={"type": "json_object"}
                         )
                         ai_msg = response.choices[0].message.content
-                        st.session_state.messages.append({"role": "assistant", "content": ai_msg})
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": ai_msg,
+                            "timestamp": datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H:%M:%S")
+                        })
                         api_success = True
                     except Exception as e:
                         st.error(f"KI Fehler: {e}")
@@ -440,13 +458,17 @@ def main():
                         "participant_id": st.session_state.get("participant_id", "unknown"),
                         "condition": st.session_state.condition,
                         "research_consent": st.session_state.research_consent,
-                        "ux_responses": st.session_state.get("ux_responses", {}),
-                        "chat": st.session_state.messages
+                        "chat": st.session_state.messages,
+                        "timing": {
+                            "experiment_start_time": datetime.fromtimestamp(st.session_state.experiment_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
+                            "interview_start_time": datetime.fromtimestamp(st.session_state.interview_start_time).strftime("%Y-%m-%d_%H:%M:%S")
+                        }
                     }
                     threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data), daemon=True).start()
                 st.rerun()
-    # --- PHASE 4: UX Fragebogen ---
-    elif st.session_state.step == "ux_survey":
+
+    # --- PHASE 4: UX Fragebogen Interview ---
+    elif st.session_state.step == "ux_survey1":
         st.title("Kurze Bewertung der Erfahrung 📋")
         st.write("Bevor Sie Ihre Auswertung sehen, bitten wir Sie, kurz Ihre Erfahrung mit dem Interview zu bewerten.")
         st.divider()
@@ -465,7 +487,7 @@ def main():
 
             submitted = st.form_submit_button("Weiter zur Auswertung")
             if submitted:
-                st.session_state.ux_responses = {
+                st.session_state.ux_responses_interview = {
                     "q1_verstaendlichkeit": q1,
                     "q2_wohlbefinden": q2,
                     "q3_natuerlichkeit": q3,
@@ -474,10 +496,9 @@ def main():
                 st.session_state.step = "results"
                 st.rerun()
 
-    # --- PHASE 4: AUSWERTUNG ---
+    # --- PHASE 5: AUSWERTUNG ---
     elif st.session_state.step == "results":
         st.title("Ihre Auswertung 📊")
-        if "data_saved" not in st.session_state: st.session_state.data_saved = False
 
         if "ai_bfi" not in st.session_state:
             with st.spinner("KI Analyse läuft..."):
@@ -500,7 +521,7 @@ def main():
                     res = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": "Analysiere den Chat auf Big Five (1-5) auf Facettenebene. Antworte NUR im JSON-Format mit den exakten Keys: 'Freundlichkeit', 'Rücksichtnahme', 'Hilfsbereitschaft', 'Fleiß', 'Organisation', 'Durchsetzungsfähigkeit', 'Selbstbewusstsein', 'Soziale Aktivität',  'Depression', 'Reizbarkeit', 'Nervosität', 'Intellekt', 'Reflexion', 'Wissenschaftliches Interesse', Aufrichtigkeit, Fairness, Bescheidenheit."},
+                            {"role": "system", "content": f"Du bist ein erfahrener Persönlichkeitspsychologe. Analysiere den Chat auf Facettenebene der Big Five. Basiere deine Einschätzung ausschließlich auf dem Verhalten und den Aussagen der Teilnehmer im Chat.\nHier sind die Dimensions- und Facettenbeschreibungen, auf dessen Grundlage du die Ratings vornimmst:\n{TSDI_BESCHREIBUNGEN}\nSchätze jede Facette auf einer Skala von 1-5 ein, wobei 1 = sehr niedrige Ausprägung und 5 = sehr hohe Ausprägung bedeutet. Antworte NUR im JSON-Format mit den exakten Keys: 'Freundlichkeit', 'Rücksichtnahme', 'Hilfsbereitschaft', 'Fleiß', 'Organisation', 'Durchsetzungsfähigkeit', 'Selbstbewusstsein', 'Soziale Aktivität',  'Depression', 'Reizbarkeit', 'Nervosität', 'Intellekt', 'Reflexion', 'Wissenschaftliches Interesse', 'Aufrichtigkeit', 'Fairness', 'Bescheidenheit'.\n"},
                             {"role": "user", "content": f"Hier ist der Chatverlauf:\n{chat_text}"}
                         ],
                         response_format={"type": "json_object"}
@@ -534,27 +555,70 @@ def main():
                 st.progress(float(ki_wert) / 5.0 if ki_wert else 0.0)
             st.divider()
 
-        if not st.session_state.data_saved:
-            if st.button("Ergebnisse final speichern & beenden"):
+        st.divider()
+        if st.button("Weiter zum Abschlussfragebogen"):
+            st.session_state.step = "ux_survey2"
+            st.rerun()
+
+    # --- PHASE 6: UX Fragebogen Auswertung ---
+    elif st.session_state.step == "ux_survey2":
+        st.title("Kurze Bewertung der Erfahrung 📋")
+        st.write("Bitte bewerten Sie Ihre Erfahrung mit der Auswertung.")
+        st.divider()
+
+        # --- PLACEHOLDER: Replace these with your actual UX questionnaire items ---
+        st.subheader("🚧 Fragebogen-Platzhalter")
+        st.info("Hier wird der UX-Fragebogen eingebettet (z.B. UEQ, AttrakDiff, NASA-TLX o.ä.).")
+
+        with st.form("ux_form"):
+            st.markdown("**Beispiel-Items (bitte ersetzen):**")
+            
+            q1 = st.slider("Das Interview war einfach zu verstehen.", 1, 7, 4)
+            q2 = st.slider("Ich fühlte mich während des Interviews wohl.", 1, 7, 4)
+            q3 = st.slider("Die KI wirkte natürlich und menschlich.", 1, 7, 4)
+            q4 = st.text_area("Haben Sie weitere Anmerkungen zum Interview?", placeholder="Optionaler Freitext...")
+
+            submitted = st.form_submit_button("Abschließen & Daten speichern")
+            if submitted:
+                st.session_state.ux_responses_results = {
+                    "q1_verstaendlichkeit": q1,
+                    "q2_wohlbefinden": q2,
+                    "q3_natuerlichkeit": q3,
+                    "q4_freitext": q4
+                }
+
+                experiment_end_time = time.time()
                 final_payload = {
                     "participant_id": st.session_state.participant_id,
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
-                    "ux_responses": st.session_state.get("ux_responses", {}),
+                    "ux_responses_interview": st.session_state.get("ux_responses_interview", {}),
+                    "ux_responses_results": st.session_state.ux_responses_results,
                     "ai_assessment": st.session_state.ai_bfi,
-                    "chat": st.session_state.messages
+                    "chat": st.session_state.messages,
+                    "timing": {
+                            "experiment_start_time": datetime.fromtimestamp(st.session_state.experiment_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
+                            "experiment_end_time": datetime.fromtimestamp(experiment_end_time).strftime("%Y-%m-%d_%H:%M:%S"),
+                            "interview_start_time": datetime.fromtimestamp(st.session_state.interview_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
+                            "interview_end_time": datetime.fromtimestamp(st.session_state.interview_end_time).strftime("%Y-%m-%d_%H:%M:%S"),
+                            "duration_interview_seconds": round(st.session_state.interview_end_time - st.session_state.interview_start_time, 2),
+                            "duration_experiment_seconds": round(experiment_end_time - st.session_state.experiment_start_time, 2)
+                        }
                 }
                 if save_to_nextcloud(st.session_state.participant_id, final_payload):
                     st.session_state.data_saved = True
+                    st.session_state.step = "farewell"
                     st.rerun()
                 else:
-                    st.error("Speicherfehler.")
-        else:
-            st.success("Daten erfolgreich gespeichert!")
-            col_a, col_b = st.columns(2)
-            with col_a: st.link_button("Zur Uni-Webseite", "https://www.uni-ulm.de/in/psy-dia/forschung/an-studien-teilnehmen/")
-            with col_b: 
-                if st.button("🔄 APP RESET"): reset_app()
+                    st.error("Speicherfehler. Bitte versuchen Sie es erneut.")
+    
+    # --- PHASE 7: ABSCHLUSS ---
+    elif st.session_state.step == "farewell":
+        st.title("Vielen Dank! 🎉")
+        st.success("Ihre Daten wurden erfolgreich gespeichert.")
+        st.write("Sie haben die Studie erfolgreich abgeschlossen. Ihre Teilnahme wird für die Übungsleistung angerechnet.")
+        st.divider()
+        st.link_button("Zur Uni-Webseite", "https://www.uni-ulm.de/in/psy-dia/forschung/an-studien-teilnehmen/")
 
 if __name__ == "__main__":
     main()
