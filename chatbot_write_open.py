@@ -180,9 +180,9 @@ NEUE STRUKTUR- & DIAGNOSTIK-REGELN:
 BESCHREIBUNGEN:
 {TSDI_BESCHREIBUNGEN} 
 
-
+{TSDI_ITEMS}
 """
-# {TSDI_ITEMS}
+
 
 def main():
     st.set_page_config(page_title="Persönlichkeits-Diagnostik (Unstrukturiert)", page_icon="🧠")
