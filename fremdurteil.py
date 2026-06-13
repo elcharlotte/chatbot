@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 from webdav3.client import Client
 import io
+import json
 
 # 1. SEITEN-KONFIGURATION
 st.set_page_config(page_title="Forschungsstudie: Transkript-Bewertung", page_icon="📝", layout="centered")
@@ -29,32 +30,59 @@ except Exception as e:
 TRANSKRIPT_ORDNER = st.secrets["nextcloud"]["folder_transcripts"]
 ERGEBNIS_ORDNER = st.secrets["nextcloud"]["folder_results"]
 
-# 3. UTILITY FUNKTIONEN (Nextcloud-Interaktion)
+# 3. UTILITY FUNKTIONEN (Nextcloud-Interaktion für deine JSON-Struktur)
 def load_transcript_list():
-    """Liest alle .txt Dateien aus dem Nextcloud-Transkriptordner."""
+    """Liest alle .json Dateien aus dem Nextcloud-Transkriptordner."""
     try:
-        # .list() benötigt den Ordnernamen. Wir hängen ein '/' an, 
-        # damit WebDAV weiß, dass es ein Verzeichnis ist.
         ordner_pfad = f"{TRANSKRIPT_ORDNER}/"
         files = client.list(ordner_pfad)
-        
-        # Nur .txt Dateien herausfiltern
-        transcripts = [f for f in files if f.endswith('.txt')]
+        # Nur .json Dateien filtern
+        transcripts = [f for f in files if f.endswith('.json')]
         return transcripts
     except Exception as e:
         st.error(f"Fehler beim Laden der Transkriptliste: {e}")
         return []
 
-def read_transcript_content(filename):
-    """Lädt den Textinhalt einer spezifischen Datei aus der Nextcloud."""
-    # Falls der filename vom Server schon den Ordnerpfad enthält, bereinigen wir ihn
+def read_and_format_json_transcript(filename):
+    """Lädt die JSON-Datei, extrahiert die ID sowie den formatierten Chat-Verlauf."""
     clean_filename = filename.split("/")[-1]
     remote_path = f"{TRANSKRIPT_ORDNER}/{clean_filename}"
     
     buffer = io.BytesIO()
-    # Nutze die offizielle WebDAV-Methode zum direkten Download in den Speicher
     client.download_from(remote_path=remote_path, file_to=buffer)
-    return buffer.getvalue().decode('utf-8')
+    
+    json_text = buffer.getvalue().decode('utf-8')
+    data = json.loads(json_text)
+    
+    # VP-Code extrahieren (Fällt zurück auf den Dateinamen, falls 'id' fehlt)
+    vp_code = data.get("id", clean_filename.replace(".json", ""))
+    
+    # Chat-Verlauf zu einem sauberen Text-Transkript zusammenbauen
+    formatted_chat = []
+    chat_verlauf = data.get("chat", [])
+    
+    for message in chat_verlauf:
+        role = message.get("role")
+        content = message.get("content", "").strip()
+        
+        # System-Prompts überspringen, da diese nur Instruktionen für die KI enthalten
+        if role == "system":
+            continue
+            
+        # Labels für die Anzeige vergeben
+        if role == "assistant":
+            label = "Interviewer (KI)"
+        elif role == "user":
+            label = "Teilnehmer (Mensch)"
+        else:
+            label = role.capitalize()
+            
+        formatted_chat.append(f"{label}:\n{content}\n")
+        
+    # Alle Nachrichten mit einer Leerzeile Abstand verbinden
+    full_transcript_text = "\n".join(formatted_chat)
+    
+    return vp_code, full_transcript_text
 
 def upload_results_to_nextcloud(filename, csv_data):
     """Lädt die CSV-Ergebnisdatei in den Ergebnisordner der Nextcloud hoch."""
@@ -62,13 +90,15 @@ def upload_results_to_nextcloud(filename, csv_data):
     buffer = io.BytesIO(csv_data.encode('utf-8'))
     client.upload_to(remote_path=remote_path, file_to=buffer)
 
-# 4. SESSION STATE INITIALISIERUNG (Zustandsverwaltung)
+# 4. SESSION STATE INITIALISIERUNG
 if 'urne' not in st.session_state:
-    # Beim ersten Start die Liste der Transkripte aus Nextcloud holen
     st.session_state.urne = load_transcript_list()
 
-if 'aktuelles_transkript' not in st.session_state:
-    st.session_state.aktuelles_transkript = None
+if 'aktuelles_transkript_file' not in st.session_state:
+    st.session_state.aktuelles_transkript_file = None
+
+if 'vp_code' not in st.session_state:
+    st.session_state.vp_code = ""
 
 if 'transkript_text' not in st.session_state:
     st.session_state.transkript_text = ""
@@ -86,37 +116,38 @@ Bitte lies dir dieses aufmerksam durch und fülle im Anschluss den kurzen Persö
 
 st.write("---")
 
-# SCHRITT 1: LOREN
-if st.session_state.aktuelles_transkript is None:
+# SCHRITT 1: ZULOSEN
+if st.session_state.aktuelles_transkript_file is None:
     st.subheader("Schritt 1: Transkript erhalten")
     
     if not st.session_state.urne:
         st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer. Bitte den Studienleiter kontaktieren.")
     else:
         if st.button("🎲 Transkript zufällig zulosen", type="primary"):
-            # Zufälliges Element aus der Urne ziehen und entfernen (Balancing)
-            gezogenes_transkript = random.choice(st.session_state.urne)
-            st.session_state.urne.remove(gezogenes_transkript)
+            # Zufälliges JSON aus der Urne ziehen und für diese Session entfernen (Balancing)
+            gezogenes_file = random.choice(st.session_state.urne)
+            st.session_state.urne.remove(gezogenes_file)
             
-            # Text live aus Nextcloud nachladen
+            # Text live aus Nextcloud laden & parsen
             with st.spinner("Transkript wird geladen..."):
-                text = read_transcript_content(gezogenes_transkript)
+                vp_code, text = read_and_format_json_transcript(gezogenes_file)
                 
-            st.session_state.aktuelles_transkript = gezogenes_transkript
+            st.session_state.aktuelles_transkript_file = gezogenes_file
+            st.session_state.vp_code = vp_code
             st.session_state.transkript_text = text
             st.rerun()
 
 # SCHRITT 2 & 3: ANZEIGEN & BEWERTEN
 else:
     if not st.session_state.abgesendet:
-        st.success(f"Dir wurde folgendes Transkript zugelost: **{st.session_state.aktuelles_transkript}**")
+        st.success("Dir wurde erfolgreich ein Interview-Transkript zugelost!")
         
-        # Textbox zur Anzeige des Transkripts (Scrollbar inklusive)
+        # Textbox zur Anzeige des reinen Transkript-Inhalts (Scrollbar inklusive)
         st.subheader("Schritt 2: Transkript lesen")
         st.text_area(
-            label="Inhalt des Interviews:", 
+            label="Inhalt des Gesprächs:", 
             value=st.session_state.transkript_text, 
-            height=400, 
+            height=450, 
             disabled=True
         )
         
@@ -127,7 +158,6 @@ else:
         st.write("Bitte schätze die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
         
         with st.form("fragebogen_form"):
-            # Beispiel-Items (kannst du beliebig erweitern/anpassen)
             extraversion = st.slider("Die Person wirkt extravertiert, gesellig und gesprächig.", 1, 5, 3)
             vertraeglichkeit = st.slider("Die Person wirkt rücksichtsvoll, empathisch und kooperativ.", 1, 5, 3)
             gewissenhaftigkeit = st.slider("Die Person wirkt organisiert, gründlich und zielstrebig.", 1, 5, 3)
@@ -140,28 +170,30 @@ else:
             submit_button = st.form_submit_button("Formular absenden", type="primary")
             
             if submit_button:
-                with st.spinner("Deine Antworten werden verschlüsselt übertragen..."):
+                with st.spinner("Deine Antworten werden sicher übertragen..."):
                     # Daten strukturieren
                     ergebnis_daten = {
                         "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "Bewertetes_Transkript": st.session_state.aktuelles_transkript,
+                        "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
+                        "Bewerteter_VP_Code": st.session_state.vp_code,  # Die extrahierte ID (z.B. "07mit hexaco")
                         "BFI_Extraversion": extraversion,
                         "BFI_Vertraeglichkeit": vertraeglichkeit,
                         "BFI_Gewissenhaftigkeit": gewissenhaftigkeit,
                         "BFI_Neurotizismus": neurotizismus,
                         "BFI_Offenheit": openness,
-                        "Freitext_Anmerkungen": anmerkungen.replace("\n", " ") # Zeilenumbrüche für CSV entfernen
+                        "Freitext_Anmerkungen": anmerkungen.replace("\n", " ")  # Zeilenumbrüche entfernen
                     }
                     
                     # DataFrame erzeugen und in CSV-String umwandeln
                     df = pd.DataFrame([ergebnis_daten])
                     csv_string = df.to_csv(index=False, sep=";")
                     
-                    # Dateiname eindeutig generieren
+                    # Eindeutigen Dateinamen für das Ergebnis generieren (Nutzt den echten VP-Code im Namen)
                     timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    dateiname = f"ergebnis_{st.session_state.aktuelles_transkript.replace('.txt', '')}_{timestamp_str}.csv"
+                    clean_vp_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
+                    dateiname = f"ergebnis_{clean_vp_name}_{timestamp_str}.csv"
                     
-                    # In Nextcloud hochladen
+                    # In Nextcloud abspeichern
                     try:
                         upload_results_to_nextcloud(dateiname, csv_string)
                         st.session_state.abgesendet = True
@@ -170,14 +202,15 @@ else:
                         st.error(f"Fehler beim Speichern der Daten. Bitte versuche es erneut oder wende dich an den Studienleiter. (Fehler: {e})")
 
     else:
-        # Danksagung nach erfolgreichem Upload
+        # Ansicht nach erfolgreichem Absenden
         st.balloons()
         st.subheader("🎉 Vielen Dank für deine Teilnahme!")
-        st.write("Deine Antworten wurden erfolgreich und anonymisiert in unserer Forschungsdatenbank gespeichert. Du kannst das Browserfenster jetzt schließen.")
+        st.write("Deine Antworten wurden erfolgreich gespeichert. Du kannst das Browserfenster jetzt schließen.")
         
-        # Ermöglicht einem neuen Teilnehmer am selben Gerät einen Neustart
+        # Option für Testzwecke / Kiosk-Modus im Labor
         if st.button("Nächste Teilnahme starten"):
-            st.session_state.aktuelles_transkript = None
+            st.session_state.aktuelles_transkript_file = None
+            st.session_state.vp_code = ""
             st.session_state.transkript_text = ""
             st.session_state.abgesendet = False
             st.rerun()
