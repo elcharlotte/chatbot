@@ -258,7 +258,7 @@ def main():
 
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
-        st.title("Willkommen zum KI-Interview 🤖")
+        st.title("Willkommen zu Teil 1 der Übung: KI-Interview 🤖")
         st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
         
         st.markdown("""
