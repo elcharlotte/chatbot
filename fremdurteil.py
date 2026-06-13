@@ -11,10 +11,28 @@ import xml.etree.ElementTree as ET
 # 1. SEITEN-KONFIGURATION
 st.set_page_config(page_title="Forschungsstudie: Transkript-Bewertung", page_icon="📝", layout="centered")
 
-# Zugangsdaten aus Secrets laden
-NC_URL = st.secrets["nextcloud"]["url"].rstrip("/") + "/"
-NC_USER = st.secrets["nextcloud"]["username"]
-NC_PASS = st.secrets["nextcloud"]["password"]
+# Daten laden und radikal von fehlerhaften Slashes befreien
+NC_USER = st.secrets["nextcloud"]["username"].strip()
+NC_PASS = st.secrets["nextcloud"]["password"].strip()
+TRANSKRIPT_ORDNER = st.secrets["nextcloud"]["folder_transcripts"].strip("/")
+ERGEBNIS_ORDNER = st.secrets["nextcloud"]["folder_results"].strip("/")
+
+# URL-Säuberung: Wir stellen sicher, dass am Ende von files/DEIN_USER ein / steht
+base_url = st.secrets["nextcloud"]["url"].strip()
+if not base_url.endswith("/"):
+    base_url += "/"
+
+# Falls du aus Versehen deinen Usernamen am Ende der URL vergessen hast, fangen wir das hier ab:
+if not base_url.endswith(f"files/{NC_USER}/"):
+    # Falls die URL nur bis /dav/ geht, bauen wir den Rest sauber an
+    if "remote.php/dav" in base_url and not "files" in base_url:
+        base_url = base_url.rstrip("/") + f"/files/{NC_USER}/"
+
+NC_URL = base_url
+AUTH = HTTPBasicAuth(NC_USER, NC_PASS)
+
+# DIAGNOSE-ANZEIGE (Nur für dich zum Testen – falls es fehlschlägt)
+st.write(f"Test-URL: {NC_URL}{TRANSKRIPT_ORDNER}/") # <-- Auskommentieren zum Prüfen!
 TRANSKRIPT_ORDNER = st.secrets["nextcloud"]["folder_transcripts"].strip("/")
 ERGEBNIS_ORDNER = st.secrets["nextcloud"]["folder_results"].strip("/")
 
