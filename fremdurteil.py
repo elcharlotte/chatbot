@@ -2,71 +2,68 @@ import streamlit as st
 import random
 import pandas as pd
 from datetime import datetime
-from webdav3.client import Client
 import io
 import json
+import requests
+from requests.auth import HTTPBasicAuth
+import xml.etree.ElementTree as ET
 
 # 1. SEITEN-KONFIGURATION
 st.set_page_config(page_title="Forschungsstudie: Transkript-Bewertung", page_icon="📝", layout="centered")
 
-# 2. WEBDAV / NEXTCLOUD VERBINDUNG AUFBAUEN
-@st.cache_resource
-def get_nextcloud_client():
-    """Erstellt eine dauerhafte Verbindung zur Nextcloud basierend auf den Secrets."""
-    options = {
-        'webdav_url': st.secrets["nextcloud"]["url"],
-        'webdav_username': st.secrets["nextcloud"]["username"],
-        'webdav_password': st.secrets["nextcloud"]["password"]
-    }
-    return Client(options)
+# Zugangsdaten aus Secrets laden
+NC_URL = st.secrets["nextcloud"]["url"].rstrip("/") + "/"
+NC_USER = st.secrets["nextcloud"]["username"]
+NC_PASS = st.secrets["nextcloud"]["password"]
+TRANSKRIPT_ORDNER = st.secrets["nextcloud"]["folder_transcripts"].strip("/")
+ERGEBNIS_ORDNER = st.secrets["nextcloud"]["folder_results"].strip("/")
 
-try:
-    client = get_nextcloud_client()
-except Exception as e:
-    st.error("Verbindung zur Nextcloud fehlgeschlagen. Bitte überprüfe die Secrets.")
-    st.stop()
+AUTH = HTTPBasicAuth(NC_USER, NC_PASS)
 
-# Pfade aus den Secrets auslesen
-TRANSKRIPT_ORDNER = st.secrets["nextcloud"]["folder_transcripts"]
-ERGEBNIS_ORDNER = st.secrets["nextcloud"]["folder_results"]
-
-# 3. UTILITY FUNKTIONEN (Nextcloud-Interaktion für deine JSON-Struktur)
+# 3. UTILITY FUNKTIONEN (Via Direkt-HTTP/WebDAV-Anfragen)
 def load_transcript_list():
-    """Liest alle .json Dateien aus dem Nextcloud-Transkriptordner."""
+    """Liest alle .json Dateien via WebDAV PROPFIND direkt aus dem Nextcloud-Ordner."""
+    url = f"{NC_URL}{TRANSKRIPT_ORDNER}/"
+    headers = {"Depth": "1"}
+    
     try:
-        # Wir säubern den Ordnernamen von eventuellen Schrägstrichen am Anfang/Ende
-        clean_folder = TRANSKRIPT_ORDNER.strip("/")
+        # PROPFIND ist der Standard-WebDAV-Befehl um Ordnerinhalte aufzulisten
+        response = requests.request("PROPFIND", url, auth=AUTH, headers=headers)
         
-        # Einige WebDAV-Versionen brauchen den relativen Pfad ohne führenden Slash
-        files = client.list(clean_folder)
-        
-        # Nur .json Dateien filtern
-        transcripts = [f for f in files if f.endswith('.json')]
-        return transcripts
-    except Exception as e:
-        # Wenn es fehlschlägt, testen wir einen alternativen absoluten WebDAV-Aufruf
-        try:
-            files = client.list(f"/{TRANSKRIPT_ORDNER.strip('/')}")
-            return [f for f in files if f.endswith('.json')]
-        except:
-            st.error(f"Fehler beim Laden der Transkriptliste: {e}")
+        if response.status_code not in [207, 200]:
+            st.error(f"Nextcloud-Fehler: Status {response.status_code}. Ordnerpfad korrekt?")
             return []
+            
+        # XML-Antwort der Nextcloud parsen, um Dateinamen zu extrahieren
+        root = ET.fromstring(response.content)
+        files = []
+        
+        for response_elem in root.findall(".//{DAV:}response"):
+            href_elem = response_elem.find("{DAV:}href")
+            if href_elem is not None:
+                href = href_elem.text
+                filename = href.split("/")[-1]
+                # Nur .json Dateien aufnehmen, die kein Ordner selbst sind
+                if filename.endswith(".json"):
+                    files.append(filename)
+        return files
+        
+    except Exception as e:
+        st.error(f"Verbindungsfehler zur Nextcloud: {e}")
+        return []
 
 def read_and_format_json_transcript(filename):
-    """Lädt die JSON-Datei, extrahiert die ID sowie den formatierten Chat-Verlauf."""
-    clean_filename = filename.split("/")[-1]
+    """Lädt die JSON-Datei via HTTP GET und formatiert den Chat."""
+    url = f"{NC_URL}{TRANSKRIPT_ORDNER}/{filename}"
     
-    # Pfad absolut und sauber zusammensetzen
-    clean_folder = TRANSKRIPT_ORDNER.strip("/")
-    remote_path = f"{clean_folder}/{clean_filename}"
+    response = requests.get(url, auth=AUTH)
+    if response.status_code != 200:
+        raise Exception(f"Datei konnte nicht geladen werden (Status {response.status_code})")
+        
+    data = response.json()
     
-    buffer = io.BytesIO()
-    client.download_from(remote_path=remote_path, file_to=buffer)
-    
-    json_text = buffer.getvalue().decode('utf-8')
-    data = json.loads(json_text)
-    
-    vp_code = data.get("id", clean_filename.replace(".json", ""))
+    # VP-Code extrahieren
+    vp_code = data.get("id", filename.replace(".json", ""))
     
     formatted_chat = []
     chat_verlauf = data.get("chat", [])
@@ -91,11 +88,13 @@ def read_and_format_json_transcript(filename):
     return vp_code, full_transcript_text
 
 def upload_results_to_nextcloud(filename, csv_data):
-    """Lädt die CSV-Ergebnisdatei in den Ergebnisordner der Nextcloud hoch."""
-    clean_folder = ERGEBNIS_ORDNER.strip("/")
-    remote_path = f"{clean_folder}/{filename}"
-    buffer = io.BytesIO(csv_data.encode('utf-8'))
-    client.upload_to(remote_path=remote_path, file_to=buffer)
+    """Lädt die CSV-Ergebnisdatei via HTTP PUT in die Nextcloud hoch."""
+    url = f"{NC_URL}{ERGEBNIS_ORDNER}/{filename}"
+    headers = {"Content-Type": "text/csv; charset=utf-8"}
+    
+    response = requests.put(url, data=csv_data.encode('utf-8'), auth=AUTH, headers=headers)
+    if response.status_code not in [201, 204]:
+        raise Exception(f"Upload fehlgeschlagen mit Status {response.status_code}")
 
 # 4. SESSION STATE INITIALISIERUNG
 if 'urne' not in st.session_state:
@@ -131,25 +130,24 @@ if st.session_state.aktuelles_transkript_file is None:
         st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer. Bitte den Studienleiter kontaktieren.")
     else:
         if st.button("🎲 Transkript zufällig zulosen", type="primary"):
-            # Zufälliges JSON aus der Urne ziehen und für diese Session entfernen (Balancing)
             gezogenes_file = random.choice(st.session_state.urne)
             st.session_state.urne.remove(gezogenes_file)
             
-            # Text live aus Nextcloud laden & parsen
             with st.spinner("Transkript wird geladen..."):
-                vp_code, text = read_and_format_json_transcript(gezogenes_file)
-                
-            st.session_state.aktuelles_transkript_file = gezogenes_file
-            st.session_state.vp_code = vp_code
-            st.session_state.transkript_text = text
-            st.rerun()
+                try:
+                    vp_code, text = read_and_format_json_transcript(gezogenes_file)
+                    st.session_state.aktuelles_transkript_file = gezogenes_file
+                    st.session_state.vp_code = vp_code
+                    st.session_state.transkript_text = text
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Fehler beim Laden der Datei: {e}")
 
 # SCHRITT 2 & 3: ANZEIGEN & BEWERTEN
 else:
     if not st.session_state.abgesendet:
         st.success("Dir wurde erfolgreich ein Interview-Transkript zugelost!")
         
-        # Textbox zur Anzeige des reinen Transkript-Inhalts (Scrollbar inklusive)
         st.subheader("Schritt 2: Transkript lesen")
         st.text_area(
             label="Inhalt des Gesprächs:", 
@@ -160,7 +158,6 @@ else:
         
         st.write("---")
         
-        # Der Fragebogen
         st.subheader("Schritt 3: Persönlichkeitseinschätzung")
         st.write("Bitte schätze die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
         
@@ -178,43 +175,37 @@ else:
             
             if submit_button:
                 with st.spinner("Deine Antworten werden sicher übertragen..."):
-                    # Daten strukturieren
                     ergebnis_daten = {
                         "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
-                        "Bewerteter_VP_Code": st.session_state.vp_code,  # Die extrahierte ID (z.B. "07mit hexaco")
+                        "Bewerteter_VP_Code": st.session_state.vp_code,
                         "BFI_Extraversion": extraversion,
                         "BFI_Vertraeglichkeit": vertraeglichkeit,
                         "BFI_Gewissenhaftigkeit": gewissenhaftigkeit,
                         "BFI_Neurotizismus": neurotizismus,
-                        "BFI_Offenheit": openness,
-                        "Freitext_Anmerkungen": anmerkungen.replace("\n", " ")  # Zeilenumbrüche entfernen
+                        "BFI_Offenheit": offenheit,
+                        "Freitext_Anmerkungen": anmerkungen.replace("\n", " ")
                     }
                     
-                    # DataFrame erzeugen und in CSV-String umwandeln
                     df = pd.DataFrame([ergebnis_daten])
                     csv_string = df.to_csv(index=False, sep=";")
                     
-                    # Eindeutigen Dateinamen für das Ergebnis generieren (Nutzt den echten VP-Code im Namen)
                     timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
                     clean_vp_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
                     dateiname = f"ergebnis_{clean_vp_name}_{timestamp_str}.csv"
                     
-                    # In Nextcloud abspeichern
                     try:
                         upload_results_to_nextcloud(dateiname, csv_string)
                         st.session_state.abgesendet = True
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Fehler beim Speichern der Daten. Bitte versuche es erneut oder wende dich an den Studienleiter. (Fehler: {e})")
+                        st.error(f"Fehler beim Speichern der Daten: {e}")
 
     else:
-        # Ansicht nach erfolgreichem Absenden
         st.balloons()
         st.subheader("🎉 Vielen Dank für deine Teilnahme!")
         st.write("Deine Antworten wurden erfolgreich gespeichert. Du kannst das Browserfenster jetzt schließen.")
         
-        # Option für Testzwecke / Kiosk-Modus im Labor
         if st.button("Nächste Teilnahme starten"):
             st.session_state.aktuelles_transkript_file = None
             st.session_state.vp_code = ""
