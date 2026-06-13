@@ -9,7 +9,7 @@ from requests.auth import HTTPBasicAuth
 import xml.etree.ElementTree as ET
 
 # 1. SEITEN-KONFIGURATION
-st.set_page_config(page_title="Teil 2 Übung: Transkript-Bewertung", page_icon="📝", layout="centered")
+st.set_page_config(page_title="Forschungsstudie: Transkript-Bewertung", page_icon="📝", layout="centered")
 
 # Zugangsdaten aus Secrets laden & bereinigen
 NC_USER = st.secrets["nextcloud"]["username"].strip()
@@ -27,7 +27,7 @@ if not base_url.endswith(f"files/{NC_USER}/"):
 NC_URL = base_url
 AUTH = HTTPBasicAuth(NC_USER, NC_PASS)
 
-# 3. UTILITY FUNKTIONEN
+# 2. UTILITY FUNKTIONEN (Nextcloud-Interaktion)
 def load_transcript_list():
     """Liest alle .json Dateien via WebDAV PROPFIND aus der Nextcloud."""
     url = f"{NC_URL}{TRANSKRIPT_ORDNER}/"
@@ -61,10 +61,10 @@ def read_and_format_json_transcript(filename):
         
     data = response.json()
     
-    # 1. VP-Code extrahieren
+    # 1. VP-Code des Interviewten extrahieren
     vp_code = data.get("id", filename.replace(".json", ""))
     
-    # 2. KI-Bewertung extrahieren (Fällt auf Standard 3 zurück, falls nicht vorhanden)
+    # 2. KI-Bewertung extrahieren
     ai_assessment = data.get("ai_assessment", {
         "Extraversion": 3,
         "Verträglichkeit": 3,
@@ -100,7 +100,16 @@ def upload_results_to_nextcloud(filename, csv_data):
     if response.status_code not in [201, 204]:
         raise Exception(f"Upload fehlgeschlagen mit Status {response.status_code}")
 
-# 4. SESSION STATE INITIALISIERUNG
+# 3. SESSION STATE INITIALISIERUNG
+if 'step' not in st.session_state:
+    st.session_state.step = "welcome"
+
+if 'participant_id' not in st.session_state:
+    st.session_state.participant_id = ""
+
+if 'matrikelnummer' not in st.session_state:
+    st.session_state.matrikelnummer = ""
+
 if 'urne' not in st.session_state:
     st.session_state.urne = load_transcript_list()
 
@@ -119,45 +128,94 @@ if 'ai_scores' not in st.session_state:
 if 'user_scores' not in st.session_state:
     st.session_state.user_scores = {}
 
-if 'abgesendet' not in st.session_state:
-    st.session_state.abgesendet = False
 
-# 5. BENUTZEROBERFLÄCHE (UI)
-st.title("📝 Fremdbeurteilung")
-st.write("""
-Willkommen zum zweiten Teil der Übungssitzung! 
-Im ersten Schritt wird Ihnen ein zufälliges Transkript eines KI-Interviews zugelost. 
-Bitte lesen Sie sich dieses aufmerksam durch und füllen Sie im Anschluss den Persönlichkeitsfragebogen über die Person, deren Transkript Sie gelesen haben, aus.
-""")
-
-st.write("---")
-
-# SCHRITT 1: ZULOSEN
-if st.session_state.aktuelles_transkript_file is None:
-    st.subheader("Schritt 1: Transkript erhalten")
+# --- PHASE 1: WILLKOMMEN & DATENEINGABE ---
+if st.session_state.step == "welcome":
+    st.title("Willkommen zur Transkript-Bewertung 📝")
+    st.write("Bitte geben Sie Ihre Daten ein, um mit der Zulosung und Bewertung zu beginnen.")
     
-    if not st.session_state.urne:
-        st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer. Bitte kontaktiere elisa.altgassen@uni-ulm.de.")
-    else:
-        if st.button("🎲 Transkript zufällig zulosen", type="primary"):
-            gezogenes_file = random.choice(st.session_state.urne)
-            st.session_state.urne.remove(gezogenes_file)
-            
-            with st.spinner("Transkript wird geladen..."):
-                try:
-                    vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
-                    st.session_state.aktuelles_transkript_file = gezogenes_file
-                    st.session_state.vp_code = vp_code
-                    st.session_state.transkript_text = text
-                    st.session_state.ai_scores = ai_scores
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Fehler beim Laden der Datei: {e}")
+    st.markdown("""
+    **Anleitung zur Generierung Ihres VP-Codes:**
+    * Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (z.B. 04)
+    * Geben Sie als zweites die letzten beiden Buchstaben des Mädchen-(Geburts-)namens der Mutter ein (z.B. ER)
+    * Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (z.B. NS)
+    * Geben Sie als viertes den Tag Ihres Geburtstags ein (z.B. 24)
 
-# SCHRITT 2 & 3: ANZEIGEN & BEWERTEN
-else:
-    if not st.session_state.abgesendet:
-        st.success("Ihnen wurde erfolgreich ein Interview-Transkript zugelost!")
+    Ein Versuchspersonencode könnte beispielsweise so aussehen: 04ERNS24
+    * Erster Vorname der Mutter: *Anna* (04 Buchstaben)
+    * Nachname der Mutter: *Müller* (ER als Endung)
+    * Erster Vorname des Vaters: *Hans* (NS als Endung)
+    * Eigener Geburtstag: *24.12.1993* (Tag.Monat.Jahr)
+    """)
+    
+    vp_code_input = st.text_input("VP-Code (Dein Teilnehmer-Code)", placeholder="z.B. 04ERNS24")
+    matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
+    
+    if st.button("Weiter zur Beschreibung", type="primary"):
+        if not vp_code_input.strip() or not matrikel_input.strip():
+            st.error("Bitte füllen Sie beide Felder aus.")
+        else:
+            st.session_state.participant_id = vp_code_input.strip()
+            st.session_state.matrikelnummer = matrikel_input.strip()
+            st.session_state.step = "consent"
+            st.rerun()
+
+
+# --- PHASE 2: EINWILLIGUNG & ABLAUF ---
+elif st.session_state.step == "consent":
+    st.title("Informationen zum Ablauf & Datenschutz 📝")
+    st.markdown("""
+    ### Beschreibung & Ablauf der Übungssitzung
+    In diesem zweiten Teil der Übung nehmen Sie die Rolle einer **fremdbeurteilenden Person** ein. Ihnen wird das anonymisierte Transkript eines bereits geführten Interviews zugelost.
+    
+    * **Deine Aufgabe:** Lies das Transkript aufmerksam durch. Schätze die interviewte Person im Anschluss auf den Big-Five-Persönlichkeitsskalen ein.
+    * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung. Wer nicht teilnimmt oder unvollständige Daten abgibt, erhält keinen Credit.
+    * **Ethikvotum:** Bewilligt unter **[PLATZHALTER: Ethikantrag-ID]**.
+    
+    ### Datenschutz
+    * **Anonymität:** Die Ihnen vorgelegten Transkripte enthalten keinerlei Klarnamen oder direkt identifizierbare Merkmale. Ihre eigenen Angaben (Matrikelnummer) werden strikt getrennt von den Bewertungsergebnissen zur Leistungsverbuchung genutzt.
+    * **Speicherung:** Alle Auswertungen und Daten werden auf sicheren Servern gespeichert.
+    """)
+    
+    consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Beurteilungsdaten zu Forschungs- und Lehrzwecken zu.")
+    
+    if st.button("Studie starten & Transkript zulosen", type="primary"):
+        if consent_checked:
+            st.session_state.step = "evaluation"
+            st.rerun()
+        else:
+            st.warning("Bitte stimmen Sie den Datenschutzbestimmungen zu, um fortzufahren.")
+
+
+# --- PHASE 3: EVALUATION (LOSEN, LESEN & FRAGEBOGEN) ---
+elif st.session_state.step == "evaluation":
+    
+    # Unterphase A: Noch kein Transkript gelost
+    if st.session_state.aktuelles_transkript_file is None:
+        st.subheader("Schritt 1: Transkript erhalten")
+        st.write("Klicke auf den Button, um dir ein zufälliges Interview-Transkript aus dem System zuzulosen.")
+        
+        if not st.session_state.urne:
+            st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer. Bitte den Studienleiter kontaktieren.")
+        else:
+            if st.button("🎲 Transkript zufällig zulosen", type="primary"):
+                gezogenes_file = random.choice(st.session_state.urne)
+                st.session_state.urne.remove(gezogenes_file)
+                
+                with st.spinner("Transkript wird geladen..."):
+                    try:
+                        vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
+                        st.session_state.aktuelles_transkript_file = gezogenes_file
+                        st.session_state.vp_code = vp_code
+                        st.session_state.transkript_text = text
+                        st.session_state.ai_scores = ai_scores
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Fehler beim Laden der Datei: {e}")
+
+    # Unterphase B: Transkript gelost, Fragebogen anzeigen
+    elif not st.session_state.user_scores:
+        st.success("Dir wurde erfolgreich ein Interview-Transkript zugelost!")
         
         st.subheader("Schritt 2: Transkript lesen")
         st.text_area(
@@ -170,7 +228,7 @@ else:
         st.write("---")
         
         st.subheader("Schritt 3: Persönlichkeitseinschätzung")
-        st.write("Bitte schätzen Sie die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
+        st.write("Bitte schätze die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
         
         with st.form("fragebogen_form"):
             extraversion = st.slider("Die Person wirkt extravertiert, gesellig und gesprächig.", 1, 5, 3)
@@ -185,26 +243,28 @@ else:
             submit_button = st.form_submit_button("Formular absenden", type="primary")
             
             if submit_button:
-                with st.spinner("Ihre Antworten werden sicher übertragen..."):
-                    # Nutzereinschätzungen zwischenspeichern für den Feedback-Bildschirm
+                with st.spinner("Deine Antworten werden sicher übertragen..."):
+                    # 1. Zwischenspeichern für das Feedback
                     st.session_state.user_scores = {
                         "Extraversion": extraversion,
                         "Verträglichkeit": vertraeglichkeit,
                         "Gewissenhaftigkeit": gewissenhaftigkeit,
                         "Neurotizismus": neurotizismus,
-                        "Offenheit": offenheit
+                        "Offenheit": openness
                     }
                     
-                    # Für die CSV-Datei vorbereiten (wir speichern auch direkt die KI-Werte zum Vergleich mit ab!)
+                    # 2. Daten für die CSV strukturieren (Inklusive RATER-Infos!)
                     ergebnis_daten = {
                         "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "Rater_VP_Code": st.session_state.participant_id,      # DEIN eingegebener VP-Code
+                        "Rater_Matrikelnummer": st.session_state.matrikelnummer, # DEINE Matrikelnummer
                         "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
-                        "Bewerteter_VP_Code": st.session_state.vp_code,
+                        "Bewerteter_Target_VP_Code": st.session_state.vp_code, # ID des Interviewten aus dem JSON
                         "USER_Extraversion": extraversion,
                         "USER_Vertraeglichkeit": vertraeglichkeit,
                         "USER_Gewissenhaftigkeit": gewissenhaftigkeit,
                         "USER_Neurotizismus": neurotizismus,
-                        "USER_Offenheit": offenheit,
+                        "USER_Offenheit": openness,
                         "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
                         "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
                         "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
@@ -216,39 +276,38 @@ else:
                     df = pd.DataFrame([ergebnis_daten])
                     csv_string = df.to_csv(index=False, sep=";")
                     
+                    # Eindeutigen Ergebnis-Dateinamen generieren (Kombination aus Bewerter & Bewertetem)
                     timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    clean_vp_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
-                    dateiname = f"ergebnis_{clean_vp_name}_{timestamp_str}.csv"
+                    clean_target_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
+                    clean_rater_name = "".join(x for x in st.session_state.participant_id if x.isalnum() or x in "._-").strip()
+                    dateiname = f"ergebnis_Rater_{clean_rater_name}_Target_{clean_target_name}_{timestamp_str}.csv"
                     
                     try:
                         upload_results_to_nextcloud(dateiname, csv_string)
-                        st.session_state.abgesendet = True
                         st.rerun()
                     except Exception as e:
                         st.error(f"Fehler beim Speichern der Daten: {e}")
+                        st.session_state.user_scores = {} # Reset bei Fehler
 
-    # DER NEUE RÜCKMELDUNGS-BILDSCHIRM
+    # Unterphase C: Abgesendet -> Feedback-Bildschirm anzeigen
     else:
         st.balloons()
-        st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
-        st.write("Ihre Antworten wurden erfolgreich und sicher in der Nextcloud gespeichert.")
+        st.subheader("🎉 Vielen Dank für deine Teilnahme!")
+        st.write("Deine Antworten wurden erfolgreich und sicher unter deiner Matrikelnummer registriert.")
         
         st.write("---")
-        st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
-        st.write("Hier sehen Sie, wie nah Ihre Einschätzung an der Einschäzung der KI lag:")
+        st.subheader("🤖 Dein Urteil im Vergleich zur KI-Bewertung")
+        st.write("Hier siehst du, wie nah deine Einschätzung an der algorithmischen Auswertung der KI lag:")
         
-        # Tabelle für den visuellen Vergleich bauen
         vergleichs_daten = []
         gesamte_abweichung = 0
         
         for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
             user_val = st.session_state.user_scores.get(dimension, 3)
             ai_val = st.session_state.ai_scores.get(dimension, 3)
-            # Absolute Differenz berechnen
             diff = abs(user_val - ai_val)
             gesamte_abweichung += diff
             
-            # Feedback-Spruch je nach Abweichung
             if diff == 0:
                 feedback = "🎯 Volltreffer!"
             elif diff == 1:
@@ -264,27 +323,27 @@ else:
                 "Feedback": feedback
             })
             
-        # Als schöne Streamlit-Tabelle anzeigen
         df_vergleich = pd.DataFrame(vergleichs_daten)
         st.table(df_vergleich)
         
-        # Gesamt-Fazit ziehen
         st.write("")
         if gesamte_abweichung <= 2:
-            st.info(f"🧠 **Fazit:** Sie haben eine extreme Ähnlichkeit zur KI-Auswertung! Die Gesamtabweichung liegt bei nur **{gesamte_abweichung}** Punkten über alle 5 Dimensionen hinweg.")
+            st.info(f"🧠 **Fazit:** Du hast eine extreme Ähnlichkeit zur KI-Auswertung! Deine Gesamtabweichung liegt bei nur **{gesamte_abweichung}** Punkten.")
         elif gesamte_abweichung <= 5:
-            st.info(f"📊 **Fazit:** Gute Übereinstimmung. Sie haben das Profil im Wesentlichen genau so wahrgenommen wie der Algorithmus (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            st.info(f"📊 **Fazit:** Gute Übereinstimmung. Du hast das Profil im Wesentlichen genau so wahrgenommen wie der Algorithmus (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
         else:
-            st.info(f"👥 **Fazit:** Spannend! Ihre menschliche Intuition weicht in einigen Punkten von der KI ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte). Genau diese Unterschiede untersuchen wir in dieser Forschungsarbeit.")
+            st.info(f"👥 **Fazit:** Spannend! Deine menschliche Intuition weicht vom Algorithmus ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte). Genau diese Unterschiede untersuchen wir.")
 
         st.write("---")
         
-        # Kiosk-Button für die nächste Versuchsperson
+        # Komplett-Reset für den Kiosk-Modus
         if st.button("Nächste Teilnahme starten"):
+            st.session_state.step = "welcome"
+            st.session_state.participant_id = ""
+            st.session_state.matrikelnummer = ""
             st.session_state.aktuelles_transkript_file = None
             st.session_state.vp_code = ""
             st.session_state.transkript_text = ""
             st.session_state.ai_scores = {}
             st.session_state.user_scores = {}
-            st.session_state.abgesendet = False
             st.rerun()
