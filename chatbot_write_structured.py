@@ -1,623 +1,349 @@
-# -*- coding: utf-8 -*-
 import streamlit as st
-from openai import OpenAI
+import random
+import pandas as pd
+from datetime import datetime
+import io
 import json
 import requests
-import uuid
-import threading
-import random
-import time
-from datetime import datetime
+from requests.auth import HTTPBasicAuth
+import xml.etree.ElementTree as ET
 
-# --- KONFIGURATION & HELPER ------------------------------------------------------------------
-def save_to_nextcloud(participant_id, data_dict):
+# 1. SEITEN-KONFIGURATION
+st.set_page_config(page_title="Forschungsstudie: Transkript-Bewertung", page_icon="📝", layout="centered")
+
+# Zugangsdaten aus Secrets laden & bereinigen
+NC_USER = st.secrets["nextcloud"]["username"].strip()
+NC_PASS = st.secrets["nextcloud"]["password"].strip()
+TRANSKRIPT_ORDNER = st.secrets["nextcloud"]["folder_transcripts"].strip("/")
+ERGEBNIS_ORDNER = st.secrets["nextcloud"]["folder_results"].strip("/")
+
+base_url = st.secrets["nextcloud"]["url"].strip()
+if not base_url.endswith("/"):
+    base_url += "/"
+if not base_url.endswith(f"files/{NC_USER}/"):
+    if "remote.php/dav" in base_url and not "files" in base_url:
+        base_url = base_url.rstrip("/") + f"/files/{NC_USER}/"
+
+NC_URL = base_url
+AUTH = HTTPBasicAuth(NC_USER, NC_PASS)
+
+# 2. UTILITY FUNKTIONEN (Nextcloud-Interaktion)
+def load_transcript_list():
+    """Liest alle .json Dateien via WebDAV PROPFIND aus der Nextcloud."""
+    url = f"{NC_URL}{TRANSKRIPT_ORDNER}/"
+    headers = {"Depth": "1"}
     try:
-        base_url = "https://cloudstore.uni-ulm.de/remote.php/dav/files/ffg79"
-        folder = "Forschungsdaten"
-        # save_time = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H:%M:%S")
-        filename = f"interview_{participant_id}.json"
-        upload_url = f"{base_url}/{folder}/{filename}"
-        
-        data = json.dumps(data_dict, indent=2, ensure_ascii=False).encode('utf-8')
-        auth = (st.secrets["nextcloud"]["user"], st.secrets["nextcloud"]["password"])
-        
-        response = requests.put(upload_url, data=data, auth=auth, headers={'Content-Type': 'application/json'})
-        return response.status_code in [201, 204]
-    except Exception as e:
-        st.error(f"Speicherfehler: {e}")
-        return False
-
-def reset_app():
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.rerun()
-
-# --- TSDI LEITFADEN --------------------------------------------------------------------------
-TSDI_BESCHREIBUNGEN = """
-## DIMENSIONEN:
-
-- VERTRÄGLICHKEIT (A): Mit dieser Dimension werden Einstellungen und gewohnheitsmäßige Verhaltensweisen in sozialen Beziehungen umschrieben. Personen mit hoher Ausprägung sind hilfsbereit, entgegenkommend, vertrauensbereit und bemüht anderen zu helfen. Sie begegnen anderen Menschen mit Wohlwollen, neigen zu Gutmütigkeit, sind bereit, in Auseinandersetzungen nachzugeben und können im Extremfall als unterwürfig oder abhängig erscheinen. Personen mit niedriger Ausprägung beschreiben sich als eher egozentrisch, misstrauisch gegenüber den Intentionen anderer, grob, sowie wenig geneigt zu kooperativem Verhalten und mit einer Präferenz für wettbewerbsorientiertes Verhalten.
-- GEWISSENHAFTIGKEIT (C): Die Grundlage der Gewissenhaftigkeit bilden Unterschiede beim Planen, Organisieren und Ausführen von Aufgaben. Personen mit einer hohen Ausprägung beschreiben sich als eher zielstrebig, willensstark und entschlossen, während Personen mit einer niedrigen Ausprägung ihre Zielsetzungen mit geringerem Engagement verfolgen.
-- EXTRAVERSION (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreudig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
-- NEUROTIZISMUS (N): Neurotizismus erfasst Unterschiede zwischen Personen hinsichtlich ihrer gefühlsmäßigen Robustheit einerseits und ihrer emotionalen Empfindlichkeit bzw. Ansprechbarkeit andererseits. Personen mit hoher Ausprägung in diesem Bereich sind empfindlicher und neigen unter Stress dazu, leichter aus dem Gleichgewicht zu kommen. Sie entwickeln eher unangepasste Formen der Problembewältigung, neigen zu unrealistischen Ideen und sind weniger in der Lage, ihre Bedürfnisse zu kontrollieren. Personen mit niedriger Ausprägung in diesem Bereich beschreiben sich als ausgeglichen, emotional stabil und robust und geraten nicht so leicht aus der Fassung. Charakteristisch für diese Personen ist, dass sie Gefühlszustände nicht so stark erleben.
-- OFFENHEIT FÜR ERFAHRUNGEN (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen, Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im Gegensatz zu Personen mit hoher Ausprägung.
-- EHRLICHKEIT-BESCHEIDENHEIT (HH): Personen mit sehr niedrigen Werten in der Skala "Ehrlichkeit-Bescheidenheit" neigen dazu, sich zu verstellen, um ihre Ziele zu erreichen. Sie nehmen Regeln häufig nicht so genau, streben nach materiellem Reichtum und Ansehen und neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit sehr hohen Werten in dieser Skala hingegen verhalten sich stets authentisch und ehrlich. Sie vermeiden es, andere zu ihren eigenen Gunsten zu beeinflussen, und handeln stets fair. Sie streben weder Luxusgüter noch einen hohen sozialen Status an, noch haben sie den Anspruch, bevorzugt behandelt zu werden.
-
-## FACETTEN:
-
-### Dimension Verträglichkeit (A)
-- Die Facette „Freundlichkeit (A-Fr)“ erfasst die Tendenz sich anderen gegenüber fröhlich und freundlich zu verhalten. Personen mit niedriger Ausprägung kommen mit anderen Menschen eher schlecht zurecht, wohingegen Personen mit hoher Ausprägung als angenehme Personen wahrgenommen werden.
-- Die Facette „Rücksichtnahme (A-Co)“ erfasst die Tendenz höflich und rücksichtsvoll zu sein. Personen mit niedriger Ausprägung achten nicht auf die Gefühle anderer, wohingegen Personen mit hoher Ausprägung stets versuchen nett zu anderen zu sein.
-- Die Facette „Hilfsbereitschaft (A-H)“ erfasst die Tendenz anderen bei Problemen zu helfen. Personen mit niedriger Ausprägung neigen zu Egoismus, wohingegen Personen mit hoher Ausprägung großzügig und uneigennützig sind.
-
-### Dimension Gewissenhaftigkeit (C)
-- Die Facette „Fleiß (C-Hw)“ erfasst die Tendenz hart und fokussiert zu arbeiten. Personen mit niedriger Ausprägung neigen dazu faul zu sein und Aufgaben nicht zu Ende zu bringen, wohingegen Personen mit hoher Ausprägung sich immer bemühen Arbeiten rechtzeitig und vollständig zu erledigen.
-- Die Facette „Organisation (C-O)“ erfasst die Tendenz ordentlich beim Erledigen von Aufgaben zu sein. Personen mit niedriger Ausprägung sind oft verspätet und halten ihre Umgebung nicht ordentlich, wohingegen Personen mit hoher Ausprägung viel Zeit für Planung und Struktur aufwenden.
-
-### Dimension Extraversion (E)
-- Die Facette „Durchsetzungsfähigkeit (E-A)“ erfasst die Tendenz in Gruppen die Führung zu übernehmen. Personen mit niedriger Ausprägung sind in Gruppen eher zurückhaltend, wohingegen Personen mit hoher Ausprägung großen Einfluss innerhalb von Gruppe haben.
-- Die Facette „Selbstbewusstsein (E-SB)“ erfasst die Tendenz selbstsicher zu sein. Personen mit niedriger Ausprägung sind schüchtern und meiden es Aufmerksamkeit zu bekommen, wohingegen Personen mit hoher Ausprägung auch gerne mal im Zentrum der Aufmerksamkeit stehen.
-- Die Facette „Soziale Aktivität (E-So)“ erfasst die Tendenz unter Leute zu gehen. Personen mit niedriger Ausprägung bleiben lieber für sich und beschäftigen sich allein, wohingegen Personen mit hoher Ausprägung häufig auf Partys anzutreffen sind.
-
-### Dimension Neurotizismus (N)
-- Die Facette „Depression (N-D)“ erfasst die Tendenz niedergeschlagen zu sein. Personen mit niedriger Ausprägung empfinden häufig positive Emotionen, wie Freude, wohingegen Personen mit hoher Ausprägung oft negative Emotionen, wie Traurigkeit empfinden.
-- Die Facette „Reizbarkeit (N-Ir)“ erfasst die Tendenz schnell emotional zu werden. Personen mit niedriger Ausprägung behalten stets Ruhe, wohingegen sich Personen mit hoher Ausprägung durch Belastung leicht aus dem Konzept bringen lassen und sehr emotional reagieren.
-- Die Facette „Nervosität (N-St)“ erfasst die Tendenz schnell nervös oder leicht gestresst zu sein. Personen mit niedriger Ausprägung bleiben auch unter großem Druck gelassen, wohingegen Personen mit hoher Ausprägung schon bei geringer Belastung unruhig werden und sich gestresst fühlen.
-
-### Dimension Offenheit für Erfahrungen (O)
-- Die Facette „Intellekt (O-In)“ erfasst die Tendenz sich mit intellektuellen Themen zu beschäftigen. Personen mit niedriger Ausprägung meiden komplexe Diskussionen, wohingegen Personen mit hoher Ausprägung generell neugierig sind.
-- Die Facette „Reflexion (O-R)“ erfasst die Tendenz über sich, eigene Gefühle und komplexe Zusammenhänge nachzudenken. Personen mit niedriger Ausprägung denken selten mehr als einmal über ein Thema nach, wohingegen Personen mit hoher Ausprägung sich viel Zeit nehmen, um über Hintergründe zu reflektieren.
-- Die Facette „Wissenschaftliches Interesse (O-Sc)“ erfasst die Tendenz sich häufig mit wissenschaftlichen Themen auseinanderzusetzen. Personen mit niedriger Ausprägung meiden solche Themen, wohingegen sich Personen mit hoher Ausprägung wissenschaftlich weiterbilden.
-
-### Dimension Ehrlichkeit-Bescheidenheit (HH)
-- Die Facette „Aufrichtigkeit (HH-Si)“ zeigt auf, wie authentisch eine Person im zwischenmenschlichen Kontakt ist. Personen mit niedriger Ausprägung in dieser Skala verstellen sich manchmal, um persönliche Ziele zu erreichen. Personen mit hoher Ausprägung verhalten sich hingegen stets aufrichtig und unverstellt. Sie beeinflussen andere nicht zu ihrem eigenen Vorteil.
-- Die Facette "Fairness (HH-Fa)" beschreibt, wie ehrlich und regelkonform das Verhalten einer Person ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, Regeln nicht so genau zu nehmen oder sogar zu brechen, um sich einen Vorteil zu verschaffen. Für Personen mit hoher Ausprägung geht Ehrlichkeit gegenüber ihren Mitmenschen und der Gesellschaft über alles und sie bereichern sich nicht auf Kosten anderer.
-- Die Facette "Bescheidenheit (HH-Mo)" zeigt, wie bescheiden jemand in Bezug auf sich selbst ist. Personen mit niedriger Ausprägung in dieser Skala neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit hoher Ausprägung betrachten sich und andere Menschen als gleichwertig und beanspruchen für sich keine besondere Behandlung.
-"""
-
-TSDI_ITEMS = """
-<ITEMS>
-## Dimension Verträglichkeit (A)
-### 1. Facette "Freundlichkeit" (A-Fr):
-- Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
-- Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
-- Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
-### 2. Facette "Rücksichtnahme" (A-Co):
-- Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
-- Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
-- Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
-### 3. Facette "Hilfsbereitschaft" (A-H):
-- Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
-- Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
-- Item tsdi42_39_A_H213: Ich bin immer großzügig, wenn es darum geht, anderen zu helfen.
-
-## Dimension Gewissenhaftigkeit (C)
-### 4. Facette "Fleiß" (C-Hw):
-- Item tsdi42_04_C_Hw126: Wenn ich mich zu etwas verpflichte, führe ich es immer zu Ende aus.
-- Item tsdi42_25_C_Hw137: Ich würde mich selbst als sehr ausdauernden Arbeiter einschätzen.
-- Item tsdi42_37_C_Hw167: Wenn ich etwas anfange, arbeite ich, bis es zu meiner Zufriedenheit beendet ist.
-### 5. Facette "Organisation" (C-O):
-- Item tsdi42_14_C_O0153: Ich halte meine persönlichen Sachen gerne ordentlich und organisiert.
-- Item tsdi42_41_C_O0157: Ich versuche einen Plan für Aufgaben zu entwickeln und halte mich daran.
-- Item tsdi42_32_C_O0162: Ich versuche vollständig vorbereitet zu sein, bevor ich eine Aufgabe anpacke.
-
-## Dimension Extraversion (E)
-### 6. Facette "Durchsetzungsfähigkeit" (E-A):
-- Item tsdi42_35_E_A002: Ich spreche lauter, wenn ich meine, einen Beitrag liefern zu können.
-- Item tsdi42_28_E_A004: Ich neige dazu, in Gruppen die Führung zu übernehmen.
-- Item tsdi42_03_E_A009: Ich habe eine menge Einfluss auf andere Leute.
-### 7. Facette "Selbstbewusstsein" (E-SB):
-- Item tsdi42_19_E_SB010: Ich bin eine sehr schüchterne Person.
-- Item tsdi42_08_E_SB014: Meine Freunde halten mich für schüchtern.
-- Item tsdi42_18_E_SB026: Ich fühle mich nicht wohl, wenn ich im Zentrum der Aufmerksamkeit stehe.
-### 8. Facette "Soziale Aktivität" (E-So):
-- Item tsdi42_33_E_So007: Ich bin gerne wo viel los ist.
-- Item tsdi42_26_E_So012: Ich gebe mir große Mühe Leute kennen zu lernen.
-- Item tsdi42_16_E_So028: Ich mag Partys auf denen viele Leute sind.
-
-## Dimension Neurotizismus (N)
-### 9. Facette "Depression" (N-D):
-- Item tsdi42_07_N_D039: Es gibt Zeiten in denen ich mich selbst bedaure.
-- Item tsdi42_15_N_D054: Manchmal bin ich entmutigt und möchte am liebsten aufgeben.
-- Item tsdi42_30_N_D055: Ich fürchte oft, dass ich meine Ziele nicht erreichen könnte.
-### 10. Facette "Reizbarkeit" (N-Ir):
-- Item tsdi42_09_N_Ir034: Manchmal rege ich mich so auf, dass es mir auf den Magen schlägt.
-- Item tsdi42_05_N_Ir058: Wenn ich aufgebracht bin, kann ich nicht mehr klar denken.
-- Item tsdi42_06_N_Ir070: Ich kann Kritik nicht sehr gut akzeptieren.
-### 11. Facette "Nervosität" (N-St):
-- Item tsdi42_29_N_St037: Ich fühle mich oft müde und erschöpft.
-- Item tsdi42_38_N_St040: Wenn ich unter großem Stress stehe, bin ich oft kurz davor zusammenzubrechen.
-- Item tsdi42_11_N_St043: Ich bin oft zittrig und angespannt.
-
-## Dimension Offenheit (O)
-### 12. Facette "Intellekt" (O-In):
-- Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
-- Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
-- Item tsdi42_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
-### 13. Facette "Reflexion" (O-R):
-- Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
-- Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
-- Item tsdi42_34_O_R120: Ich lese gerne Gedichte.
-### 14. Facette "Wissenschaftliches Interesse" (O-Sc):
-- Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
-- Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
-- Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
-
-## Dimension Ehrlichkeit-Bescheidenheit (HH)
-### 15. Facette "Aufrichtigkeit" (HH-Si):
-- Item x42i47_hh_si001_t2: Wenn ich von einer Person, die ich nicht mag, etwas will, verhalte ich mich dieser Person gegenüber sehr nett um es zu bekommen.
-- Item x42i15_hh_si005_t2: Ich würde keine Schmeicheleien benutzen, um eine Gehaltserhöhung zu bekommen oder befördert zu werden, auch wenn ich wüsste, dass es erfolgreich wäre.
-- Item x42i04_hh_si009_t2: Wenn ich von jemandem etwas will, lache ich auch noch über dessen schlechteste Witze.
-### 16. Facette "Fairness" (HH-Fa):
-- Item x42i31_hh_fa006_t2: Ich würde in Versuchung geraten, Diebesgut zu kaufen, wenn ich knapp bei Kasse wäre.
-- Item x42i17_hh_fa010_t2: Ich würde niemals Bestechungsgeld annehmen, auch wenn es sehr viel wäre.
-- Item x42i08_hh_fa002_t2: Wenn ich wüsste, dass ich niemals erwischt werde, wäre ich bereit, eine Million zu stehlen.
-### 17. Facette "Bescheidenheit" (HH-Mo):
-- Item x42i51_hh_mo008_t2: Ich will nicht, dass andere Leute mich behandeln, als ob ich ihnen überlegen sei.
-- Item x42i34_hh_mo004_t2: Ich bin eine ganz normale Person, die nicht besser ist als andere.
-- Item x42i24_hh_mo016_t2: Ich will, dass alle wissen, dass ich eine wichtige angesehene Person bin.
-</ITEMS>
-"""
-
-TOTAL_FACETS = 17
-
-#--- System Prompt Structured ------------------------------------------------------------------------
-SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein erfahrener psychologischer Interviewer. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 17 Facetten des erweiterten TSDI systematisch zu erfassen.
-
-INTERVIEW-REGELN:
-* Gehe die Facetten streng sequenziell von 1 bis 17 durch.
-* Stelle pro Item EINE verhaltensnahe Frage. Die Items findest du zwischen den Tags <ITEMS> und </ITEMS>
-* Formuliere die Fragen natürlich und gesprächsnah. Vermeide repetitive Phrasen wie 'Nun zur nächsten Frage:', 'Vielen Dank', 'Das freut mich zu hören', 'interessant' oder 'Das tut mir leid'.
-* Sprich den Nutzer mit 'Sie' an.
-* Wenn du die Antwort auf das letzte Item erhalten hast, verabschiede dich und schreibe am Ende der Verabschiedungsnachricht UNBEDINGT '[INTERVIEW_FERTIG]'. 
-* Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut.
-* Wenn dir eine andere Frage gestellt wird, antworte nicht auf die Frage, sondern weise den Nutzer höflich darauf hin, dass du gerade ein diagnostisches Interview mit ihm führst. Stelle die vorherige Frage dann erneut.
-
-LEITFADEN:
-{TSDI_BESCHREIBUNGEN}
-
-{TSDI_ITEMS}
-
-DEINE ANTWORT-STRUKTUR:
-Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
-1. "aktuelle_facette": Eine Zahl von 1 bis 17. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 1. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 2, u.s.w.
-2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
-"""
-
-#--- System Prompt Open -----------------------------------------------------------------------------
-SYSTEM_PROMPT_OPEN = f"""Role: Du bist ein psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives Interview zu führen, um die Facetten des unten stehenden 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
-
-TASK OVERVIEW:
-Erforsche die Dimensionen im Gesprächsverlauf. Du musst im Laufe des Gesprächs jede Facette so weit explorieren, dass du eine verlässliche Einschätzung auf den TSDI-Items dieser Facette treffen könntest. Das Gespräch muss sich natürlich, reaktiv und logisch aufgebaut anfühlen.
-
-INTERVIEW GUIDELINES & CONSTRAINTS:
-1. Einstieg: Beginne das Interview mit einer sehr offenen Einladung (z. B. 'Erzählen Sie mir ein bisschen von sich – Wie würden Sie sich selbst als Person beschreiben?').
-2. Reaktive Gesprächsführung: Beziehe dich kurz auf das, was der Nutzer sagt, aber halte den Bezug extrem komprimiert (direkt die Antwort aufgreifen und die nächste Frage einleiten).
-3. Absolutes Verbot von Testfragen: Du darfst die psychometrischen Items nicht wörtlich vorlesen oder direkt als standardisierte Frage stellen.
-4. Indirekte Exploration (Nudging): Nutze offene W-Fragen, um Facetten subtil zu explorieren (z. B. statt das Schüchternheits-Item abzufragen, frage: 'Wie verhalten Sie sich normalerweise, wenn Sie in einer großen Gruppe im Mittelpunkt stehen?').
-
-NEUE STRUKTUR- & DIAGNOSTIK-REGELN
-5. THEMATISCHE KONSISTENZ (DIMENSIONS-BLÖCKE): Springe nicht wild zwischen den großen Dimensionen (A, C, E, N, O) hin und her. Wenn du eine Dimension (z. B. GEWISSENHAFTIGKEIT) beginnst, erkunde nacheinander alle zugehörigen Facetten (Pflichtbewusstsein, dann Ordnung), bevor du zur nächsten Hauptdimension übergehst. Das sorgt für einen natürlichen roten Faden.
-6. DIAGNOSTISCHES ABBRUCHKRITERIUM (QUALITÄT VOR QUANTITÄT): Prüfe nach jeder Antwort des Nutzers kritisch: *Könnte ich anhand dieser Aussage die TSDI-Items dieser Facette bereits einschätzen?*
-   - Wenn NEIN (z. B. bei einsilbigen Antworten wie 'ja' oder 'weiß ich nicht'): Frage gezielt weiter nach (z. B. über ein konkretes Alltagsbeispiel).
-   - Wenn JA (der Datenpunkt ist gesättigt): Höre sofort auf, in dieser Facette weiterzubohren, und leite elegant zur nächsten Facette oder zur nächsten Dimension über.
-7. REINE DIAGNOSTIK – KEINE LÖSUNGEN/STRATEGIEN: Frage NIEMALS nach Lösungen, Hilfsmitteln, Bewältigungsstrategien oder Eisbrechern. Dich interessiert NUR der Ist-Zustand des Verhaltens.
-8. ABSOLUTES FLOSKEL-VERBOT: Nutze NIEMALS Phrasen wie 'Das verstehe ich', 'Das macht Sinn', 'Das klingt interessant', 'Spannend', 'Kein Problem' oder 'Ich möchte lediglich...'.
-9. UMGANG MIT RÜCKFRAGEN / WIDERSTAND: Wenn der Nutzer Fragen stellt oder den Sinn hinterfragt, antworte extrem kurz und sachlich (z. B. 'Es hilft mir, Ihr Verhalten besser einzuordnen.') und stelle direkt die nächste Frage.
-10. MAXIMALE KÜRZE: Halte deine Textbeiträge extrem kurz (maximal 1-2 Sätze pro Antwort).
-11. SIEZEN: Sprich den Nutzer im gesamten Interview höflich mit 'Sie' an.
-
-
-12. BEENDIGUNG: Sobald du alle Facetten im freien Gespräch diagnostisch ausreichend abgedeckt hast, verabschiede dich freundlich und platziere am Ende deiner allerletzten Nachricht exakt das Wort '[INTERVIEW_FERTIG]' (inklusive der eckigen Klammern).
-
-
-# DIAGNOSTIK-LEITFADEN: Trait Self-Descriptive Inventory
-
-LEITFADEN:
-{TSDI_BESCHREIBUNGEN}
-
-ITEMS:
-{TSDI_ITEMS}
-
-DEINE ANTWORT-STRUKTUR:
-Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
-1. "aktuelle_facette": Eine Zahl von 0 bis 14. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 0. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 1, u.s.w.
-2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
-"""
-
-#--- Condition Configs --------------------------------------------------------------------------------------
-CONDITION_CONFIGS = {
-    "structured-write": {
-        "system_prompt": SYSTEM_PROMPT_STRUCTURED,
-        "init_message": json.dumps({
-            "aktuelle_facette": 1,
-            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Würden Sie sagen, dass man Sie für jemanden hält, mit dem man einfach gut auskommt?" # Condition label löschen
-        })
-    },
-    "open-write": {
-        "system_prompt": SYSTEM_PROMPT_OPEN,
-        "init_message": json.dumps({
-            "aktuelle_facette": 1,
-            "interviewer_text": "[Open] Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?" # Condition label löschen
-        })
-    }
-}
-
-def main():
-    st.set_page_config(page_title="Persönlichkeits-Diagnostik", page_icon="🧠")
-    
-    if "step" not in st.session_state:
-        params = st.query_params
-        st.session_state.default_id = params.get("caseNumber", "")
-        st.session_state.step = "welcome"
-        st.session_state.messages = []
-        st.session_state.condition = random.choice(["structured-write", "open-write"])
-        st.session_state.current_facet_count = 0
-        st.session_state.research_consent = False
-        st.session_state.experiment_start_time = time.time()
-
-    # --- PHASE 1: WILLKOMMEN ---
-    if st.session_state.step == "welcome":
-        st.title("Willkommen zum KI-Interview 🤖")
-        st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
-        
-        st.markdown("""
-        **Anleitung zur Generierung Ihres VP-Codes:**
-        * Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (z.B. 04)
-        * Geben Sie als zweites die letzten beiden Buchstaben des Mädchen-(Geburts-)namens der Mutter ein (z.B. ER)
-        * Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (z.B. NS)
-        * Geben Sie als viertes den Tag Ihres Geburtstags ein (z.B. 24)
-
-        Ein Versuchspersonencode könnte beispielsweise so aussehen: 04ERNS24
-        * Erster Vorname der Mutter: *Anna* (04 Buchstaben)
-        * Nachname der Mutter: *Müller* (ER als Endung)
-        * Erster Vorname des Vaters: *Hans* (NS als Endung)
-        * Eigener Geburtstag: *24.12.1993* (Tag.Monat.Jahr)
-        """)
-        
-        vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 04ERNS24")
-        matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
-        
-        if st.button("Weiter zur Beschreibung"):
-            if not vp_code_input.strip() or not matrikel_input.strip():
-                st.error("Bitte füllen Sie beide Felder aus.")
-            else:
-                st.session_state.participant_id = vp_code_input.strip()
-                st.session_state.matrikelnummer = matrikel_input.strip()
-                st.session_state.step = "consent"
-                st.rerun()
-
-    # --- PHASE 2: EINWILLIGUNG ---
-    elif st.session_state.step == "consent":
-        st.title("Informationen zum Ablauf & Datenschutz 📝")
-        st.markdown("""
-        ### Beschreibung & Ablauf der Übungssitzung
-        Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
-        * **Verpflichtung:** Die Teilnahme am Interview ist der erste Teil der Übungsleistung für diese Woche. Wer nicht teilnimmt, erhält keinen Credit.
-        * **Ehrlichkeit:** Es besteht keine Pflicht zu wahrheitsgemäßen Antworten, aber fiktive Angaben verfälschen natürlich die finale Auswertung Ihrer Big Five.
-        * **Ethikvotum:** Bewilligt unter **[PLATZHALTER: Ethikantrag-ID]**.
-        
-        ### Datenschutz
-        * **OpenAI API:** Die Daten werden verschlüsselt via API an OpenAI übertragen (der KI-Interviewer beruht auf einem OpenAI Modell). OpenAI nutzt die übermittelten Daten NICHT zum Training und löscht die Daten nach 30 Tagen.
-        * **Speicherung:** Die Interviewtranskripte werden auf sicheren Servern der Universität Ulm gespeichert.
-        """)
-        
-        consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
-        if st.button("Interview starten"):
-            if consent_checked:
-                st.session_state.research_consent = True
-                st.session_state.interview_start_time = time.time()
-                st.session_state.step = "chat"
-                
-                config = CONDITION_CONFIGS[st.session_state.condition]
-                                
-                st.session_state.messages = [
-                    {"role": "system", "content": config["system_prompt"]},
-                    {"role": "assistant", "content": config["init_message"]}
-                ]
-                st.rerun()
-            else:
-                st.warning("Bitte stimmen Sie zu.")
-
-    # --- PHASE 3: CHAT ---
-    elif st.session_state.step == "chat":
-        st.title("Interview im Dialog 💬")
-
-        # Read facet progress
-        if st.session_state.messages:
-            last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
-            try:
-                msg_data = json.loads(last_ai_msg)
-                st.session_state.current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
-            except:
-                pass
-
-        progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
-        st.markdown(f"Facette {st.session_state.current_facet_count} von {TOTAL_FACETS}")
-        st.progress(progress_percentage)
-        st.divider()
-
-        # Inject CSS for scrollable chat container
-        st.markdown("""
-        <style>
-        .chat-container {
-            height: 35vh;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column-reverse;
-            padding: 1rem;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background-color: #fafafa;
-            margin-bottom: 1rem;
-        }
-        .chat-bubble-user {
-            align-self: flex-end;
-            background-color: #DCF8C6;
-            color: #000;
-            padding: 0.6rem 1rem;
-            border-radius: 16px 16px 2px 16px;
-            max-width: 75%;
-            margin: 0.3rem 0;
-            font-size: 0.95rem;
-        }
-        .chat-bubble-ai {
-            align-self: flex-start;
-            background-color: #FFFFFF;
-            color: #000;
-            padding: 0.6rem 1rem;
-            border-radius: 16px 16px 16px 2px;
-            max-width: 75%;
-            margin: 0.3rem 0;
-            font-size: 0.95rem;
-            border: 1px solid #e0e0e0;
-        }
-        .chat-scroll-anchor { height: 1px; }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # Build chat HTML
-        chat_html = '<meta charset="UTF-8"><div class="chat-container" id="chat-box">'
-        interview_ended = False
-
-        for msg in reversed(list(st.session_state.messages)):
-            if msg["role"] == "system":
-                continue
-            if msg["role"] == "assistant":
-                try:
-                    data = json.loads(msg["content"])
-                    text_content = data.get("interviewer_text", "")
-                    if "[INTERVIEW_FERTIG]" in text_content:
-                        interview_ended = True
-                    text_content = text_content.replace("[INTERVIEW_FERTIG]", "").strip()
-                except:
-                    text_content = msg["content"]
-                chat_html += f'<div class="chat-bubble-ai">🤖 {text_content}</div>'
-            else:
-                chat_html += f'<div class="chat-bubble-user">{msg["content"]}</div>'
-
-        chat_html += '<div class="chat-scroll-anchor" id="bottom"></div></div>'
-
-        # Auto-scroll to bottom
-        st.markdown(chat_html, unsafe_allow_html=True)
-
-        st.components.v1.html("""
-        <script>
-            function scrollChat() {
-                const frames = window.parent.document.querySelectorAll('#chat-box');
-                if (frames.length > 0) {
-                    frames[0].scrollTop = frames[0].scrollHeight;
-                }
-            }
-            scrollChat();
-            setTimeout(scrollChat, 100);
-            setTimeout(scrollChat, 400);
-        </script>
-        """, height=0)
-
-        if interview_ended:
-            if "interview_end_time" not in st.session_state:
-                st.session_state.interview_end_time = time.time()
-            st.success("Das Interview wurde erfolgreich beendet.")
-            if st.button("Nächste Seite"):
-                st.session_state.step = "ux_survey1"
-                st.rerun()
-        else:
-            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-            user_input = st.chat_input("Ihre Antwort hier tippen...")
-
-            if user_input:
-                st.session_state.messages.append({
-                    "role": "user",
-                    "content": user_input,
-                    "timestamp": datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H:%M:%S")
-                })
-                api_success = False
-                
-                with st.spinner("🤖 Interviewer überlegt..."):
-                    try:
-                        api_messages = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
-                        response = client.chat.completions.create(
-                            model="gpt-4o-mini",
-                            messages=api_messages,
-                            response_format={"type": "json_object"}
-                        )
-                        ai_msg = response.choices[0].message.content
-                        st.session_state.messages.append({
-                            "role": "assistant",
-                            "content": ai_msg,
-                            "timestamp": datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H:%M:%S")
-                        })
-                        api_success = True
-                    except Exception as e:
-                        st.error(f"KI Fehler: {e}")
-                
-                # Cloud-Speicherung nur triggern, wenn API erfolgreich war
-                if api_success:
-                    full_data = {
-                        "participant_id": st.session_state.get("participant_id", "unknown"),
-                        "condition": st.session_state.condition,
-                        "research_consent": st.session_state.research_consent,
-                        "chat": st.session_state.messages,
-                        "timing": {
-                            "experiment_start_time": datetime.fromtimestamp(st.session_state.experiment_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
-                            "interview_start_time": datetime.fromtimestamp(st.session_state.interview_start_time).strftime("%Y-%m-%d_%H:%M:%S")
-                        }
-                    }
-                    threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data), daemon=True).start()
-                st.rerun()
-
-    # --- PHASE 4: UX Fragebogen Interview ---
-    elif st.session_state.step == "ux_survey1":
-        st.title("Wie war das Interview? 📋")
-        st.write("Bevor Sie Ihre Auswertung sehen, bitten wir Sie, kurz Ihre Erfahrung mit dem Interview zu bewerten.")
-        st.divider()
-
-        # --- PLACEHOLDER: Replace these with your actual UX questionnaire items ---
-        st.subheader("🚧 Fragebogen-Platzhalter")
-        st.info("Hier wird der UX-Fragebogen eingebettet (z.B. UEQ, AttrakDiff, NASA-TLX o.ä.).")
-
-        with st.form("ux_form"):
-            st.markdown("**Beispiel-Items (bitte ersetzen):**")
+        response = requests.request("PROPFIND", url, auth=AUTH, headers=headers)
+        if response.status_code not in [207, 200]:
+            st.error(f"Nextcloud-Fehler: Status {response.status_code}. Ordnerpfad korrekt?")
+            return []
             
-            q1 = st.slider("Das Interview war einfach zu verstehen.", 1, 5, 4)
-            q2 = st.slider("Ich fühlte mich während des Interviews wohl.", 1, 5, 4)
-            q3 = st.slider("Die KI wirkte natürlich und menschlich.", 1, 5, 4)
-            q4 = st.text_area("Haben Sie weitere Anmerkungen zum Interview?", placeholder="Optionaler Freitext...")
+        root = ET.fromstring(response.content)
+        files = []
+        for response_elem in root.findall(".//{DAV:}response"):
+            href_elem = response_elem.find("{DAV:}href")
+            if href_elem is not None:
+                href = href_elem.text
+                filename = href.split("/")[-1]
+                if filename.endswith(".json"):
+                    files.append(filename)
+        return files
+    except Exception as e:
+        st.error(f"Verbindungsfehler zur Nextcloud: {e}")
+        return []
 
-            submitted = st.form_submit_button("Weiter zur Auswertung")
-            if submitted:
-                st.session_state.ux_responses_interview = {
-                    "q1_verstaendlichkeit": q1,
-                    "q2_wohlbefinden": q2,
-                    "q3_natuerlichkeit": q3,
-                    "q4_freitext": q4
-                }
-                st.session_state.step = "results"
-                st.rerun()
+def read_and_format_json_transcript(filename):
+    """Lädt die JSON-Datei, extrahiert ID, Chat und das KI-Assessment."""
+    url = f"{NC_URL}{TRANSKRIPT_ORDNER}/{filename}"
+    response = requests.get(url, auth=AUTH)
+    if response.status_code != 200:
+        raise Exception(f"Datei konnte nicht geladen werden (Status {response.status_code})")
+        
+    data = response.json()
+    
+    # 1. VP-Code des Interviewten extrahieren
+    vp_code = data.get("id", filename.replace(".json", ""))
+    
+    # 2. KI-Bewertung extrahieren
+    ai_assessment = data.get("ai_assessment", {
+        "Extraversion": 3,
+        "Verträglichkeit": 3,
+        "Gewissenhaftigkeit": 3,
+        "Neurotizismus": 3,
+        "Offenheit": 3
+    })
+    
+    # 3. Chat-Verlauf formatieren
+    formatted_chat = []
+    chat_verlauf = data.get("chat", [])
+    for message in chat_verlauf:
+        role = message.get("role")
+        content = message.get("content", "").strip()
+        if role == "system":
+            continue
+        if role == "assistant":
+            label = "Interviewer (KI)"
+        elif role == "user":
+            label = "Teilnehmer (Mensch)"
+        else:
+            label = role.capitalize()
+        formatted_chat.append(f"{label}:\n{content}\n")
+        
+    full_transcript_text = "\n".join(formatted_chat)
+    return vp_code, full_transcript_text, ai_assessment
 
-    # --- PHASE 5: AUSWERTUNG ---
-    elif st.session_state.step == "results":
-        st.title("Ihre Auswertung 📊")
+def upload_results_to_nextcloud(filename, csv_data):
+    """Lädt die CSV-Ergebnisdatei via HTTP PUT in die Nextcloud hoch."""
+    url = f"{NC_URL}{ERGEBNIS_ORDNER}/{filename}"
+    headers = {"Content-Type": "text/csv; charset=utf-8"}
+    response = requests.put(url, data=csv_data.encode('utf-8'), auth=AUTH, headers=headers)
+    if response.status_code not in [201, 204]:
+        raise Exception(f"Upload fehlgeschlagen mit Status {response.status_code}")
 
-        if "ai_bfi" not in st.session_state:
-            with st.spinner("KI Analyse läuft..."):
-                try:
-                    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-                    
-                    clean_messages = []
-                    for m in st.session_state.messages:
-                        if m["role"] == "system": continue
-                        if m["role"] == "assistant":
-                            try:
-                                clean_messages.append(f"Interviewer: {json.loads(m['content']).get('interviewer_text', '')}")
-                            except:
-                                clean_messages.append(f"Interviewer: {m['content']}")
-                        else:
-                            clean_messages.append(f"Teilnehmer: {m['content']}")
-                            
-                    chat_text = "\n".join(clean_messages)
-                    
-                    res = client.chat.completions.create(
-                        model="gpt-4o-mini",
-                        messages=[
-                            {"role": "system", "content": f"Du bist ein erfahrener Persönlichkeitspsychologe. Analysiere den Chat auf Facettenebene der Big Five. Basiere deine Einschätzung ausschließlich auf dem Verhalten und den Aussagen der Teilnehmer im Chat.\nHier sind die Dimensions- und Facettenbeschreibungen, auf dessen Grundlage du die Ratings vornimmst:\n{TSDI_BESCHREIBUNGEN}\nSchätze jede Facette auf einer Skala von 1-5 ein, wobei 1 = sehr niedrige Ausprägung und 5 = sehr hohe Ausprägung bedeutet. Antworte NUR im JSON-Format mit den exakten Keys: 'Freundlichkeit', 'Rücksichtnahme', 'Hilfsbereitschaft', 'Fleiß', 'Organisation', 'Durchsetzungsfähigkeit', 'Selbstbewusstsein', 'Soziale Aktivität',  'Depression', 'Reizbarkeit', 'Nervosität', 'Intellekt', 'Reflexion', 'Wissenschaftliches Interesse', 'Aufrichtigkeit', 'Fairness', 'Bescheidenheit'.\n"},
-                            {"role": "user", "content": f"Hier ist der Chatverlauf:\n{chat_text}"}
-                        ],
-                        response_format={"type": "json_object"}
-                    )
-                    st.session_state.ai_bfi = json.loads(res.choices[0].message.content)
-                except Exception as e:
-                    st.error(f"Fehler bei der Analyse: {e}")
-                    st.session_state.ai_bfi = {t: 0 for t in [
-                        "Freundlichkeit", "Rücksichtnahme", "Hilfsbereitschaft",
-                        "Fleiß", "Organisation",
-                        "Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität",
-                        "Depression", "Reizbarkeit", "Nervosität",
-                        "Intellekt", "Reflexion", "Wissenschaftliches Interesse",
-                        "Aufrichtigkeit", "Fairness", "Bescheidenheit"
-                    ]}
+# 3. SESSION STATE INITIALISIERUNG
+if 'step' not in st.session_state:
+    st.session_state.step = "welcome"
 
-        DIMENSION_FACETS = {
-            "Ehrlichkeit-Bescheidenheit": ["Aufrichtigkeit", "Fairness", "Bescheidenheit"],
-            "Neurotizismus": ["Depression", "Reizbarkeit", "Nervosität"],
-            "Extraversion": ["Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität"],
-            "Verträglichkeit": ["Freundlichkeit", "Rücksichtnahme", "Hilfsbereitschaft"],
-            "Gewissenhaftigkeit": ["Fleiß", "Organisation"],
-            "Offenheit": ["Intellekt", "Reflexion", "Wissenschaftliches Interesse"],
-        }
+if 'participant_id' not in st.session_state:
+    st.session_state.participant_id = ""
 
-        for dimension, facets in DIMENSION_FACETS.items():
-            st.subheader(dimension)
-            for t in facets:
-                ki_wert = st.session_state.ai_bfi.get(t, 0)
-                st.metric(f"{t}", f"{ki_wert} / 5")
-                st.progress(float(ki_wert) / 5.0 if ki_wert else 0.0)
-            st.divider()
+if 'matrikelnummer' not in st.session_state:
+    st.session_state.matrikelnummer = ""
 
-        if st.button("Weiter zum Abschlussfragebogen"):
-            st.session_state.step = "ux_survey2"
+if 'urne' not in st.session_state:
+    st.session_state.urne = load_transcript_list()
+
+if 'aktuelles_transkript_file' not in st.session_state:
+    st.session_state.aktuelles_transkript_file = None
+
+if 'vp_code' not in st.session_state:
+    st.session_state.vp_code = ""
+
+if 'transkript_text' not in st.session_state:
+    st.session_state.transkript_text = ""
+
+if 'ai_scores' not in st.session_state:
+    st.session_state.ai_scores = {}
+
+if 'user_scores' not in st.session_state:
+    st.session_state.user_scores = {}
+
+
+# --- PHASE 1: WILLKOMMEN & DATENEINGABE ---
+if st.session_state.step == "welcome":
+    st.title("Willkommen zur Transkript-Bewertung 📝")
+    st.write("Bitte geben Sie Ihre Daten ein, um mit der Zulosung und Bewertung zu beginnen.")
+    
+    st.markdown("""
+    **Anleitung zur Generierung Ihres VP-Codes:**
+    * Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (z.B. 04)
+    * Geben Sie als zweites die letzten beiden Buchstaben des Mädchen-(Geburts-)namens der Mutter ein (z.B. ER)
+    * Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (z.B. NS)
+    * Geben Sie als viertes den Tag Ihres Geburtstags ein (z.B. 24)
+
+    Ein Versuchspersonencode könnte beispielsweise so aussehen: 04ERNS24
+    * Erster Vorname der Mutter: *Anna* (04 Buchstaben)
+    * Nachname der Mutter: *Müller* (ER als Endung)
+    * Erster Vorname des Vaters: *Hans* (NS als Endung)
+    * Eigener Geburtstag: *24.12.1993* (Tag.Monat.Jahr)
+    """)
+    
+    vp_code_input = st.text_input("VP-Code (Dein Teilnehmer-Code)", placeholder="z.B. 04ERNS24")
+    matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
+    
+    if st.button("Weiter zur Beschreibung", type="primary"):
+        if not vp_code_input.strip() or not matrikel_input.strip():
+            st.error("Bitte füllen Sie beide Felder aus.")
+        else:
+            st.session_state.participant_id = vp_code_input.strip()
+            st.session_state.matrikelnummer = matrikel_input.strip()
+            st.session_state.step = "consent"
             st.rerun()
 
-    # --- PHASE 6: UX Fragebogen Auswertung ---
-    elif st.session_state.step == "ux_survey2":
-        st.title("Wie war die Auswertung? 📋")
-        st.write("Bitte bewerten Sie Ihre Erfahrung mit der Auswertung.")
-        st.divider()
 
-        # --- PLACEHOLDER: Replace these with your actual UX questionnaire items ---
-        st.subheader("🚧 Fragebogen-Platzhalter")
-        st.info("Hier wird der UX-Fragebogen eingebettet (z.B. UEQ, AttrakDiff, NASA-TLX o.ä.).")
-
-        with st.form("ux_form"):
-            st.markdown("**Beispiel-Items (bitte ersetzen):**")
-            
-            q1 = st.slider("Das Interview war einfach zu verstehen.", 1, 7, 4)
-            q2 = st.slider("Ich fühlte mich während des Interviews wohl.", 1, 7, 4)
-            q3 = st.slider("Die KI wirkte natürlich und menschlich.", 1, 7, 4)
-            q4 = st.text_area("Haben Sie weitere Anmerkungen zum Interview?", placeholder="Optionaler Freitext...")
-
-            submitted = st.form_submit_button("Abschließen & Daten speichern")
-            if submitted:
-                st.session_state.ux_responses_results = {
-                    "q1_verstaendlichkeit": q1,
-                    "q2_wohlbefinden": q2,
-                    "q3_natuerlichkeit": q3,
-                    "q4_freitext": q4
-                }
-
-                experiment_end_time = time.time()
-                final_payload = {
-                    "participant_id": st.session_state.participant_id,
-                    "condition": st.session_state.condition,
-                    "research_consent": st.session_state.research_consent,
-                    "ux_responses_interview": st.session_state.get("ux_responses_interview", {}),
-                    "ux_responses_results": st.session_state.ux_responses_results,
-                    "ai_assessment": st.session_state.ai_bfi,
-                    "chat": st.session_state.messages,
-                    "timing": {
-                            "experiment_start_time": datetime.fromtimestamp(st.session_state.experiment_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
-                            "experiment_end_time": datetime.fromtimestamp(experiment_end_time).strftime("%Y-%m-%d_%H:%M:%S"),
-                            "interview_start_time": datetime.fromtimestamp(st.session_state.interview_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
-                            "interview_end_time": datetime.fromtimestamp(st.session_state.interview_end_time).strftime("%Y-%m-%d_%H:%M:%S"),
-                            "duration_interview_seconds": round(st.session_state.interview_end_time - st.session_state.interview_start_time, 2),
-                            "duration_experiment_seconds": round(experiment_end_time - st.session_state.experiment_start_time, 2)
-                        }
-                }
-                if save_to_nextcloud(st.session_state.participant_id, final_payload):
-                    st.session_state.data_saved = True
-                    st.session_state.step = "farewell"
-                    st.rerun()
-                else:
-                    st.error("Speicherfehler. Bitte versuchen Sie es erneut.")
+# --- PHASE 2: EINWILLIGUNG & ABLAUF ---
+elif st.session_state.step == "consent":
+    st.title("Informationen zum Ablauf & Datenschutz 📝")
+    st.markdown("""
+    ### Beschreibung & Ablauf der Übungssitzung
+    In diesem zweiten Teil der Übung nehmen Sie die Rolle einer **fremdbeurteilenden Person** ein. Ihnen wird das anonymisierte Transkript eines bereits geführten Interviews zugelost.
     
-    # --- PHASE 7: ABSCHLUSS ---
-    elif st.session_state.step == "farewell":
-        st.title("Vielen Dank! 🎉")
-        st.success("Ihre Daten wurden erfolgreich gespeichert.")
-        st.write("Sie haben das Interview erfolgreich abgeschlossen. Ihre Teilnahme wird für die Übungsleistung angerechnet.")
-        st.divider()
-        st.link_button("Zur Uni-Webseite", "https://www.uni-ulm.de/in/psy-dia/forschung/an-studien-teilnehmen/")
+    * **Deine Aufgabe:** Lies das Transkript aufmerksam durch. Schätze die interviewte Person im Anschluss auf den Big-Five-Persönlichkeitsskalen ein.
+    * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung. Wer nicht teilnimmt oder unvollständige Daten abgibt, erhält keinen Credit.
+    * **Ethikvotum:** Bewilligt unter **[PLATZHALTER: Ethikantrag-ID]**.
+    
+    ### Datenschutz
+    * **Anonymität:** Die Ihnen vorgelegten Transkripte enthalten keinerlei Klarnamen oder direkt identifizierbare Merkmale. Ihre eigenen Angaben (Matrikelnummer) werden strikt getrennt von den Bewertungsergebnissen zur Leistungsverbuchung genutzt.
+    * **Speicherung:** Alle Auswertungen und Daten werden auf sicheren Servern gespeichert.
+    """)
+    
+    consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Beurteilungsdaten zu Forschungs- und Lehrzwecken zu.")
+    
+    if st.button("Studie starten & Transkript zulosen", type="primary"):
+        if consent_checked:
+            st.session_state.step = "evaluation"
+            st.rerun()
+        else:
+            st.warning("Bitte stimmen Sie den Datenschutzbestimmungen zu, um fortzufahren.")
 
-if __name__ == "__main__":
-    main()
+
+# --- PHASE 3: EVALUATION (LOSEN, LESEN & FRAGEBOGEN) ---
+elif st.session_state.step == "evaluation":
+    
+    # Unterphase A: Noch kein Transkript gelost
+    if st.session_state.aktuelles_transkript_file is None:
+        st.subheader("Schritt 1: Transkript erhalten")
+        st.write("Klicke auf den Button, um dir ein zufälliges Interview-Transkript aus dem System zuzulosen.")
+        
+        if not st.session_state.urne:
+            st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer. Bitte den Studienleiter kontaktieren.")
+        else:
+            if st.button("🎲 Transkript zufällig zulosen", type="primary"):
+                gezogenes_file = random.choice(st.session_state.urne)
+                st.session_state.urne.remove(gezogenes_file)
+                
+                with st.spinner("Transkript wird geladen..."):
+                    try:
+                        vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
+                        st.session_state.aktuelles_transkript_file = gezogenes_file
+                        st.session_state.vp_code = vp_code
+                        st.session_state.transkript_text = text
+                        st.session_state.ai_scores = ai_scores
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Fehler beim Laden der Datei: {e}")
+
+    # Unterphase B: Transkript gelost, Fragebogen anzeigen
+    elif not st.session_state.user_scores:
+        st.success("Dir wurde erfolgreich ein Interview-Transkript zugelost!")
+        
+        st.subheader("Schritt 2: Transkript lesen")
+        st.text_area(
+            label="Inhalt des Gesprächs:", 
+            value=st.session_state.transkript_text, 
+            height=450, 
+            disabled=True
+        )
+        
+        st.write("---")
+        
+        st.subheader("Schritt 3: Persönlichkeitseinschätzung")
+        st.write("Bitte schätze die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
+        
+        with st.form("fragebogen_form"):
+            extraversion = st.slider("Die Person wirkt extravertiert, gesellig und gesprächig.", 1, 5, 3)
+            vertraeglichkeit = st.slider("Die Person wirkt rücksichtsvoll, empathisch und kooperativ.", 1, 5, 3)
+            gewissenhaftigkeit = st.slider("Die Person wirkt organisiert, gründlich und zielstrebig.", 1, 5, 3)
+            neurotizismus = st.slider("Die Person wirkt emotional labil, unsicher oder nervös.", 1, 5, 3)
+            offenheit = st.slider("Die Person wirkt offen für neue Erfahrungen und einfallsreich.", 1, 5, 3)
+            
+            st.write("")
+            anmerkungen = st.text_area("Gibt es noch sonstige Auffälligkeiten oder Bemerkungen zur Person? (Optional)", max_chars=500)
+            
+            submit_button = st.form_submit_button("Formular absenden", type="primary")
+            
+            if submit_button:
+                with st.spinner("Deine Antworten werden sicher übertragen..."):
+                    # 1. Zwischenspeichern für das Feedback
+                    st.session_state.user_scores = {
+                        "Extraversion": extraversion,
+                        "Verträglichkeit": vertraeglichkeit,
+                        "Gewissenhaftigkeit": gewissenhaftigkeit,
+                        "Neurotizismus": neurotizismus,
+                        "Offenheit": openness
+                    }
+                    
+                    # 2. Daten für die CSV strukturieren (Inklusive RATER-Infos!)
+                    ergebnis_daten = {
+                        "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "Rater_VP_Code": st.session_state.participant_id,      # DEIN eingegebener VP-Code
+                        "Rater_Matrikelnummer": st.session_state.matrikelnummer, # DEINE Matrikelnummer
+                        "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
+                        "Bewerteter_Target_VP_Code": st.session_state.vp_code, # ID des Interviewten aus dem JSON
+                        "USER_Extraversion": extraversion,
+                        "USER_Vertraeglichkeit": vertraeglichkeit,
+                        "USER_Gewissenhaftigkeit": gewissenhaftigkeit,
+                        "USER_Neurotizismus": neurotizismus,
+                        "USER_Offenheit": openness,
+                        "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
+                        "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
+                        "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
+                        "AI_Neurotizismus": st.session_state.ai_scores.get("Neurotizismus"),
+                        "AI_Offenheit": st.session_state.ai_scores.get("Offenheit"),
+                        "Freitext_Anmerkungen": anmerkungen.replace("\n", " ")
+                    }
+                    
+                    df = pd.DataFrame([ergebnis_daten])
+                    csv_string = df.to_csv(index=False, sep=";")
+                    
+                    # Eindeutigen Ergebnis-Dateinamen generieren (Kombination aus Bewerter & Bewertetem)
+                    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    clean_target_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
+                    clean_rater_name = "".join(x for x in st.session_state.participant_id if x.isalnum() or x in "._-").strip()
+                    dateiname = f"ergebnis_Rater_{clean_rater_name}_Target_{clean_target_name}_{timestamp_str}.csv"
+                    
+                    try:
+                        upload_results_to_nextcloud(dateiname, csv_string)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Fehler beim Speichern der Daten: {e}")
+                        st.session_state.user_scores = {} # Reset bei Fehler
+
+    # Unterphase C: Abgesendet -> Feedback-Bildschirm anzeigen
+    else:
+        st.balloons()
+        st.subheader("🎉 Vielen Dank für deine Teilnahme!")
+        st.write("Deine Antworten wurden erfolgreich und sicher unter deiner Matrikelnummer registriert.")
+        
+        st.write("---")
+        st.subheader("🤖 Dein Urteil im Vergleich zur KI-Bewertung")
+        st.write("Hier siehst du, wie nah deine Einschätzung an der algorithmischen Auswertung der KI lag:")
+        
+        vergleichs_daten = []
+        gesamte_abweichung = 0
+        
+        for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
+            user_val = st.session_state.user_scores.get(dimension, 3)
+            ai_val = st.session_state.ai_scores.get(dimension, 3)
+            diff = abs(user_val - ai_val)
+            gesamte_abweichung += diff
+            
+            if diff == 0:
+                feedback = "🎯 Volltreffer!"
+            elif diff == 1:
+                feedback = "👍 Sehr nah dran"
+            else:
+                feedback = "🔄 Andere Wahrnehmung"
+                
+            vergleichs_daten.append({
+                "Big-Five Dimension": dimension,
+                "Deine Einschätzung": user_val,
+                "KI-Einschätzung": ai_val,
+                "Abweichung": diff,
+                "Feedback": feedback
+            })
+            
+        df_vergleich = pd.DataFrame(vergleichs_daten)
+        st.table(df_vergleich)
+        
+        st.write("")
+        if gesamte_abweichung <= 2:
+            st.info(f"🧠 **Fazit:** Du hast eine extreme Ähnlichkeit zur KI-Auswertung! Deine Gesamtabweichung liegt bei nur **{gesamte_abweichung}** Punkten.")
+        elif gesamte_abweichung <= 5:
+            st.info(f"📊 **Fazit:** Gute Übereinstimmung. Du hast das Profil im Wesentlichen genau so wahrgenommen wie der Algorithmus (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+        else:
+            st.info(f"👥 **Fazit:** Spannend! Deine menschliche Intuition weicht vom Algorithmus ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte). Genau diese Unterschiede untersuchen wir.")
+
+        st.write("---")
+        
+        # Komplett-Reset für den Kiosk-Modus
+        if st.button("Nächste Teilnahme starten"):
+            st.session_state.step = "welcome"
+            st.session_state.participant_id = ""
+            st.session_state.matrikelnummer = ""
+            st.session_state.aktuelles_transkript_file = None
+            st.session_state.vp_code = ""
+            st.session_state.transkript_text = ""
+            st.session_state.ai_scores = {}
+            st.session_state.user_scores = {}
+            st.rerun()
