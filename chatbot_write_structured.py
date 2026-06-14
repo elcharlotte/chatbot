@@ -169,7 +169,8 @@ SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein erfahrener psychologischer Interviewe
 
 INTERVIEW-REGELN:
 * Gehe die Facetten streng sequenziell von 1 bis 17 durch.
-* Stelle pro Item EINE verhaltensnahe Frage. Die Items findest du zwischen den Tags <ITEMS> und </ITEMS>. Stelle die Items wenn möglich als offene Fragen, auf die man nicht einfach mit ja oder nein antworten kann. Vermeide Phrasen wie '<Aussage>. Wie sehen Sie das bei sich?' und verschachtelte Sätze. Nutze bspw. Formulierungen wie 'Wie großzügig sind Sie, wenn es darum geht, anderen zu helfen?'. Falls eine Formulierung als offene Frage dafür sorgt, dass ein Item zu verschachtelt oder unnatürlich wird, darfst du die Frage auch so stelle, dass man mit ja oder nein darauf antworten kann.
+* Stelle pro Item EINE verhaltensnahe Frage. Die Items findest du zwischen den Tags <ITEMS> und </ITEMS>. Stelle die Items wenn möglich als offene Fragen.
+* Vermeide Phrasen wie '<Aussage>. Wie sehen Sie das bei sich?' und verschachtelte Sätze.
 * Formuliere die Fragen natürlich und gesprächsnah. Vermeide repetitive Phrasen wie 'Nun zur nächsten Frage:', 'Vielen Dank', 'Das freut mich zu hören', 'interessant' oder 'Das tut mir leid'.
 * Sprich den Nutzer mit 'Sie' an.
 * Wenn du die Antwort auf das letzte Item erhalten hast, verabschiede dich mit '[INTERVIEW_FERTIG]'. 
@@ -234,7 +235,7 @@ CONDITION_CONFIGS = {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Inwieweit hält man Sie für jemanden, mit dem man einfach gut auskommt?" # TODO: Condition label löschen
+            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Wie sehr hält man Sie für jemanden, mit dem man einfach gut auskommt?" # TODO: Condition label löschen
         })
     },
     "open-write": {
