@@ -234,7 +234,7 @@ CONDITION_CONFIGS = {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Würden Sie sagen, dass man Sie für jemanden hält, mit dem man einfach gut auskommt?" # TODO: Condition label löschen
+            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Inwieweit hält man Sie für jemanden, mit dem man einfach gut auskommt?" # TODO: Condition label löschen
         })
     },
     "open-write": {
