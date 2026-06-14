@@ -18,7 +18,7 @@ def save_to_nextcloud(participant_id, data_dict, final=True):
         if final:
             filename = f"interview_{participant_id}_{save_time}.json"
         else:
-            filename = f"interview_{participant_id}_preliminary"
+            filename = f"interview_{participant_id}_preliminary.json"
         upload_url = f"{base_url}/{folder}/{filename}"
         
         data = json.dumps(data_dict, indent=2, ensure_ascii=False).encode('utf-8')
