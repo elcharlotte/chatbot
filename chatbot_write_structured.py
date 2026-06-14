@@ -10,12 +10,15 @@ import time
 from datetime import datetime
 
 # --- KONFIGURATION & HELPER ------------------------------------------------------------------
-def save_to_nextcloud(participant_id, data_dict):
+def save_to_nextcloud(participant_id, data_dict, final=True):
     try:
         base_url = "https://cloudstore.uni-ulm.de/remote.php/dav/files/ffg79"
         folder = "Forschungsdaten"
-        # save_time = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H:%M:%S")
-        filename = f"interview_{participant_id}.json"
+        save_time = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H:%M:%S")
+        if final:
+            filename = f"interview_{participant_id}_{save_time}.json"
+        else:
+            filename = f"interview_{participant_id}_preliminary"
         upload_url = f"{base_url}/{folder}/{filename}"
         
         data = json.dumps(data_dict, indent=2, ensure_ascii=False).encode('utf-8')
@@ -166,10 +169,10 @@ SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein erfahrener psychologischer Interviewe
 
 INTERVIEW-REGELN:
 * Gehe die Facetten streng sequenziell von 1 bis 17 durch.
-* Stelle pro Item EINE verhaltensnahe Frage. Die Items findest du zwischen den Tags <ITEMS> und </ITEMS>
+* Stelle pro Item EINE verhaltensnahe Frage. Die Items findest du zwischen den Tags <ITEMS> und </ITEMS>. Stelle die Items als offene Fragen, auf die man nicht einfach mit ja oder nein antworten kann. Vermeide Phrasen wie '<Aussage>. Wie sehen Sie das bei sich?'.
 * Formuliere die Fragen natürlich und gesprächsnah. Vermeide repetitive Phrasen wie 'Nun zur nächsten Frage:', 'Vielen Dank', 'Das freut mich zu hören', 'interessant' oder 'Das tut mir leid'.
 * Sprich den Nutzer mit 'Sie' an.
-* Wenn du die Antwort auf das letzte Item erhalten hast, verabschiede dich und schreibe am Ende der Verabschiedungsnachricht UNBEDINGT '[INTERVIEW_FERTIG]'. 
+* Wenn du die Antwort auf das letzte Item erhalten hast, verabschiede dich mit '[INTERVIEW_FERTIG]'. 
 * Wenn der Nutzer antwortet, dass die Frage nicht verstanden wurde, bspw. 'Was meinst du damit?', erkläre die Frage kurz und stelle Sie erneut.
 * Wenn dir eine andere Frage gestellt wird, antworte nicht auf die Frage, sondern weise den Nutzer höflich darauf hin, dass du gerade ein diagnostisches Interview mit ihm führst. Stelle die vorherige Frage dann erneut.
 
@@ -231,14 +234,14 @@ CONDITION_CONFIGS = {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Würden Sie sagen, dass man Sie für jemanden hält, mit dem man einfach gut auskommt?" # Condition label löschen
+            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Würden Sie sagen, dass man Sie für jemanden hält, mit dem man einfach gut auskommt?" # TODO: Condition label löschen
         })
     },
     "open-write": {
         "system_prompt": SYSTEM_PROMPT_OPEN,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": "[Open] Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?" # Condition label löschen
+            "interviewer_text": "[Open] Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?" # TODO: Condition label löschen
         })
     }
 }
@@ -258,7 +261,7 @@ def main():
 
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
-        st.title("Willkommen zu Teil 1 der Übung: KI-Interview 🤖")
+        st.title("Willkommen zum Interview 🤖")
         st.write("Bitte geben Sie Ihre Daten ein, um mit dem Interview zu beginnen.")
         
         st.markdown("""
@@ -278,7 +281,7 @@ def main():
         vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 04ERNS24")
         matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
         
-        if st.button("Weiter zur Beschreibung"):
+        if st.button("Weiter zur Studienbeschreibung"):
             if not vp_code_input.strip() or not matrikel_input.strip():
                 st.error("Bitte füllen Sie beide Felder aus.")
             else:
@@ -289,17 +292,17 @@ def main():
 
     # --- PHASE 2: EINWILLIGUNG ---
     elif st.session_state.step == "consent":
-        st.title("Informationen zum Ablauf & Datenschutz 📝")
+        st.title("Informationen zur Studie & Datenschutz 📝")
         st.markdown("""
-        ### Beschreibung & Ablauf der Übungssitzung
+        ### Beschreibung & Zweck der Studie
         Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
-        * **Verpflichtung:** Die Teilnahme am Interview ist der erste Teil der Übungsleistung für diese Woche. Wer nicht teilnimmt, erhält keinen Credit.
-        * **Ehrlichkeit:** Es besteht keine Pflicht zu wahrheitsgemäßen Antworten, aber fiktive Angaben verfälschen natürlich die finale Auswertung Ihrer Big Five.
+        * **Verpflichtung:** Die Teilnahme ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
+        * **Ehrlichkeit:** Keine Pflicht zur Wahrheit, aber fiktive Angaben verfälschen die Auswertung.
         * **Ethikvotum:** Bewilligt unter **[PLATZHALTER: Ethikantrag-ID]**.
         
         ### Datenschutz
-        * **OpenAI API:** Die Daten werden verschlüsselt via API an OpenAI übertragen (der KI-Interviewer beruht auf einem OpenAI Modell). OpenAI nutzt die übermittelten Daten NICHT zum Training und löscht die Daten nach 30 Tagen.
-        * **Speicherung:** Die Interviewtranskripte werden auf sicheren Servern der Universität Ulm gespeichert.
+        * **OpenAI API:** Daten werden verschlüsselt übertragen, nicht zum Training genutzt und nach 30 Tagen gelöscht.
+        * **Speicherung:** Daten landen auf der sicheren Nextcloud der Universität Ulm.
         """)
         
         consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
@@ -456,6 +459,7 @@ def main():
                 if api_success:
                     full_data = {
                         "participant_id": st.session_state.get("participant_id", "unknown"),
+                        "matrikelnummer": st.session_state.matrikelnummer,
                         "condition": st.session_state.condition,
                         "research_consent": st.session_state.research_consent,
                         "chat": st.session_state.messages,
@@ -464,7 +468,7 @@ def main():
                             "interview_start_time": datetime.fromtimestamp(st.session_state.interview_start_time).strftime("%Y-%m-%d_%H:%M:%S")
                         }
                     }
-                    threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data), daemon=True).start()
+                    threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data, False), daemon=True).start()
                 st.rerun()
 
     # --- PHASE 4: UX Fragebogen Interview ---
@@ -480,9 +484,9 @@ def main():
         with st.form("ux_form"):
             st.markdown("**Beispiel-Items (bitte ersetzen):**")
             
-            q1 = st.slider("Das Interview war einfach zu verstehen.", 1, 5, 4)
-            q2 = st.slider("Ich fühlte mich während des Interviews wohl.", 1, 5, 4)
-            q3 = st.slider("Die KI wirkte natürlich und menschlich.", 1, 5, 4)
+            q1 = st.slider("Das Interview war einfach zu verstehen.", 1, 7, 4)
+            q2 = st.slider("Ich fühlte mich während des Interviews wohl.", 1, 7, 4)
+            q3 = st.slider("Die KI wirkte natürlich und menschlich.", 1, 7, 4)
             q4 = st.text_area("Haben Sie weitere Anmerkungen zum Interview?", placeholder="Optionaler Freitext...")
 
             submitted = st.form_submit_button("Weiter zur Auswertung")
@@ -589,6 +593,7 @@ def main():
                 experiment_end_time = time.time()
                 final_payload = {
                     "participant_id": st.session_state.participant_id,
+                    "matrikelnummer": st.session_state.matrikelnummer,
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
                     "ux_responses_interview": st.session_state.get("ux_responses_interview", {}),
@@ -604,7 +609,7 @@ def main():
                             "duration_experiment_seconds": round(experiment_end_time - st.session_state.experiment_start_time, 2)
                         }
                 }
-                if save_to_nextcloud(st.session_state.participant_id, final_payload):
+                if save_to_nextcloud(st.session_state.participant_id, final_payload, True):
                     st.session_state.data_saved = True
                     st.session_state.step = "farewell"
                     st.rerun()
@@ -615,7 +620,7 @@ def main():
     elif st.session_state.step == "farewell":
         st.title("Vielen Dank! 🎉")
         st.success("Ihre Daten wurden erfolgreich gespeichert.")
-        st.write("Sie haben das Interview erfolgreich abgeschlossen. Ihre Teilnahme wird für die Übungsleistung angerechnet.")
+        st.write("Sie haben die Studie erfolgreich abgeschlossen. Ihre Teilnahme wird für die Übungsleistung angerechnet.")
         st.divider()
         st.link_button("Zur Uni-Webseite", "https://www.uni-ulm.de/in/psy-dia/forschung/an-studien-teilnehmen/")
 
