@@ -727,7 +727,7 @@ def main():
             q9 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als sicher (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
             q10 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als interessant (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
             q11 = st.slider("Ich fand die Fragen des KI-Chatbot nicht sonderlich gut gewählt.", 1,5,3)
-            q12 = st.sloder("Ich hätte gegenüber einer menschlichen Interviewerin sozial erwünschter reagiert.", 1,5,3)
+            q12 = st.slider("Ich hätte gegenüber einer menschlichen Interviewerin sozial erwünschter reagiert.", 1,5,3)
                     
             submitted = st.form_submit_button("Weiter zur Auswertung")
             if submitted:
