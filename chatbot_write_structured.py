@@ -586,17 +586,43 @@ is_structured = st.session_state.condition.startswith("structured")
 
     # --- PHASE 3B: CHAT SPEECH (AUDIO-EINGABE & TEXT-AUSGABE) ---
     elif st.session_state.step == "chat_speech":
-        st.title("Interview im Dialog 💬")
+st.title("Interview im Dialog 💬")
         user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
         st.session_state.interaction_count = len(user_msgs)
-        st.info(f"Interaktion {st.session_state.interaction_count} von 10")
-        
+
+        is_structured = st.session_state.condition.startswith("structured")
+
+        if is_structured:
+            current_facet_count = 0
+            if st.session_state.messages:
+                last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
+                try:
+                    msg_data = json.loads(last_ai_msg)
+                    current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
+                except:
+                    pass
+            progress_percentage = float(current_facet_count) / float(TOTAL_FACETS)
+            st.markdown(f"Facette {current_facet_count} von {TOTAL_FACETS}")
+            st.progress(progress_percentage)
+        else:
+            interaction_count_capped = min(st.session_state.interaction_count, OPEN_MAX_INTERACTIONS)
+            progress_percentage = float(interaction_count_capped) / float(OPEN_MAX_INTERACTIONS)
+            st.markdown(f"Interaktion {st.session_state.interaction_count} von {OPEN_MAX_INTERACTIONS}")
+            st.progress(progress_percentage)
+
+        st.divider()
+
+        interview_ended = False
+
         for msg in st.session_state.messages:
             if msg["role"] != "system":
                 if msg["role"] == "assistant":
                     try:
                         data = json.loads(msg["content"])
                         display_text = data.get("interviewer_text", msg["content"])
+                        if "[INTERVIEW_FERTIG]" in display_text:
+                            interview_ended = True
+                        display_text = display_text.replace("[INTERVIEW_FERTIG]", "").strip()
                     except (json.JSONDecodeError, TypeError):
                         display_text = msg["content"]
                 else:
@@ -604,10 +630,12 @@ is_structured = st.session_state.condition.startswith("structured")
                 with st.chat_message(msg["role"]):
                     st.markdown(display_text)
 
-        if st.session_state.interaction_count >= 10:
-            st.warning("Interview beendet.")
-            if st.button("Zur Auswertung"):
-                st.session_state.step = "results"
+        if interview_ended:
+            if "interview_end_time" not in st.session_state:
+                st.session_state.interview_end_time = time.time()
+            st.success("Das Interview wurde erfolgreich beendet.")
+            if st.button("Nächste Seite"):
+                st.session_state.step = "ux_survey1"
                 st.rerun()
         else:
             user_input = None
