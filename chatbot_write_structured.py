@@ -261,13 +261,15 @@ CONDITION_CONFIGS = {
 #--- UI -----------------------------------------------------------------------------------------------------
 def main():
     st.set_page_config(page_title="Persönlichkeits-Diagnostik", page_icon="🧠")
-    
+
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
     if "step" not in st.session_state:
         params = st.query_params
         st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.condition = random.choice(["structured-write", "open-write", "speech-structured", "speech-open"])
+        st.session_state.condition = random.choice(["structured-write", "open-write", "structured-speech"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
         st.session_state.experiment_start_time = time.time()
@@ -320,7 +322,7 @@ def main():
         
         consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
         
-        if st.session_state.condition in ["write-structured", "write-open"]:
+        if st.session_state.condition in ["structured-write", "open-write"]:
             button_name = "Interview starten"
         else:
             button_name = "Weiter zum Mikrofon-Test"
@@ -492,7 +494,6 @@ def main():
                 st.session_state.step = "ux_survey1"
                 st.rerun()
         else:
-            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
             user_input = st.chat_input("Ihre Antwort hier tippen...")
 
             if user_input:
@@ -546,8 +547,16 @@ def main():
         
         for msg in st.session_state.messages:
             if msg["role"] != "system":
+                if msg["role"] == "assistant":
+                    try:
+                        data = json.loads(msg["content"])
+                        display_text = data.get("interviewer_text", msg["content"])
+                    except (json.JSONDecodeError, TypeError):
+                        display_text = msg["content"]
+                else:
+                    display_text = msg["content"]
                 with st.chat_message(msg["role"]):
-                    st.markdown(msg["content"])
+                    st.markdown(display_text)
 
         if st.session_state.interaction_count >= 10:
             st.warning("Interview beendet.")
@@ -590,7 +599,8 @@ def main():
                     try:
                         response = client.chat.completions.create(
                             model="gpt-4o-mini",
-                            messages=st.session_state.messages
+                            messages=st.session_state.messages,
+                            response_format={"type": "json_object"}
                         )
                         ai_msg = response.choices[0].message.content
                         st.session_state.messages.append({"role": "assistant", "content": ai_msg})
@@ -650,8 +660,6 @@ def main():
         if "ai_bfi" not in st.session_state:
             with st.spinner("KI Analyse läuft..."):
                 try:
-                    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-                    
                     clean_messages = []
                     for m in st.session_state.messages:
                         if m["role"] == "system": continue
