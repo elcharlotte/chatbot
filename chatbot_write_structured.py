@@ -9,6 +9,7 @@ import random
 import time
 from datetime import datetime
 import io
+import hashlib
 from streamlit_mic_recorder import mic_recorder
 
 # --- KONFIGURATION & HELPER ------------------------------------------------------------------
@@ -167,7 +168,6 @@ TSDI_ITEMS = """
 """
 
 TOTAL_FACETS = 17
-OPEN_MAX_INTERACTIONS = 40  # Annahme für Fortschrittsbalken in der "open"-Bedingung – bei Bedarf anpassen
 
 #--- System Prompt Structured ------------------------------------------------------------------------
 SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein erfahrener psychologischer Interviewer. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 17 Facetten des erweiterten TSDI systematisch zu erfassen.
@@ -303,7 +303,7 @@ def main():
         st.session_state.step = "welcome"
         st.session_state.messages = []
         # hier die liste anpassen, wenn ich mehr bedingungen haben will 
-        st.session_state.condition = random.choice(["structured-write", "open-write"])
+        st.session_state.condition = random.choice(["structured-write", "open-write", "structured-speech", "open-speech"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
         st.session_state.experiment_start_time = time.time()
@@ -385,16 +385,20 @@ def main():
         st.title("🎙️ Mikrofon-Test")
         st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet. Sprechen Sie nach dem Starten der Aufnahme ein paar Worte (z. B. 'Hallo, Test').")
         
-        test_recorder = mic_recorder(
-            start_prompt="Test-Aufnahme starten",
-            stop_prompt="Test-Aufnahme stoppen",
-            key="mic_test_recorder"
-        )
-        
-        if test_recorder:
-            audio_bytes = test_recorder['bytes']
-            audio_file = io.BytesIO(audio_bytes)
-            audio_file.name = "test.wav"
+        audio_record = mic_recorder(
+                start_prompt="Aufnahme starten",
+                stop_prompt="Aufnahme stoppen",
+                key="speech_recorder"
+            )
+            
+        if audio_record:
+            audio_bytes = audio_record['bytes']
+            audio_hash = hashlib.md5(audio_bytes).hexdigest()
+
+            if audio_hash != st.session_state.get("last_audio_hash"):
+                st.session_state.last_audio_hash = audio_hash
+                audio_file = io.BytesIO(audio_bytes)
+                audio_file.name = "audio.wav"
             
             with st.spinner("Prüfe Audio-Eingang..."):
                 try:
@@ -446,9 +450,9 @@ def main():
         else:
             # Open condition: Fortschritt über Anzahl der Interaktionen
             interaction_count = len([m for m in st.session_state.messages if m["role"] == "user"])
-            interaction_count_capped = min(interaction_count, OPEN_MAX_INTERACTIONS)
-            progress_percentage = float(interaction_count_capped) / float(OPEN_MAX_INTERACTIONS)
-            st.markdown(f"Interaktion {interaction_count} von {OPEN_MAX_INTERACTIONS}")
+            facet_count_approx = interaction_count // 3
+            progress_percentage = float(facet_count_approx) / float(TOTAL_FACETS)
+            st.markdown(f"Facette {facet_count_approx} von {TOTAL_FACETS}")
             st.progress(progress_percentage)
 
         st.divider()
