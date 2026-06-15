@@ -181,7 +181,7 @@ Befolge für jede einzelne Dimension und deren Facetten exakt diese chronologisc
 7. ÜBERGANG ZU FACETTE 2: Mache einen kurzen, prägnanten Übergang zur 2. Facette dieser Dimension und wiederhole die Schritte 5 und 6. Wiederhole dies für alle Facetten der Dimension, bevor du mit Schritt 1 für die nächste Hauptdimension fortfährst.
 
 VERTIEFUNG, SÄTTIGUNG & AUSNAHMESITUATIONEN:
-- Max-Fragen-Regel: Stelle maximal 3 Fragen pro Facette (einschließlich der Fragen aus Schritt 5 und 6 sowie eventueller Nachfragen).
+- Max-Fragen-Regel: Stelle maximal 5 Fragen pro Facette (einschließlich der Fragen aus Schritt 5 und 6 sowie eventueller Nachfragen).
 - REGELESTREUE VERTIEFUNG (AUSNAHMEN ERFORSCHEN): Wenn ein Nutzer eine Tendenz sehr stark beschreibt, nutze eine deiner verfügbaren Fragen, um nach *Ausnahmesituationen* zu fragen (z. B.: "Gibt es Momente oder Situationen, in denen Sie sich ganz anders verhalten, als Sie es gerade beschrieben haben? Wie sehen diese aus?"). Das liefert wertvolle diagnostische Tiefe.
 - Nutze offene W-Fragen, um Facetten subtil zu explorieren, falls die Antworten zu einsilbig sind.
 - Prüfe nach jeder Antwort des Nutzers kritisch: *Könnte ich anhand dieser Aussage die TSDI-Items dieser Facette bereits einschätzen?*
