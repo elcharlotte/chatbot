@@ -53,7 +53,7 @@ def load_transcript_list():
         return []
 
 def read_and_format_json_transcript(filename):
-    """Lädt die JSON-Datei, extrahiert ID, Chat und das KI-Assessment."""
+    """Lädt die JSON-Datei, extrahiert ID, Chat und das KI-Assessment (falls vorhanden)."""
     url = f"{NC_URL}{TRANSKRIPT_ORDNER}/{filename}"
     response = requests.get(url, auth=AUTH)
     if response.status_code != 200:
@@ -61,10 +61,10 @@ def read_and_format_json_transcript(filename):
         
     data = response.json()
     
-    # 1. VP-Code des Interviewten extrahieren
-    vp_code = data.get("id", filename.replace(".json", ""))
+    # 1. Flexible Extraktion des VP-Codes des Interviewten (sucht nach 'participant_id' oder 'id')
+    vp_code = data.get("participant_id", data.get("id", filename.replace(".json", "")))
     
-    # 2. KI-Bewertung extrahieren
+    # 2. KI-Bewertung extrahieren (Fällt auf Standard 3 zurück, falls im JSON nicht vorhanden)
     ai_assessment = data.get("ai_assessment", {
         "Extraversion": 3,
         "Verträglichkeit": 3,
@@ -79,14 +79,25 @@ def read_and_format_json_transcript(filename):
     for message in chat_verlauf:
         role = message.get("role")
         content = message.get("content", "").strip()
+        
         if role == "system":
             continue
+            
+        # Falls der Assistant-Text als JSON-String verpackt ist (wie im neuen Output-Beispiel)
+        if role == "assistant" and content.startswith("{"):
+            try:
+                content_json = json.loads(content)
+                content = content_json.get("interviewer_text", content)
+            except:
+                pass
+        
         if role == "assistant":
             label = "Interviewer (KI)"
         elif role == "user":
             label = "Teilnehmer (Mensch)"
         else:
             label = role.capitalize()
+            
         formatted_chat.append(f"{label}:\n{content}\n")
         
     full_transcript_text = "\n".join(formatted_chat)
@@ -256,10 +267,10 @@ elif st.session_state.step == "evaluation":
                     # 2. Daten für die CSV strukturieren (Inklusive RATER-Infos!)
                     ergebnis_daten = {
                         "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "Rater_VP_Code": st.session_state.participant_id,      # DEIN eingegebener VP-Code
-                        "Rater_Matrikelnummer": st.session_state.matrikelnummer, # DEINE Matrikelnummer
+                        "Rater_VP_Code": st.session_state.participant_id,      
+                        "Rater_Matrikelnummer": st.session_state.matrikelnummer, 
                         "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
-                        "Bewerteter_Target_VP_Code": st.session_state.vp_code, # ID des Interviewten aus dem JSON
+                        "Bewerteter_Target_VP_Code": st.session_state.vp_code, 
                         "USER_Extraversion": extraversion,
                         "USER_Vertraeglichkeit": vertraeglichkeit,
                         "USER_Gewissenhaftigkeit": gewissenhaftigkeit,
@@ -276,7 +287,7 @@ elif st.session_state.step == "evaluation":
                     df = pd.DataFrame([ergebnis_daten])
                     csv_string = df.to_csv(index=False, sep=";")
                     
-                    # Eindeutigen Ergebnis-Dateinamen generieren (Kombination aus Bewerter & Bewertetem)
+                    # Eindeutigen Ergebnis-Dateinamen generieren
                     timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
                     clean_target_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
                     clean_rater_name = "".join(x for x in st.session_state.participant_id if x.isalnum() or x in "._-").strip()
@@ -287,7 +298,7 @@ elif st.session_state.step == "evaluation":
                         st.rerun()
                     except Exception as e:
                         st.error(f"Fehler beim Speichern der Daten: {e}")
-                        st.session_state.user_scores = {} # Reset bei Fehler
+                        st.session_state.user_scores = {}
 
     # Unterphase C: Abgesendet -> Feedback-Bildschirm anzeigen
     else:
