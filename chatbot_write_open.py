@@ -269,7 +269,7 @@ def main():
                 st.session_state.research_consent = True
                 st.session_state.step = "chat"
                 
-                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Ich bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Lassen Sie uns mit dem ersten Thema beginnen: der Dimension 'Extraversion'. Diese Dimension beschreibt, inwiefern Personen gesellig, gesprächig, freundlich und aktiv sind. Menschen mit hoher Ausprägung fühlen sich wohl in Gruppen und mögen aufregende Situationen, während Personen mit niedriger Ausprägung eher zurückhaltend und bedachtsam sind. Was kommt Ihnen als Erstes in den Sinn, wenn Sie an Extraversion denken? Wie würden Sie sich im Vergleich zu anderen Personen hinsichtlich Ihrer Extraversion einschätzen? Was sind dabei hervorstechende Merkmale, die Sie für sich selbst beobachten können?"
+                first_ai_msg = "Vielen Dank für Ihre Teilnahme! Ich bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Lassen Sie uns mit dem ersten Thema beginnen: der Dimension 'Extraversion'. Diese Dimension beschreibt, inwiefern Personen gesellig, gesprächig, freundlich und aktiv sind. Menschen mit hoher Ausprägung fühlen sich wohl in Gruppen und mögen aufregende Situationen, während Personen mit niedriger Ausprägung eher zurückhaltend und bedachtsam sind. Wie würden Sie sich im Vergleich zu anderen Personen hinsichtlich Ihrer Extraversion einschätzen?"
 
 
 # Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?"
