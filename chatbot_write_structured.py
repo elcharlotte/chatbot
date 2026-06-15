@@ -590,118 +590,36 @@ def main():
                 st.rerun()
 
     # --- PHASE 3B: CHAT SPEECH (AUDIO-EINGABE & TEXT-AUSGABE) ---
-    elif st.session_state.step == "chat_speech":
-        st.title("Interview im Dialog 💬")
-        user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
-        st.session_state.interaction_count = len(user_msgs)
-
-        is_structured = st.session_state.condition.startswith("structured")
-
-        if is_structured:
-            current_facet_count = 0
-            if st.session_state.messages:
-                last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
+    st.write("---")
+    st.write("🎤 **Antwort einsprechen:**")
+    
+    # NUTZE EINEN STATISCHEN KEY STATT EINEM VARIABLEN
+    audio_record = mic_recorder(
+        start_prompt="Aufnahme starten",
+        stop_prompt="Aufnahme stoppen",
+        key="speech_interview_recorder"  # Fest definiert
+    )
+    
+    if audio_record:
+        audio_bytes = audio_record['bytes']
+        audio_hash = hashlib.md5(audio_bytes).hexdigest()
+        
+        # Verhindere, dass dasselbe Audio doppelt verarbeitet wird, wenn Streamlit neu lädt
+        if audio_hash != st.session_state.get("last_processed_audio_hash"):
+            st.session_state.last_processed_audio_hash = audio_hash
+            audio_file = io.BytesIO(audio_bytes)
+            audio_file.name = "audio.wav"
+            
+            with st.spinner("🎧 Ich höre zu... (Sprache wird verarbeitet)"):
                 try:
-                    msg_data = json.loads(last_ai_msg)
-                    current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
-                except:
-                    pass
-            progress_percentage = float(current_facet_count) / float(TOTAL_FACETS)
-            st.markdown(f"Facette {current_facet_count} von {TOTAL_FACETS}")
-            st.progress(progress_percentage)
-        else:
-            interaction_count_capped = min(st.session_state.interaction_count, MAX_INTERACTIONS)
-            progress_percentage = float(interaction_count_capped) / float(MAX_INTERACTIONS)
-            st.markdown(f"Interaktion {st.session_state.interaction_count} von {MAX_INTERACTIONS}")
-            st.progress(progress_percentage)
-
-        st.divider()
-
-        interview_ended = False
-
-        for msg in st.session_state.messages:
-            if msg["role"] != "system":
-                if msg["role"] == "assistant":
-                    try:
-                        data = json.loads(msg["content"])
-                        display_text = data.get("interviewer_text", msg["content"])
-                        if "[INTERVIEW_FERTIG]" in display_text:
-                            interview_ended = True
-                        display_text = display_text.replace("[INTERVIEW_FERTIG]", "").strip()
-                    except (json.JSONDecodeError, TypeError):
-                        display_text = msg["content"]
-                else:
-                    display_text = msg["content"]
-                with st.chat_message(msg["role"]):
-                    st.markdown(display_text)
-
-        if interview_ended:
-            if "interview_end_time" not in st.session_state:
-                st.session_state.interview_end_time = time.time()
-            st.success("Das Interview wurde erfolgreich beendet.")
-            if st.button("Nächste Seite"):
-                st.session_state.step = "ux_survey1"
-                st.rerun()
-        else:
-            user_input = None
-
-            st.write("---")
-            st.write("🎤 **Antwort einsprechen:**")
-            
-            recorder_key = f"recorder_{st.session_state.interaction_count}"
-            
-            audio_record = mic_recorder(
-                start_prompt="Aufnahme starten",
-                stop_prompt="Aufnahme stoppen",
-                key=recorder_key
-            )
-            
-            if audio_record:
-                audio_bytes = audio_record['bytes']
-                audio_file = io.BytesIO(audio_bytes)
-                audio_file.name = "audio.wav"
-                
-                with st.spinner("🎧 Ich höre zu... (Sprache wird verarbeitet)"):
-                    try:
-                        transcript = client.audio.transcriptions.create(
-                            model="whisper-1", 
-                            file=audio_file
-                        )
-                        user_input = transcript.text
-                    except Exception as e:
-                        st.error(f"Spracherkennungs-Fehler: {e}")
-
-            if user_input:
-                st.session_state.messages.append({"role": "user", "content": user_input})
-                
-                with st.spinner("🤖 Interviewer überlegt..."):
-                    try:
-                        response = client.chat.completions.create(
-                            model="gpt-4o-mini",
-                            messages=st.session_state.messages,
-                            response_format={"type": "json_object"}
-                        )
-                        ai_msg = response.choices[0].message.content
-                        st.session_state.messages.append({"role": "assistant", "content": ai_msg})
-                    except Exception as e:
-                        st.error(f"KI Fehler: {e}")
-                
-                full_data = {
-                    "participant_id": st.session_state.participant_id,
-                    "condition": st.session_state.condition,
-                    "research_consent": st.session_state.research_consent,
-                    "chat": st.session_state.messages
-                }
-                
-                threading.Thread(
-                    target=save_to_nextcloud, 
-                    args=(st.session_state.participant_id, full_data),
-                    daemon=True
-                ).start()
-                
-                if recorder_key in st.session_state:
-                    del st.session_state[recorder_key]
-                st.rerun()
+                    transcript = client.audio.transcriptions.create(
+                        model="whisper-1", 
+                        file=audio_file
+                    )
+                    user_input = transcript.text
+                except Exception as e:
+                    st.error(f"Spracherkennungs-Fehler: {e}")
+                    user_input = None
 
     # --- PHASE 4: UX Fragebogen Interview ---
     elif st.session_state.step == "ux_survey1":
