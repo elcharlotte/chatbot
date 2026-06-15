@@ -101,13 +101,13 @@ TSDI_ITEMS = """
 
 ## Dimension Gewissenhaftigkeit (C)
 ### 4. Facette "Fleiß" (C-Hw):
-- Item tsdi42_04_C_Hw126: Wenn ich mich zu etwas verpflichte, führe ich es immer zu Ende aus.
-- Item tsdi42_25_C_Hw137: Ich würde mich selbst als sehr ausdauernden Arbeiter einschätzen.
-- Item tsdi42_37_C_Hw167: Wenn ich etwas anfange, arbeite ich, bis es zu meiner Zufriedenheit beendet ist.
+- Item tsdi42_04_C_Hw126: Führen Sie Dinge, zu denen Sie sich verpflichtet haben, immer zu Ende? 
+- Item tsdi42_25_C_Hw137: Würden Sie sich selbst als ausdauernden Arbeiter beschreiben? Was zeigt sich bei Ihnen, wenn Sie besonders ausdauernd arbeiten?
+- Item tsdi42_37_C_Hw167: Wenn Sie etwas anfangen, arbeiten Sie dann solange daran, bis es Sie zufriedenstellt? Was tun Sie, wenn eine Aufgabe noch nicht zu Ihrer Zufriedenheit erledigt ist?
 ### 5. Facette "Organisation" (C-O):
-- Item tsdi42_14_C_O0153: Ich halte meine persönlichen Sachen gerne ordentlich und organisiert.
-- Item tsdi42_41_C_O0157: Ich versuche einen Plan für Aufgaben zu entwickeln und halte mich daran.
-- Item tsdi42_32_C_O0162: Ich versuche vollständig vorbereitet zu sein, bevor ich eine Aufgabe anpacke.
+- Item tsdi42_14_C_O0153: Halten Sie Ihre persönlichen Sachen gerne ordentlich und organisiert? Woran merken Sie das? 
+- Item tsdi42_41_C_O0157: Entwickeln Sie für Aufgaben einen Plan und halten sich daran? Was für Pläne erstellen Sie typischerweise für Aufgaben?
+- Item tsdi42_32_C_O0162: Würden Sie sagen, dass Sie versuchen, vollständig vorbereitet zu sein, bevor Sie eine Aufgabe anpacken? Was gehört für Sie zu einer vollständigen Vorbereitung dazu?
 
 ## Dimension Extraversion (E)
 ### 6. Facette "Durchsetzungsfähigkeit" (E-A):
