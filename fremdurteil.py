@@ -180,7 +180,7 @@ elif st.session_state.step == "consent":
     
     consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der Nutzung zu.")
     
-    if st.button("Studie starten & Transkript zulosen", type="primary"):
+    if st.button("Übungsblock starten & Transkript zulosen", type="primary"):
         if consent_checked:
             st.session_state.step = "evaluation"
             st.rerun()
@@ -234,151 +234,134 @@ elif st.session_state.step == "evaluation":
         st.write("---")
         
         st.subheader("Schritt 3: TSDI-Persönlichkeitseinschätzung")
-        st.write("Bitte schätzen Sie die Person im Interview auf den 17 Facetten ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu). Falls Sie zu einer Aussage keine Aussage treffen können, fällen Sie ihr Urteil anhand der gegeben Informationen:")
-        
+        st.write("Bitte schätzen Sie die Person hinsichtlich ihrer Persönlichkeit ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu). Falls Sie zu einer Aussage keine Aussage treffen können, fällen Sie ihr Urteil anhand der gegeben Informationen:")
+
         with st.form("fragebogen_form"):
             
             # ==========================================
             # 🤝 DIMENSION VERTRÄGLICHKEIT (A)
             # ==========================================
-            st.markdown("### 🤝 Dimension Verträglichkeit (A)")
+            st.markdown("## 🤝 Dimension Verträglichkeit (A)")
             
-            st.markdown("**Facette: Freundlichkeit (A-Fr)**")
-            st.caption("* *Die Person gilt als jemand, mit dem man einfach gut auskommt.* \n"
-                       "* *Die Person kommt mit den meisten Menschen gut zurecht.* \n"
-                       "* *Die Person versucht auch fröhlich zu sein, wenn es nicht so gut läuft.* ")
-            a_fr = st.slider("Deine Einschätzung zu **Freundlichkeit**:", 1, 5, 3, key="s_a_fr")
+            st.markdown("### 1. Facette: Freundlichkeit (A-Fr)")
+            a_fr_1 = st.slider("Die Person gilt als jemand, mit dem man einfach gut auskommt.", 1, 5, 3, key="x42i29")
+            a_fr_2 = st.slider("Die Person kommt mit den meisten Menschen gut zurecht.", 1, 5, 3, key="x42i14")
+            a_fr_3 = st.slider("Die Person versucht auch fröhlich zu sein, wenn es nicht so gut läuft.", 1, 5, 3, key="x42i43")
             
-            st.markdown("**Facette: Rücksichtnahme (A-Co)**")
-            st.caption("* *Die Person behandelt andere Leute immer freundlich.* \n"
-                       "* *Die Person versucht zu jedem freundlich zu sein, den sie kennt.* \n"
-                       "* *Die Person versucht immer höflich zu sein, auch zu denen, die ihr gegenüber unfreundlich sind.* ")
-            a_co = st.slider("Deine Einschätzung zu **Rücksichtnahme**:", 1, 5, 3, key="s_a_co")
+            st.markdown("### 2. Facette: Rücksichtnahme (A-Co)")
+            a_co_1 = st.slider("Die Person behandelt andere Leute immer freundlich.", 1, 5, 3, key="x42i02")
+            a_co_2 = st.slider("Die Person versucht zu jedem freundlich zu sein, den sie kennt.", 1, 5, 3, key="x42i26")
+            a_co_3 = st.slider("Die Person versucht immer höflich zu sein, auch zu denen, die ihr gegenüber unfreundlich sind.", 1, 5, 3, key="x42i27")
             
-            st.markdown("**Facette: Hilfsbereitschaft (A-H)**")
-            st.caption("* *Es ist der Person eine Freude, anderen mit ihren Problemen zu helfen.* \n"
-                       "* *Die Person hilft anderen Leuten gerne, auch wenn nichts für sie dabei herausspringt.* \n"
-                       "* *Die Person ist immer großzügig, wenn es darum geht, anderen zu helfen.* ")
-            a_h = st.slider("Deine Einschätzung zu **Hilfsbereitschaft**:", 1, 5, 3, key="s_a_h")
+            st.markdown("### 3. Facette: Hilfsbereitschaft (A-H)")
+            a_h_1 = st.slider("Es ist der Person eine Freude, anderen mit ihren Problemen zu helfen.", 1, 5, 3, key="x42i12")
+            a_h_2 = st.slider("Die Person hilft anderen Leuten gerne, auch wenn nichts für sie dabei herausspringt.", 1, 5, 3, key="x42i48")
+            a_h_3 = st.slider("Die Person ist immer großzügig, wenn es darum geht, anderen zu helfen.", 1, 5, 3, key="x42i46")
             
             st.write("---")
 
             # ==========================================
             # 🎯 DIMENSION GEWISSENHAFTIGKEIT (C)
             # ==========================================
-            st.markdown("### 🎯 Dimension Gewissenhaftigkeit (C)")
+            st.markdown("## 🎯 Dimension Gewissenhaftigkeit (C)")
             
-            st.markdown("**Facette: Fleiß (C-Hw)**")
-            st.caption("* *Wenn sich die Person zu etwas verpflichtet, führt sie es immer zu Ende aus.* \n"
-                       "* *Die Person schätzt sich selbst als sehr ausdauernde Arbeiterin ein.* \n"
-                       "* *Wenn die Person etwas anfängt, arbeitet sie, bis es zu ihrer Zufriedenheit beendet ist.* ")
-            c_hw = st.slider("Deine Einschätzung zu **Fleiß**:", 1, 5, 3, key="s_c_hw")
+            st.markdown("### 4. Facette: Fleiß (C-Hw)")
+            c_hw_1 = st.slider("Wenn sich die Person zu etwas verpflichtet, führt sie es immer zu Ende aus.", 1, 5, 3, key="x42i05")
+            c_hw_2 = st.slider("Die Person schätzt sich selbst als sehr ausdauernde Arbeiterin ein.", 1, 5, 3, key="x42i30")
+            c_hw_3 = st.slider("Wenn die Person etwas anfängt, arbeitet sie, bis es zu ihrer Zufriedenheit beendet ist.", 1, 5, 3, key="x42i44")
             
-            st.markdown("**Facette: Organisation (C-O)**")
-            st.caption("* *Die Person hält ihre persönlichen Sachen gerne ordentlich und organisiert.* \n"
-                       "* *Die Person versucht einen Plan für Aufgaben zu entwickeln und hält sich daran.* \n"
-                       "* *Die Person versucht vollständig vorbereitet zu sein, bevor sie eine Aufgabe anpacke.* ")
-            c_o = st.slider("Deine Einschätzung zu **Organisation**:", 1, 5, 3, key="s_c_o")
+            st.markdown("### 5. Facette: Organisation (C-O)")
+            c_o_1 = st.slider("Die Person hält ihre persönlichen Sachen gerne ordentlich und organisiert.", 1, 5, 3, key="x42i18")
+            c_o_2 = st.slider("Die Person versucht einen Plan für Aufgaben zu entwickeln und hält sich daran.", 1, 5, 3, key="x42i49")
+            c_o_3 = st.slider("Die Person versucht vollständig vorbereitet zu sein, bevor sie eine Aufgabe anpackt.", 1, 5, 3, key="x42i39")
             
             st.write("---")
 
             # ==========================================
             # 📢 DIMENSION EXTRAVERSION (E)
             # ==========================================
-            st.markdown("### 📢 Dimension Extraversion (E)")
+            st.markdown("## 📢 Dimension Extraversion (E)")
             
-            st.markdown("**Facette: Durchsetzungsfähigkeit (E-A)**")
-            st.caption("* *Die Person spricht lauter, wenn sie meint, einen Beitrag liefern zu können.* \n"
-                       "* *Die Person neigt dazu, in Gruppen die Führung zu übernehmen.* \n"
-                       "* *Die Person hat eine Menge Einfluss auf andere Leute.* ")
-            e_a = st.slider("Deine Einschätzung zu **Durchsetzungsfähigkeit**:", 1, 5, 3, key="s_e_a")
+            st.markdown("### 6. Facette: Durchsetzungsfähigkeit (E-A)")
+            e_a_1 = st.slider("Die Person spricht lauter, wenn sie meint, einen Beitrag liefern zu können.", 1, 5, 3, key="x42i42")
+            e_a_2 = st.slider("Die Person neigt dazu, in Gruppen die Führung zu übernehmen.", 1, 5, 3, key="x42i35")
+            e_a_3 = st.slider("Die Person hat eine Menge Einfluss auf andere Leute.", 1, 5, 3, key="x42i03")
             
-            st.markdown("**Facette: Selbstbewusstsein (E-SB)**")
-            st.caption("* *Die Person ist eine sehr schüchterne Person.* \n"
-                       "* *Die Freunde der Person halten sie für schüchtern.* \n"
-                       "* *Die Person fühlt sich nicht wohl, wenn sie im Zentrum der Aufmerksamkeit steht.* ")
-            e_sb = st.slider("Deine Einschätzung zu **Selbstbewusstsein**:", 1, 5, 3, key="s_e_sb")
+            st.markdown("### 7. Facette: Selbstbewusstsein (E-SB)")
+            e_sb_1 = st.slider("Die Person ist eine sehr schüchterne Person. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i23")
+            e_sb_2 = st.slider("Die Freunde der Person halten sie für schüchtern. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i10")
+            e_sb_3 = st.slider("Die Person fühlt sich nicht wohl, wenn sie im Zentrum der Aufmerksamkeit steht. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i22")
             
-            st.markdown("**Facette: Soziale Aktivität (E-So)**")
-            st.caption("* *Die Person ist gerne wo viel los ist.* \n"
-                       "* *Die Person gibt sich große Mühe Leute kennenzulernen.*\n"
-                       "* *Die Person mag Partys auf denen viele Leute sind.* ")
-            e_so = st.slider("Deine Einschätzung zu **Soziale Aktivität**:", 1, 5, 3, key="s_e_so")
+            st.markdown("### 8. Facette: Soziale Aktivität (E-So)")
+            e_so_1 = st.slider("Die Person ist gerne wo viel los ist.", 1, 5, 3, key="x42i40")
+            e_so_2 = st.slider("Die Person gibt sich große Mühe Leute kennenzulernen.", 1, 5, 3, key="x42i32")
+            e_so_3 = st.slider("Die Person mag Partys auf denen viele Leute sind.", 1, 5, 3, key="x42i20")
             
             st.write("---")
 
             # ==========================================
             # 🛡️ DIMENSION NEUROTIZISMUS (N)
             # ==========================================
-            st.markdown("### 🛡️ Dimension Neurotizismus (N)")
+            st.markdown("## 🛡️ Dimension Neurotizismus (N)")
             
-            st.markdown("**Facette: Depression (N-D)**")
-            st.caption("* *Es gibt Zeiten, in denen sich die Person selbst bedauert.* \n"
-                       "* *Manchmal ist die Person entmutigt und möchte am liebsten aufgeben.* \n"
-                       "* *Die Person fürchtet oft, dass sie ihre Ziele nicht erreichen könnte.* ")
-            n_d = st.slider("Deine Einschätzung zu **Depression**:", 1, 5, 3, key="s_n_d")
+            st.markdown("### 9. Facette: Depression (N-D)")
+            n_d_1 = st.slider("Es gibt Zeiten, in denen sich die Person selbst bedauert.", 1, 5, 3, key="x42i09")
+            n_d_2 = st.slider("Manchmal ist die Person entmutigt und möchte am liebsten aufgeben.", 1, 5, 3, key="x42i19")
+            n_d_3 = st.slider("Die Person fürchtet oft, dass sie ihre Ziele nicht erreichen könnte.", 1, 5, 3, key="x42i37")
             
-            st.markdown("**Facette: Reizbarkeit (N-Ir)**")
-            st.caption("* *Manchmal regt sich die Person so auf, dass es ihr auf den Magen schlägt.* \n"
-                       "* *Wenn die Person aufgebracht ist, kann sie nicht mehr klar denken.* \n"
-                       "* *Die Person kann Kritik nicht sehr gut akzeptieren.* ")
-            n_ir = st.slider("Deine Einschätzung zu **Reizbarkeit**:", 1, 5, 3, key="s_n_ir")
+            st.markdown("### 10. Facette: Reizbarkeit (N-Ir)")
+            n_ir_1 = st.slider("Manchmal regt sich die Person so auf, dass es ihr auf den Magen schlägt.", 1, 5, 3, key="x42i11")
+            n_ir_2 = st.slider("Wenn die Person aufgebracht ist, kann sie nicht mehr klar denken.", 1, 5, 3, key="x42i06")
+            n_ir_3 = st.slider("Die Person kann Kritik nicht sehr gut akzeptieren.", 1, 5, 3, key="x42i07")
             
-            st.markdown("**Facette: Nervosität (N-St)**")
-            st.caption("* *Die Person fühlt sich oft müde und erschöpft.* \n"
-                       "* *Wenn die Person unter großem Stress steht, ist sie oft kurz davor zusammenzubebraten.* \n"
-                       "* *Die Person ist oft zittrig und angespannt.* ")
-            n_st = st.slider("Deine Einschätzung zu **Nervosität**:", 1, 5, 3, key="s_n_st")
+            st.markdown("### 11. Facette: Nervosität (N-St)")
+            n_st_1 = st.slider("Die Person fühlt sich oft müde und erschöpft.", 1, 5, 3, key="x42i36")
+            n_st_2 = st.slider("Wenn die Person unter großem Stress steht, ist sie oft kurz davor zusammenzubrechen.", 1, 5, 3, key="x42i45")
+            n_st_3 = st.slider("Die Person ist oft zittrig und angespannt.", 1, 5, 3, key="x42i13")
             
             st.write("---")
 
             # ==========================================
             # 💡 DIMENSION OFFENHEIT (O)
             # ==========================================
-            st.markdown("### 💡 Dimension Offenheit (O)")
+            st.markdown("## 💡 Dimension Offenheit (O)")
             
-            st.markdown("**Facette: Intellekt (O-In)**")
-            st.caption("* *Die Person mag es, intellektuelle Diskussionen mit Freunden zu führen.* \n"
-                       "* *Die Person findet intellektuelle Themen interessanter als Sport (z.B. Fußball, Tennis).* \n"
-                       "* *Die Person besitzt ein hohes Maß an intellektueller Neugier.* ")
-            o_in = st.slider("Deine Einschätzung zu **Intellekt**:", 1, 5, 3, key="s_o_in")
+            st.markdown("### 12. Facette: Intellekt (O-In)")
+            o_in_1 = st.slider("Die Person mag es, intellektuelle Diskussionen mit Freunden zu führen.", 1, 5, 3, key="x42i38")
+            o_in_2 = st.slider("Die Person findet intellektuelle Themen interessanter als Sport (z.B. Fußball, Tennis).", 1, 5, 3, key="x42i28")
+            o_in_3 = st.slider("Die Person besitzt ein hohes Maß an intellektueller Neugier.", 1, 5, 3, key="x42i33")
             
-            st.markdown("**Facette: Reflexion (O-R)**")
-            st.caption("* *Die Person verbringt viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.* \n"
-                       "* *Die Person verbringt viel Zeit damit, ihre Gefühlswelt zu erkunden.* \n"
-                       "* *Die Person liest gerne Gedichte.* ")
-            o_r = st.slider("Deine Einschätzung zu **Reflexion**:", 1, 5, 3, key="s_o_r")
+            st.markdown("### 13. Facette: Reflexion (O-R)")
+            o_r_1 = st.slider("Die Person verbringt viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.", 1, 5, 3, key="x42i21")
+            o_r_2 = st.slider("Die Person verbringt viel Zeit damit, ihre Gefühlswelt zu erkunden.", 1, 5, 3, key="x42i50")
+            o_r_3 = st.slider("Die Person liest gerne Gedichte.", 1, 5, 3, key="x42i41")
             
-            st.markdown("**Facette: Wissenschaftliches Interesse (O-Sc)**")
-            st.caption("* *Die Person hat sich viele Gedanken über den Ursprung des Universums gemacht.*\n"
-                       "* *Die Person denkt oft über die Wunder der Natur nach.* \n"
-                       "* *Die Evolutionstheorie fasziniert die Person.*")
-            o_sc = st.slider("Deine Einschätzung zu **Wissenschaftliches Interesse**:", 1, 5, 3, key="s_o_sc")
+            st.markdown("### 14. Facette: Wissenschaftliches Interesse (O-Sc)")
+            o_sc_1 = st.slider("Die Person hat sich viele Gedanken über den Ursprung des Universums gemacht.", 1, 5, 3, key="x42i01")
+            o_sc_2 = st.slider("Die Person denkt oft über die Wunder der Natur nach.", 1, 5, 3, key="x42i16")
+            o_sc_3 = st.slider("Die Evolutionstheorie fasziniert die Person.", 1, 5, 3, key="x42i25")
             
             st.write("---")
 
             # ==========================================
             # 💎 DIMENSION EHRLICHKEIT-BESCHEIDENHEIT (HH)
             # ==========================================
-            st.markdown("### 💎 Dimension Ehrlichkeit-Bescheidenheit (HH)")
+            st.markdown("## 💎 Dimension Ehrlichkeit-Bescheidenheit (HH)")
             
-            st.markdown("**Facette: Aufrichtigkeit (HH-Si)**")
-            st.caption("* *Wenn die Person von jemandem, den sie nicht mag, etwas will, verhält sie sich sehr nett.* \n"
-                       "* *Die Person würde keine Schmeicheleien nutzen, um eine Gehaltserhöhung zu bekommen.* \n"
-                       "* *Wenn die Person von jemandem etwas will, lacht sie auch über dessen schlechteste Witze.* ")
-            hh_si = st.slider("Deine Einschätzung zu **Aufrichtigkeit**:", 1, 5, 3, key="s_hh_si")
+            st.markdown("### 15. Facette: Aufrichtigkeit (HH-Si)")
+            hh_si_1 = st.slider("Wenn die Person von jemandem, den sie nicht mag, etwas will, verhält sie sich sehr nett. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i47")
+            hh_si_2 = st.slider("Die Person würde keine Schmeicheleien nutzen, um eine Gehaltserhöhung zu bekommen.", 1, 5, 3, key="x42i15")
+            hh_si_3 = st.slider("Wenn die Person von jemandem etwas will, lache sie auch über dessen schlechteste Witze. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i04")
             
-            st.markdown("**Facette: Fairness (HH-Fa)**")
-            st.caption("* *Die Person würde in Versuchung geraten, Diebesgut zu kaufen, wenn sie knapp bei Kasse wäre.*\n"
-                       "* *Die Person würde niemals Bestechungsgeld annehmen, auch wenn es sehr viel wäre.*\n"
-                       "* *Wenn die Person wüsste, dass sie niemals erwischt wird, wäre sie bereit, eine Million zu stehlen.*")
-            hh_fa = st.slider("Deine Einschätzung zu **Fairness**:", 1, 5, 3, key="s_hh_fa")
+            st.markdown("### 16. Facette: Fairness (HH-Fa)")
+            hh_fa_1 = st.slider("Die Person würde in Versuchung geraten, Diebesgut zu kaufen, wenn sie knapp bei Kasse wäre. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i31")
+            hh_fa_2 = st.slider("Die Person würde niemals Bestechungsgeld annehmen, auch wenn es sehr viel wäre.", 1, 5, 3, key="x42i17")
+            hh_fa_3 = st.slider("Wenn die Person wüsste, dass sie niemals erwischt wird, wäre sie bereit, eine Million zu stehlen. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i08")
             
-            st.markdown("**Facette: Bescheidenheit (HH-Mo)**")
-            st.caption("* *Die Person will, dass alle wissen, dass sie eine wichtige angesehene Person ist.*\n"
-                       "* *Die Person ist eine ganz normale Person, die nicht besser ist als andere.*\n"
-                       "* *Die Person will nicht, dass andere Leute sie behandeln, als ob sie ihnen überlegen sei.*")
-            hh_mo = st.slider("Deine Einschätzung zu **Bescheidenheit**:", 1, 5, 3, key="s_hh_mo")
+            st.markdown("### 17. Facette: Bescheidenheit (HH-Mo)")
+            hh_mo_1 = st.slider("Die Person will, dass alle wissen, dass sie eine wichtige angesehene Person ist. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i24")
+            hh_mo_2 = st.slider("Die Person ist eine ganz normale Person, die nicht besser ist als andere.", 1, 5, 3, key="x42i34")
+            hh_mo_3 = st.slider("Die Person will nicht, dass andere Leute sie behandeln, als ob sie ihnen überlegen sei.", 1, 5, 3, key="x42i51")
             
             st.write("")
             anmerkungen = st.text_area("Gibt es noch sonstige Auffälligkeiten oder Bemerkungen zur Person? (Optional)", max_chars=500)
@@ -388,12 +371,38 @@ elif st.session_state.step == "evaluation":
             if submit_button:
                 with st.spinner("Ihre Antworten werden sicher übertragen..."):
                     
-                    # 1. Globale Dimensionen für das Feedback aggregieren (Mittelwerte der Facetten)
-                    user_extraversion = (e_a + e_sb + e_so) / 3
-                    user_vertraeglichkeit = (a_fr + a_co + a_h) / 3
-                    user_gewissenhaftigkeit = (c_hw + c_o) / 3
-                    user_neurotizismus = (n_d + n_ir + n_st) / 3
-                    user_offenheit = (o_in + o_r + o_sc) / 3
+                    # 1. Invertierte Items umpolen (Wichtig für korrekte psychometrische Mittelwerte!)
+                    # Aus 1 wird 5, aus 2 wird 4, etc. Formel: 6 - Wert
+                    e_sb_rec = ( (6 - e_sb_1) + (6 - e_sb_2) + (6 - e_sb_3) ) / 3
+                    hh_si_rec = ( (6 - hh_si_1) + hh_si_2 + (6 - hh_si_3) ) / 3
+                    hh_fa_rec = ( (6 - hh_fa_1) + hh_fa_2 + (6 - hh_fa_3) ) / 3
+                    hh_mo_rec = ( (6 - hh_mo_1) + hh_mo_2 + hh_mo_3 ) / 3
+                    
+                    # Normal laufende Facetten aggregieren
+                    facette_a_fr = (a_fr_1 + a_fr_2 + a_fr_3) / 3
+                    facette_a_co = (a_co_1 + a_co_2 + a_co_3) / 3
+                    facette_a_h  = (a_h_1 + a_h_2 + a_h_3) / 3
+                    
+                    facette_c_hw = (c_hw_1 + c_hw_2 + c_hw_3) / 3
+                    facette_c_o  = (c_o_1 + c_o_2 + c_o_3) / 3
+                    
+                    facette_e_a  = (e_a_1 + e_a_2 + e_a_3) / 3
+                    facette_e_so = (e_so_1 + e_so_2 + e_so_3) / 3
+                    
+                    facette_n_d  = (n_d_1 + n_d_2 + n_d_3) / 3
+                    facette_n_ir = (n_ir_1 + n_ir_2 + n_ir_3) / 3
+                    facette_n_st = (n_st_1 + n_st_2 + n_st_3) / 3
+                    
+                    facette_o_in = (o_in_1 + o_in_2 + o_in_3) / 3
+                    facette_o_r  = (o_r_1 + o_r_2 + o_r_3) / 3
+                    facette_o_sc = (o_sc_1 + o_sc_2 + o_sc_3) / 3
+                    
+                    # 2. Globale Dimensionen berechnen
+                    user_extraversion = (facette_e_a + e_sb_rec + facette_e_so) / 3
+                    user_vertraeglichkeit = (facette_a_fr + facette_a_co + facette_a_h) / 3
+                    user_gewissenhaftigkeit = (facette_c_hw + facette_c_o) / 3
+                    user_neurotizismus = (facette_n_d + facette_n_ir + facette_n_st) / 3
+                    user_offenheit = (facette_o_in + facette_o_r + facette_o_sc) / 3
                     
                     st.session_state.user_scores = {
                         "Extraversion": round(user_extraversion, 2),
@@ -404,6 +413,7 @@ elif st.session_state.step == "evaluation":
                     }
                     
                     # 2. Daten für die CSV strukturieren (Alle 17 Facetten einzeln erfassen!)
+                    # 3. CSV-Datenstruktur zusammenstellen (Alle 51 Items!)
                     ergebnis_daten = {
                         "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "Rater_VP_Code": st.session_state.participant_id,      
@@ -411,23 +421,33 @@ elif st.session_state.step == "evaluation":
                         "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
                         "Bewerteter_Target_VP_Code": st.session_state.vp_code, 
                         
-                        # Einzelfacetten des Raters
-                        "FACETTE_A_Fr": a_fr, "FACETTE_A_Co": a_co, "FACETTE_A_H": a_h,
-                        "FACETTE_C_Hw": c_hw, "FACETTE_C_O": c_o,
-                        "FACETTE_E_A": e_a, "FACETTE_E_SB": e_sb, "FACETTE_E_So": e_so,
-                        "FACETTE_N_D": n_d, "FACETTE_N_Ir": n_ir, "FACETTE_N_St": n_st,
-                        "FACETTE_O_In": o_in, "FACETTE_O_R": o_r, "FACETTE_O_Sc": o_sc,
-                        "FACETTE_HH_Si": hh_si, "FACETTE_HH_Fa": hh_fa, "FACETTE_HH_Mo": hh_mo,
+                        # Rohdaten der 51 Items
+                        "ITEM_x42i29": a_fr_1, "ITEM_x42i14": a_fr_2, "ITEM_x42i43": a_fr_3,
+                        "ITEM_x42i02": a_co_1, "ITEM_x42i26": a_co_2, "ITEM_x42i27": a_co_3,
+                        "ITEM_x42i12": a_h_1,  "ITEM_x42i48": a_h_2,  "ITEM_x42i46": a_h_3,
+                        "ITEM_x42i05": c_hw_1, "ITEM_x42i30": c_hw_2, "ITEM_x42i44": c_hw_3,
+                        "ITEM_x42i18": c_o_1,  "ITEM_x42i49": c_o_2,  "ITEM_x42i39": c_o_3,
+                        "ITEM_x42i42": e_a_1,  "ITEM_x42i35": e_a_2,  "ITEM_x42i03": e_a_3,
+                        "ITEM_x42i23": e_sb_1, "ITEM_x42i10": e_sb_2, "ITEM_x42i22": e_sb_3,
+                        "ITEM_x42i40": e_so_1, "ITEM_x42i32": e_so_2, "ITEM_x42i20": e_so_3,
+                        "ITEM_x42i09": n_d_1,  "ITEM_x42i19": n_d_2,  "ITEM_x42i37": n_d_3,
+                        "ITEM_x42i11": n_ir_1, "ITEM_x42i06": n_ir_2, "ITEM_x42i07": n_ir_3,
+                        "ITEM_x42i36": n_st_1, "ITEM_x42i45": n_st_2, "ITEM_x42i13": n_st_3,
+                        "ITEM_x42i38": o_in_1, "ITEM_x42i28": o_in_2, "ITEM_x42i33": o_in_3,
+                        "ITEM_x42i21": o_r_1,  "ITEM_x42i50": o_r_2,  "ITEM_x42i41": o_r_3,
+                        "ITEM_x42i01": o_sc_1, "ITEM_x42i16": o_sc_2, "ITEM_x42i25": o_sc_3,
+                        "ITEM_x42i47": hh_si_1,"ITEM_x42i15": hh_si_2,"ITEM_x42i04": hh_si_3,
+                        "ITEM_x42i31": hh_fa_1,"ITEM_x42i17": hh_fa_2,"ITEM_x42i08": hh_fa_3,
+                        "ITEM_x42i24": hh_mo_1,"ITEM_x42i34": hh_mo_2,"ITEM_x42i51": hh_mo_3,
                         
-                        # Globale berechnete Dimensionen des Raters
+                        # Aggregierte Globale Werte
                         "USER_Extraversion": st.session_state.user_scores["Extraversion"],
                         "USER_Vertraeglichkeit": st.session_state.user_scores["Verträglichkeit"],
                         "USER_Gewissenhaftigkeit": st.session_state.user_scores["Gewissenhaftigkeit"],
                         "USER_Neurotizismus": st.session_state.user_scores["Neurotizismus"],
                         "USER_Offenheit": st.session_state.user_scores["Offenheit"],
                         
-                        # Zum direkten Vergleich: Globale KI-Werte aus der JSON
-                        "AI_Extraversion": st.secrets.get(f"ai_assessment", {}).get("Extraversion", st.session_state.ai_scores.get("Extraversion")),
+                        "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
                         "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
                         "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
                         "AI_Neurotizismus": st.session_state.ai_scores.get("Neurotizismus"),
