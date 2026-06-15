@@ -53,7 +53,7 @@ def load_transcript_list():
         return []
 
 def read_and_format_json_transcript(filename):
-    """Lädt die JSON-Datei, extrahiert ID, Chat und das KI-Assessment (falls vorhanden)."""
+    """Lädt die JSON-Datei, extrahiert ID, Chat und das KI-Assessment."""
     url = f"{NC_URL}{TRANSKRIPT_ORDNER}/{filename}"
     response = requests.get(url, auth=AUTH)
     if response.status_code != 200:
@@ -61,10 +61,10 @@ def read_and_format_json_transcript(filename):
         
     data = response.json()
     
-    # 1. Flexible Extraktion des VP-Codes des Interviewten (sucht nach 'participant_id' oder 'id')
+    # VP-Code des Interviewten extrahieren
     vp_code = data.get("participant_id", data.get("id", filename.replace(".json", "")))
     
-    # 2. KI-Bewertung extrahieren (Fällt auf Standard 3 zurück, falls im JSON nicht vorhanden)
+    # KI-Bewertung extrahieren (Fällt auf Standard 3 zurück, falls im JSON nicht vorhanden)
     ai_assessment = data.get("ai_assessment", {
         "Extraversion": 3,
         "Verträglichkeit": 3,
@@ -73,7 +73,7 @@ def read_and_format_json_transcript(filename):
         "Offenheit": 3
     })
     
-    # 3. Chat-Verlauf formatieren
+    # Chat-Verlauf formatieren
     formatted_chat = []
     chat_verlauf = data.get("chat", [])
     for message in chat_verlauf:
@@ -83,7 +83,6 @@ def read_and_format_json_transcript(filename):
         if role == "system":
             continue
             
-        # Falls der Assistant-Text als JSON-String verpackt ist (wie im neuen Output-Beispiel)
         if role == "assistant" and content.startswith("{"):
             try:
                 content_json = json.loads(content)
@@ -153,10 +152,6 @@ if st.session_state.step == "welcome":
     * Geben Sie als viertes den Tag Ihres Geburtstags ein (z.B. 24)
 
     Ein Versuchspersonencode könnte beispielsweise so aussehen: 04ERNS24
-    * Erster Vorname der Mutter: *Anna* (04 Buchstaben)
-    * Nachname der Mutter: *Müller* (ER als Endung)
-    * Erster Vorname des Vaters: *Hans* (NS als Endung)
-    * Eigener Geburtstag: *24.12.1993* (Tag.Monat.Jahr)
     """)
     
     vp_code_input = st.text_input("VP-Code (Dein Teilnehmer-Code)", placeholder="z.B. 04ERNS24")
@@ -179,16 +174,11 @@ elif st.session_state.step == "consent":
     ### Beschreibung & Ablauf der Übungssitzung
     In diesem zweiten Teil der Übung nehmen Sie die Rolle einer **fremdbeurteilenden Person** ein. Ihnen wird das anonymisierte Transkript eines bereits geführten Interviews zugelost.
     
-    * **Ihre Aufgabe:** Lesen Sie das Transkript aufmerksam durch. Schätzen Sie die interviewte Person im Anschluss auf den Big-Five-Persönlichkeitsskalen ein.
-    * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung. Wer nicht teilnimmt oder unvollständige Daten abgibt, erhält keinen Credit.
-    * **Ethikvotum:** Bewilligt unter **[PLATZHALTER: Ethikantrag-ID]**.
-    
-    ### Datenschutz
-    * **Anonymität:** Die Ihnen vorgelegten Transkripte enthalten keinerlei Klarnamen oder direkt identifizierbare Merkmale. Ihre eigenen Angaben (Matrikelnummer) werden strikt getrennt von den Bewertungsergebnissen zur Leistungsverbuchung genutzt.
-    * **Speicherung:** Alle Auswertungen und Daten werden auf sicheren Servern gespeichert.
+    * **Ihre Aufgabe:** Lesen Sie das Transkript aufmerksam durch. Schätzen Sie die interviewte Person im Anschluss auf den 17 TSDI-Persönlichkeitsfacetten ein.
+    * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung.
     """)
     
-    consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Beurteilungsdaten zu Forschungs- und Lehrzwecken zu.")
+    consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der Nutzung zu.")
     
     if st.button("Studie starten & Transkript zulosen", type="primary"):
         if consent_checked:
@@ -201,13 +191,12 @@ elif st.session_state.step == "consent":
 # --- PHASE 3: EVALUATION (LOSEN, LESEN & FRAGEBOGEN) ---
 elif st.session_state.step == "evaluation":
     
-    # Unterphase A: Noch kein Transkript gelost
     if st.session_state.aktuelles_transkript_file is None:
         st.subheader("Schritt 1: Transkript erhalten")
         st.write("Klicken Sie auf den Button, um ein zufälliges Interview-Transkript aus dem System zugelost zu bekommen.")
         
         if not st.session_state.urne:
-            st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer. Bitte den Studienleiter kontaktieren.")
+            st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer.")
         else:
             if st.button("🎲 Transkript zufällig zulosen", type="primary"):
                 gezogenes_file = random.choice(st.session_state.urne)
@@ -224,31 +213,18 @@ elif st.session_state.step == "evaluation":
                     except Exception as e:
                         st.error(f"Fehler beim Laden der Datei: {e}")
 
-    # Unterphase B: Transkript gelost, Fragebogen anzeigen
     elif not st.session_state.user_scores:
         st.success("Ihnen wurde erfolgreich ein Interview-Transkript zugelost!")
         
         st.subheader("Schritt 2: Transkript lesen")
         
-        # NEU: Ein wunderschöner, kontrastreicher Scroll-Container statt der grauen Textarea
-        # .replace("\n", "<br>") sorgt dafür, dass die Zeilenumbrüche im HTML erhalten bleiben
+        # Kontrastreicher HTML-Scroll-Container für das Transkript
         html_transkript = st.session_state.transkript_text.replace("\n", "<br>")
-        
         st.markdown(
             f"""
-            <div style="
-                background-color: #f9f9f9;
-                color: #111111;
-                padding: 20px;
-                border-radius: 8px;
-                border: 1px solid #e0e0e0;
-                height: 450px;
-                overflow-y: scroll;
-                font-family: monospace;
-                font-size: 14px;
-                line-height: 1.6;
-                box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-            ">
+            <div style="background-color: #f9f9f9; color: #111111; padding: 20px; border-radius: 8px;
+                        border: 1px solid #e0e0e0; height: 450px; overflow-y: scroll;
+                        font-family: monospace; font-size: 14px; line-height: 1.6;">
                 {html_transkript}
             </div>
             """, 
@@ -257,15 +233,45 @@ elif st.session_state.step == "evaluation":
         
         st.write("---")
         
-        st.subheader("Schritt 3: Persönlichkeitseinschätzung")
-        st.write("Bitte schätzen Sie die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
+        st.subheader("Schritt 3: TSDI-Persönlichkeitseinschätzung")
+        st.write("Bitte schätzen Sie die Person im Interview auf den 17 Facetten ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
         
         with st.form("fragebogen_form"):
-            extraversion = st.slider("Die Person wirkt extravertiert, gesellig und gesprächig.", 1, 5, 3)
-            vertraeglichkeit = st.slider("Die Person wirkt rücksichtsvoll, empathisch und kooperativ.", 1, 5, 3)
-            gewissenhaftigkeit = st.slider("Die Person wirkt organisiert, gründlich und zielstrebig.", 1, 5, 3)
-            neurotizismus = st.slider("Die Person wirkt emotional labil, unsicher oder nervös.", 1, 5, 3)
-            offenheit = st.slider("Die Person wirkt offen für neue Erfahrungen und einfallsreich.", 1, 5, 3)
+            
+            # --- Verträglichkeit ---
+            st.markdown("### 🤝 Dimension Verträglichkeit (A)")
+            a_fr = st.slider("**Freundlichkeit (A-Fr):** Wie gut kommt die Person mit den meisten Menschen aus? (Wirkt fröhlich/angenehm)", 1, 5, 3)
+            a_co = st.slider("**Rücksichtnahme (A-Co):** Wie höflich, freundlich und rücksichtsvoll verhält sich die Person gegenüber anderen?", 1, 5, 3)
+            a_h  = st.slider("**Hilfsbereitschaft (A-H):** Wie gerne und uneigennützig hilft die Person anderen bei Problemen?", 1, 5, 3)
+            
+            # --- Gewissenhaftigkeit ---
+            st.markdown("### 🎯 Dimension Gewissenhaftigkeit (C)")
+            c_hw = st.slider("**Fleiß (C-Hw):** Wie hart, ausdauernd, fokussiert und zielstrebig arbeitet die Person an Aufgaben?", 1, 5, 3)
+            c_o  = st.slider("**Organisation (C-O):** Wie ordentlich, geplant, strukturiert und vorbereitet agiert die Person?", 1, 5, 3)
+            
+            # --- Extraversion ---
+            st.markdown("### 📢 Dimension Extraversion (E)")
+            e_a  = st.slider("**Durchsetzungsfähigkeit (E-A):** Wie dominant, einflussreich wirkt die Person? Übernimmt sie Führung in Gruppen?", 1, 5, 3)
+            e_sb = st.slider("**Selbstbewusstsein (E-SB):** Wie selbstsicher (vs. schüchtern/zurückhaltend) wirkt die Person im Rampenlicht?", 1, 5, 3)
+            e_so = st.slider("**Soziale Aktivität (E-So):** Wie gerne geht die Person unter Leute, mag Trubel und lernt aktiv Menschen kennen?", 1, 5, 3)
+            
+            # --- Neurotizismus ---
+            st.markdown("### 🛡️ Dimension Neurotizismus (N)")
+            n_d  = st.slider("**Depression (N-D):** Wie sehr neigt die Person zu negativen Emotionen, Entmutigung oder Selbstbedauern?", 1, 5, 3)
+            n_ir = st.slider("**Reizbarkeit (N-Ir):** Wie leicht lässt sich die Person emotional aus dem Konzept bringen oder durch Kritik aufregen?", 1, 5, 3)
+            n_st = st.slider("**Nervosität (N-St):** Wie anfällig wirkt die Person für Stress, Erschöpfung, Anspannung oder Unruhe?", 1, 5, 3)
+            
+            # --- Offenheit ---
+            st.markdown("### 💡 Dimension Offenheit (O)")
+            o_in = st.slider("**Intellekt (O-In):** Wie hoch ist die intellektuelle Neugier und das Interesse an komplexen Diskussionen?", 1, 5, 3)
+            o_r  = st.slider("**Reflexion (O-R):** Wie viel Zeit investiert die Person in die Erkundung der eigenen Gefühlswelt oder Verhaltensmotive?", 1, 5, 3)
+            o_sc = st.slider("**Wissenschaftliches Interesse (O-Sc):** Wie fasziniert ist die Person von Naturwundern, Evolution oder dem Universum?", 1, 5, 3)
+            
+            # --- Ehrlichkeit-Bescheidenheit ---
+            st.markdown("### 💎 Dimension Ehrlichkeit-Bescheidenheit (HH)")
+            hh_si = st.slider("**Aufrichtigkeit (HH-Si):** Wie authentisch und unverstellt agiert die Person? (Nutzt sie Schmeicheleien für Vorteile?)", 1, 5, 3)
+            hh_fa = st.slider("**Fairness (HH-Fa):** Wie regelkonform und ehrlich verhält sich die Person? (Würde sie stehlen/Bestechung annehmen?)", 1, 5, 3)
+            hh_mo = st.slider("**Bescheidenheit (HH-Mo):** Wie bescheiden schätzt die Person sich ein? (Betrachtet sie sich als gleichwertig?)", 1, 5, 3)
             
             st.write("")
             anmerkungen = st.text_area("Gibt es noch sonstige Auffälligkeiten oder Bemerkungen zur Person? (Optional)", max_chars=500)
@@ -274,28 +280,47 @@ elif st.session_state.step == "evaluation":
             
             if submit_button:
                 with st.spinner("Ihre Antworten werden sicher übertragen..."):
-                    # 1. Zwischenspeichern für das Feedback
+                    
+                    # 1. Globale Dimensionen für das Feedback aggregieren (Mittelwerte der Facetten)
+                    user_extraversion = (e_a + e_sb + e_so) / 3
+                    user_vertraeglichkeit = (a_fr + a_co + a_h) / 3
+                    user_gewissenhaftigkeit = (c_hw + c_o) / 3
+                    user_neurotizismus = (n_d + n_ir + n_st) / 3
+                    user_offenheit = (o_in + o_r + o_sc) / 3
+                    
                     st.session_state.user_scores = {
-                        "Extraversion": extraversion,
-                        "Verträglichkeit": vertraeglichkeit,
-                        "Gewissenhaftigkeit": gewissenhaftigkeit,
-                        "Neurotizismus": neurotizismus,
-                        "Offenheit": offenheit
+                        "Extraversion": round(user_extraversion, 2),
+                        "Verträglichkeit": round(user_vertraeglichkeit, 2),
+                        "Gewissenhaftigkeit": round(user_gewissenhaftigkeit, 2),
+                        "Neurotizismus": round(user_neurotizismus, 2),
+                        "Offenheit": round(user_offenheit, 2)
                     }
                     
-                    # 2. Daten für die CSV strukturieren (Inklusive RATER-Infos!)
+                    # 2. Daten für die CSV strukturieren (Alle 17 Facetten einzeln erfassen!)
                     ergebnis_daten = {
                         "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "Rater_VP_Code": st.session_state.participant_id,      
                         "Rater_Matrikelnummer": st.session_state.matrikelnummer, 
                         "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
                         "Bewerteter_Target_VP_Code": st.session_state.vp_code, 
-                        "USER_Extraversion": extraversion,
-                        "USER_Vertraeglichkeit": vertraeglichkeit,
-                        "USER_Gewissenhaftigkeit": gewissenhaftigkeit,
-                        "USER_Neurotizismus": neurotizismus,
-                        "USER_Offenheit": offenheit,
-                        "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
+                        
+                        # Einzelfacetten des Raters
+                        "FACETTE_A_Fr": a_fr, "FACETTE_A_Co": a_co, "FACETTE_A_H": a_h,
+                        "FACETTE_C_Hw": c_hw, "FACETTE_C_O": c_o,
+                        "FACETTE_E_A": e_a, "FACETTE_E_SB": e_sb, "FACETTE_E_So": e_so,
+                        "FACETTE_N_D": n_d, "FACETTE_N_Ir": n_ir, "FACETTE_N_St": n_st,
+                        "FACETTE_O_In": o_in, "FACETTE_O_R": o_r, "FACETTE_O_Sc": o_sc,
+                        "FACETTE_HH_Si": hh_si, "FACETTE_HH_Fa": hh_fa, "FACETTE_HH_Mo": hh_mo,
+                        
+                        # Globale berechnete Dimensionen des Raters
+                        "USER_Extraversion": st.session_state.user_scores["Extraversion"],
+                        "USER_Vertraeglichkeit": st.session_state.user_scores["Verträglichkeit"],
+                        "USER_Gewissenhaftigkeit": st.session_state.user_scores["Gewissenhaftigkeit"],
+                        "USER_Neurotizismus": st.session_state.user_scores["Neurotizismus"],
+                        "USER_Offenheit": st.session_state.user_scores["Offenheit"],
+                        
+                        # Zum direkten Vergleich: Globale KI-Werte aus der JSON
+                        "AI_Extraversion": st.secrets.get(f"ai_assessment", {}).get("Extraversion", st.session_state.ai_scores.get("Extraversion")),
                         "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
                         "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
                         "AI_Neurotizismus": st.session_state.ai_scores.get("Neurotizismus"),
@@ -306,7 +331,6 @@ elif st.session_state.step == "evaluation":
                     df = pd.DataFrame([ergebnis_daten])
                     csv_string = df.to_csv(index=False, sep=";")
                     
-                    # Eindeutigen Ergebnis-Dateinamen generieren
                     timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
                     clean_target_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
                     clean_rater_name = "".join(x for x in st.session_state.participant_id if x.isalnum() or x in "._-").strip()
@@ -316,18 +340,17 @@ elif st.session_state.step == "evaluation":
                         upload_results_to_nextcloud(dateiname, csv_string)
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Fehler beim Speichern der Daten: {e}")
-                        st.session_state.user_scores = {}
+                        st.error(f"Fehler beim Speichern: {e}")
 
     # Unterphase C: Abgesendet -> Feedback-Bildschirm anzeigen
     else:
         st.balloons()
         st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
-        st.write("Ihre Antworten wurden erfolgreich und sicher unter Ihrer Matrikelnummer registriert.")
+        st.write("Ihre Antworten wurden erfolgreich registriert.")
         
         st.write("---")
         st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
-        st.write("Hier sehen Sie, wie nah Ihre Einschätzung an der algorithmischen Auswertung der KI lag:")
+        st.write("Hier sehen Sie Ihre berechneten Dimensionen im Vergleich zu den globalen KI-Werten:")
         
         vergleichs_daten = []
         gesamte_abweichung = 0
@@ -335,19 +358,19 @@ elif st.session_state.step == "evaluation":
         for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
             user_val = st.session_state.user_scores.get(dimension, 3)
             ai_val = st.session_state.ai_scores.get(dimension, 3)
-            diff = abs(user_val - ai_val)
+            diff = round(abs(user_val - ai_val), 2)
             gesamte_abweichung += diff
             
-            if diff == 0:
-                feedback = "🎯 Volltreffer!"
-            elif diff == 1:
+            if diff <= 0.5:
+                feedback = "🎯 Nahezu identisch!"
+            elif diff <= 1.2:
                 feedback = "👍 Sehr nah dran"
             else:
                 feedback = "🔄 Andere Wahrnehmung"
                 
             vergleichs_daten.append({
                 "Big-Five Dimension": dimension,
-                "Deine Einschätzung": user_val,
+                "Deine Einschätzung (Mittelwert)": user_val,
                 "KI-Einschätzung": ai_val,
                 "Abweichung": diff,
                 "Feedback": feedback
@@ -356,17 +379,18 @@ elif st.session_state.step == "evaluation":
         df_vergleich = pd.DataFrame(vergleichs_daten)
         st.table(df_vergleich)
         
+        # Fazit berechnen
+        gesamte_abweichung = round(gesamte_abweichung, 2)
         st.write("")
-        if gesamte_abweichung <= 2:
-            st.info(f"🧠 **Fazit:** Sie haben eine extreme Ähnlichkeit zur KI-Auswertung! Ihre Gesamtabweichung liegt bei nur **{gesamte_abweichung}** Punkten.")
-        elif gesamte_abweichung <= 5:
-            st.info(f"📊 **Fazit:** Gute Übereinstimmung. Sie haben das Profil im Wesentlichen genau so wahrgenommen wie der Algorithmus (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+        if gesamte_abweichung <= 2.5:
+            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! Deine berechneten Skalenwerte spiegeln das KI-Profil bemerkenswert präzise wider (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+        elif gesamte_abweichung <= 5.0:
+            st.info(f"📊 **Fazit:** Solide Annäherung. Du hast die Tendenzen der Person im Kern ähnlich bewertet wie die KI (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
         else:
-            st.info(f"👥 **Fazit:** Spannend! Ihre menschliche Intuition weicht vom Algorithmus ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte). Genau diese Unterschiede untersuchen wir.")
+            st.info(f"👥 **Fazit:** Spannende Nuancen! Deine menschliche Fremdbeurteilung weicht punktuell von den mathematischen KI-Scores ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
 
         st.write("---")
         
-        # Komplett-Reset für den Kiosk-Modus
         if st.button("Nächste Teilnahme starten"):
             st.session_state.step = "welcome"
             st.session_state.participant_id = ""
