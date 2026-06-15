@@ -399,7 +399,7 @@ def main():
             4. Klicken Sie (falls sichtbar) auf **'Als Standardgerät festlegen'**.
             
             ### 🍏 Unter macOS:
-            1. Öffnen Sie die **Systemeinstellungen** $\rightarrow$ **Ton**.
+            1. Öffnen Sie die **Systemeinstellungen** --> **Ton**.
             2. Wechseln Sie auf den Reiter **'Eingabe'**.
             3. Klicken Sie Ihr Wunsch-Mikrofon an, sodass es blau hinterlegt ist. Es ist nun das systemweite Standardgerät.
             
