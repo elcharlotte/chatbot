@@ -168,7 +168,7 @@ elif st.session_state.step == "consent":
     ### Beschreibung & Ablauf der Übungssitzung
     In diesem zweiten Teil der Übung nehmen Sie die Rolle einer **fremdbeurteilenden Person** ein. Ihnen wird das anonymisierte Transkript eines bereits geführten Interviews zugelost.
     
-    * **Deine Aufgabe:** Lies das Transkript aufmerksam durch. Schätze die interviewte Person im Anschluss auf den Big-Five-Persönlichkeitsskalen ein.
+    * **Ihre Aufgabe:** Lesen Sie das Transkript aufmerksam durch. Schätzen Sie die interviewte Person im Anschluss auf den Big-Five-Persönlichkeitsskalen ein.
     * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung. Wer nicht teilnimmt oder unvollständige Daten abgibt, erhält keinen Credit.
     * **Ethikvotum:** Bewilligt unter **[PLATZHALTER: Ethikantrag-ID]**.
     
@@ -193,7 +193,7 @@ elif st.session_state.step == "evaluation":
     # Unterphase A: Noch kein Transkript gelost
     if st.session_state.aktuelles_transkript_file is None:
         st.subheader("Schritt 1: Transkript erhalten")
-        st.write("Klicke auf den Button, um dir ein zufälliges Interview-Transkript aus dem System zuzulosen.")
+        st.write("Klicken Sie auf den Button, um ein zufälliges Interview-Transkript aus dem System zugelost zu bekommen.")
         
         if not st.session_state.urne:
             st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer. Bitte den Studienleiter kontaktieren.")
@@ -215,7 +215,7 @@ elif st.session_state.step == "evaluation":
 
     # Unterphase B: Transkript gelost, Fragebogen anzeigen
     elif not st.session_state.user_scores:
-        st.success("Dir wurde erfolgreich ein Interview-Transkript zugelost!")
+        st.success("Ihnen wurde erfolgreich ein Interview-Transkript zugelost!")
         
         st.subheader("Schritt 2: Transkript lesen")
         st.text_area(
@@ -228,7 +228,7 @@ elif st.session_state.step == "evaluation":
         st.write("---")
         
         st.subheader("Schritt 3: Persönlichkeitseinschätzung")
-        st.write("Bitte schätze die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
+        st.write("Bitte schätzen Sie die Person im Interview anhand der folgenden Skalen ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
         
         with st.form("fragebogen_form"):
             extraversion = st.slider("Die Person wirkt extravertiert, gesellig und gesprächig.", 1, 5, 3)
@@ -243,7 +243,7 @@ elif st.session_state.step == "evaluation":
             submit_button = st.form_submit_button("Formular absenden", type="primary")
             
             if submit_button:
-                with st.spinner("Deine Antworten werden sicher übertragen..."):
+                with st.spinner("Ihre Antworten werden sicher übertragen..."):
                     # 1. Zwischenspeichern für das Feedback
                     st.session_state.user_scores = {
                         "Extraversion": extraversion,
@@ -292,12 +292,12 @@ elif st.session_state.step == "evaluation":
     # Unterphase C: Abgesendet -> Feedback-Bildschirm anzeigen
     else:
         st.balloons()
-        st.subheader("🎉 Vielen Dank für deine Teilnahme!")
-        st.write("Deine Antworten wurden erfolgreich und sicher unter deiner Matrikelnummer registriert.")
+        st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
+        st.write("Ihre Antworten wurden erfolgreich und sicher unter Ihrer Matrikelnummer registriert.")
         
         st.write("---")
-        st.subheader("🤖 Dein Urteil im Vergleich zur KI-Bewertung")
-        st.write("Hier siehst du, wie nah deine Einschätzung an der algorithmischen Auswertung der KI lag:")
+        st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
+        st.write("Hier sehen Sie, wie nah Ihre Einschätzung an der algorithmischen Auswertung der KI lag:")
         
         vergleichs_daten = []
         gesamte_abweichung = 0
@@ -328,11 +328,11 @@ elif st.session_state.step == "evaluation":
         
         st.write("")
         if gesamte_abweichung <= 2:
-            st.info(f"🧠 **Fazit:** Du hast eine extreme Ähnlichkeit zur KI-Auswertung! Deine Gesamtabweichung liegt bei nur **{gesamte_abweichung}** Punkten.")
+            st.info(f"🧠 **Fazit:** Sie haben eine extreme Ähnlichkeit zur KI-Auswertung! Ihre Gesamtabweichung liegt bei nur **{gesamte_abweichung}** Punkten.")
         elif gesamte_abweichung <= 5:
-            st.info(f"📊 **Fazit:** Gute Übereinstimmung. Du hast das Profil im Wesentlichen genau so wahrgenommen wie der Algorithmus (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            st.info(f"📊 **Fazit:** Gute Übereinstimmung. Sie haben das Profil im Wesentlichen genau so wahrgenommen wie der Algorithmus (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
         else:
-            st.info(f"👥 **Fazit:** Spannend! Deine menschliche Intuition weicht vom Algorithmus ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte). Genau diese Unterschiede untersuchen wir.")
+            st.info(f"👥 **Fazit:** Spannend! Ihre menschliche Intuition weicht vom Algorithmus ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte). Genau diese Unterschiede untersuchen wir.")
 
         st.write("---")
         
