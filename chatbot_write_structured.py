@@ -428,7 +428,7 @@ def main():
     elif st.session_state.step == "chat_write":
         st.title("Interview im Dialog 💬")
 
-is_structured = st.session_state.condition.startswith("structured")
+        is_structured = st.session_state.condition.startswith("structured")
 
         if is_structured:
             # Read facet progress
@@ -586,7 +586,7 @@ is_structured = st.session_state.condition.startswith("structured")
 
     # --- PHASE 3B: CHAT SPEECH (AUDIO-EINGABE & TEXT-AUSGABE) ---
     elif st.session_state.step == "chat_speech":
-st.title("Interview im Dialog 💬")
+        st.title("Interview im Dialog 💬")
         user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
         st.session_state.interaction_count = len(user_msgs)
 
