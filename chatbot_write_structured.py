@@ -195,7 +195,7 @@ Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSO
 """
 
 #--- System Prompt Open -----------------------------------------------------------------------------
-SYSTEM_PROMPT = f"""Du bist ein erfahrener psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives und offenes Interview zu führen, um die 17 Facetten des erweiterten 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
+SYSTEM_PROMPT_OPEN = f"""Du bist ein erfahrener psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives und offenes Interview zu führen, um die 17 Facetten des erweiterten 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
 
 STRIKTE TURN-TAKING-REGEL (WICHTIGSTE REGEL):
 - Gib pro Interaktion/Nachricht IMMER NUR EINE EINZIGE FRAGE aus.
