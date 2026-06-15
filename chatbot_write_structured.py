@@ -805,7 +805,7 @@ def main():
                 st.progress(float(ki_wert) / 5.0 if ki_wert else 0.0)
             st.divider()
 
-        if st.button("Weiter zum Abschlussfragebogen"):
+        if st.button("Weiter um Übungsblock zu beenden"):
             st.session_state.step = "ux_survey2"
             st.rerun()
 
