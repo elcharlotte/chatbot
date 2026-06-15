@@ -815,11 +815,8 @@ def main():
         st.write("Bitte bewerten Sie Ihre Erfahrung mit der Auswertung.")
         st.divider()
 
-        # --- PLACEHOLDER: Replace these with your actual UX questionnaire items ---
-        #st.subheader("🚧 Fragebogen-Platzhalter")
-        #st.info("Hier wird der UX-Fragebogen eingebettet (z.B. UEQ, AttrakDiff, NASA-TLX o.ä.).")
-
-        with st.form("ux_form"):
+        # Eindeutige ID "ux_form_results" vergeben
+        with st.form("ux_form_results"):
             st.markdown("**Bitte geben Sie an...:**")
             
             q13 = st.slider("Ich habe insgesamt wahrheitsgemäß gegenüber dem KI-Chatbot geantwortet. ", 1, 5, 3)
