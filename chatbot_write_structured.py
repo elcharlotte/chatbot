@@ -382,10 +382,32 @@ def main():
                 st.warning("Bitte stimmen Sie zu.")
 
     # --- NEU - PHASE 2.5: MIKROFON TEST ---
+    # --- PHASE 2.5: MIKROFON TEST ---
     elif st.session_state.step == "mic_test":
-        st.title("🎙️ Mikrofon-Test")
+        st.title("🎙️ Mikrofon-Test & Vorbereitung")
         st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet. Sprechen Sie nach dem Starten der Aufnahme ein paar Worte (z. B. 'Hallo, Test').")
         
+        # --- WICHTIGER GEWÄHLTER HINWEIS FÜR DIE NUTZER ---
+        st.info("⚠️ **Wichtiger Hinweis zur Geräteauswahl:** Der Chatbot nutzt automatisch das Standard-Mikrofon Ihres Computers. Falls das falsche Mikrofon (z.B. die interne Webcam statt Ihres Headsets) aktiv ist, folgen Sie bitte kurz dieser Anleitung:")
+        
+        with st.expander("📋 Anleitung: So legen Sie Ihr Wunsch-Mikrofon fest"):
+            st.markdown("""
+            ### 🪟 Unter Windows:
+            1. Drücken Sie die **Windows-Taste** auf Ihrer Tastatur und tippen Sie **'Soundeinstellungen'** ein (dann Enter drücken).
+            2. Scrollen Sie nach unten zum Bereich **'Eingabe'**.
+            3. Wählen Sie dort Ihr Wunsch-Mikrofon aus.
+            4. Klicken Sie (falls sichtbar) auf **'Als Standardgerät festlegen'**.
+            
+            ### 🍏 Unter macOS:
+            1. Öffnen Sie die **Systemeinstellungen** $\rightarrow$ **Ton**.
+            2. Wechseln Sie auf den Reiter **'Eingabe'**.
+            3. Klicken Sie Ihr Wunsch-Mikrofon an, sodass es blau hinterlegt ist. Es ist nun das systemweite Standardgerät.
+            
+            *Laden Sie die Seite nach der Änderung ggf. einmal neu, falls Ihr Mikrofon weiterhin nicht erkannt wird.*
+            """)
+        
+        st.write("---")
+
         audio_record = mic_recorder(
                 start_prompt="Aufnahme starten",
                 stop_prompt="Aufnahme stoppen",
