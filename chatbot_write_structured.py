@@ -8,6 +8,8 @@ import threading
 import random
 import time
 from datetime import datetime
+import io
+from streamlit_mic_recorder import mic_recorder
 
 # --- KONFIGURATION & HELPER ------------------------------------------------------------------
 def save_to_nextcloud(participant_id, data_dict, final=True):
@@ -246,9 +248,17 @@ CONDITION_CONFIGS = {
             "aktuelle_facette": 1,
             "interviewer_text": "[Open] Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?" # TODO: Condition label löschen
         })
-    }
+    },
+    "structured-speech": {
+        "system_prompt": SYSTEM_PROMPT_STRUCTURED,
+        "init_message": json.dumps({
+            "aktuelle_facette": 1,
+            "interviewer_text": "[Speech] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Wie sehr hält man Sie für jemanden, mit dem man einfach gut auskommt?" # TODO: Condition label löschen
+        })
+    },
 }
 
+#--- UI -----------------------------------------------------------------------------------------------------
 def main():
     st.set_page_config(page_title="Persönlichkeits-Diagnostik", page_icon="🧠")
     
@@ -257,7 +267,7 @@ def main():
         st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.condition = random.choice(["structured-write", "open-write"])
+        st.session_state.condition = random.choice(["structured-write", "open-write", "speech-structured", "speech-open"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
         st.session_state.experiment_start_time = time.time()
@@ -309,11 +319,20 @@ def main():
         """)
         
         consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
-        if st.button("Interview starten"):
+        
+        if st.session_state.condition in ["write-structured", "write-open"]:
+            button_name = "Interview starten"
+        else:
+            button_name = "Weiter zum Mikrofon-Test"
+        
+        if st.button(button_name):
             if consent_checked:
                 st.session_state.research_consent = True
-                st.session_state.interview_start_time = time.time()
-                st.session_state.step = "chat"
+                if button_name == "Interview starten":
+                    st.session_state.step = "chat_write"
+                    st.session_state.interview_start_time = time.time()
+                else:
+                    st.session_state.step = "mic_test"
                 
                 config = CONDITION_CONFIGS[st.session_state.condition]
                                 
@@ -325,8 +344,52 @@ def main():
             else:
                 st.warning("Bitte stimmen Sie zu.")
 
-    # --- PHASE 3: CHAT ---
-    elif st.session_state.step == "chat":
+    # --- NEU - PHASE 2.5: MIKROFON TEST ---
+    elif st.session_state.step == "mic_test":
+        st.title("🎙️ Mikrofon-Test")
+        st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet. Sprechen Sie nach dem Starten der Aufnahme ein paar Worte (z. B. 'Hallo, Test').")
+        
+        test_recorder = mic_recorder(
+            start_prompt="Test-Aufnahme starten",
+            stop_prompt="Test-Aufnahme stoppen",
+            key="mic_test_recorder"
+        )
+        
+        if test_recorder:
+            audio_bytes = test_recorder['bytes']
+            audio_file = io.BytesIO(audio_bytes)
+            audio_file.name = "test.wav"
+            
+            with st.spinner("Prüfe Audio-Eingang..."):
+                try:
+                    transcript = client.audio.transcriptions.create(
+                        model="whisper-1", 
+                        file=audio_file
+                    )
+                    if transcript.text.strip():
+                        st.session_state.mic_test_transcript = transcript.text
+                        st.session_state.mic_test_passed = True
+                    else:
+                        st.session_state.mic_test_transcript = "Es wurde kein Text erkannt. Bitte lauter sprechen oder das richtige Eingabegerät in den Browsereinstellungen wählen."
+                        st.session_state.mic_test_passed = False
+                except Exception as e:
+                    st.error(f"Fehler beim Mikrofon-Test: {e}")
+        
+        # Visuelle Rückmeldung für die Person
+        if "mic_test_transcript" in st.session_state:
+            st.info(f"**Erkanntes Audio:** „{st.session_state.mic_test_transcript}“")
+            
+            if st.session_state.mic_test_passed:
+                st.success("✅ Mikrofon funktioniert erfolgreich! Sie können das Interview jetzt starten.")
+                if st.button("Interview starten"):
+                    st.session_state.step = "chat_speech"
+                    st.session_state.interview_start_time = time.time()
+                    st.rerun()
+            else:
+                st.error("❌ Audio-Signal zu schwach oder fehlerhaft. Bitte versuchen Sie es erneut.")
+
+    # --- PHASE 3A: CHAT WRITE ---
+    elif st.session_state.step == "chat_write":
         st.title("Interview im Dialog 💬")
 
         # Read facet progress
@@ -472,6 +535,83 @@ def main():
                         }
                     }
                     threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data, False), daemon=True).start()
+                st.rerun()
+
+    # --- PHASE 3B: CHAT SPEECH (AUDIO-EINGABE & TEXT-AUSGABE) ---
+    elif st.session_state.step == "chat_speech":
+        st.title("Interview im Dialog 💬")
+        user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
+        st.session_state.interaction_count = len(user_msgs)
+        st.info(f"Interaktion {st.session_state.interaction_count} von 10")
+        
+        for msg in st.session_state.messages:
+            if msg["role"] != "system":
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+
+        if st.session_state.interaction_count >= 10:
+            st.warning("Interview beendet.")
+            if st.button("Zur Auswertung"):
+                st.session_state.step = "results"
+                st.rerun()
+        else:
+            user_input = None
+
+            st.write("---")
+            st.write("🎤 **Antwort einsprechen:**")
+            
+            recorder_key = f"recorder_{st.session_state.interaction_count}"
+            
+            audio_record = mic_recorder(
+                start_prompt="Aufnahme starten",
+                stop_prompt="Aufnahme stoppen",
+                key=recorder_key
+            )
+            
+            if audio_record:
+                audio_bytes = audio_record['bytes']
+                audio_file = io.BytesIO(audio_bytes)
+                audio_file.name = "audio.wav"
+                
+                with st.spinner("🎧 Ich höre zu... (Sprache wird verarbeitet)"):
+                    try:
+                        transcript = client.audio.transcriptions.create(
+                            model="whisper-1", 
+                            file=audio_file
+                        )
+                        user_input = transcript.text
+                    except Exception as e:
+                        st.error(f"Spracherkennungs-Fehler: {e}")
+
+            if user_input:
+                st.session_state.messages.append({"role": "user", "content": user_input})
+                
+                with st.spinner("🤖 Interviewer überlegt..."):
+                    try:
+                        response = client.chat.completions.create(
+                            model="gpt-4o-mini",
+                            messages=st.session_state.messages
+                        )
+                        ai_msg = response.choices[0].message.content
+                        st.session_state.messages.append({"role": "assistant", "content": ai_msg})
+                    except Exception as e:
+                        st.error(f"KI Fehler: {e}")
+                
+                full_data = {
+                    "participant_id": st.session_state.participant_id,
+                    "condition": st.session_state.condition,
+                    "research_consent": st.session_state.research_consent,
+                    "chat": st.session_state.messages
+                }
+                
+                threading.Thread(
+                    target=save_to_nextcloud, 
+                    args=(st.session_state.participant_id, full_data),
+                    daemon=True
+                ).start()
+                
+                if recorder_key in st.session_state:
+                    del st.session_state[recorder_key]
                 st.rerun()
 
     # --- PHASE 4: UX Fragebogen Interview ---
