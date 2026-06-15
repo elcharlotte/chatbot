@@ -302,7 +302,7 @@ def main():
         st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.condition = random.choice(["structured-speech", "open-speech"])
+        st.session_state.condition = random.choice(["structured-write", "open-write"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
         st.session_state.experiment_start_time = time.time()
@@ -601,15 +601,14 @@ def main():
 
             st.write("---")
             st.write("🎤 **Antwort einsprechen:**")
-                        
+            
+            recorder_key = f"recorder_{st.session_state.interaction_count}"
+            
             audio_record = mic_recorder(
                 start_prompt="Aufnahme starten",
                 stop_prompt="Aufnahme stoppen",
-                key="speech_key"
+                key=recorder_key
             )
-
-            if audio_record and audio_record['id'] != st.session_state.get("last_audio_id"):
-                st.session_state.last_audio_id = audio_record['id']
             
             if audio_record:
                 audio_bytes = audio_record['bytes']
@@ -654,6 +653,8 @@ def main():
                     daemon=True
                 ).start()
                 
+                if recorder_key in st.session_state:
+                    del st.session_state[recorder_key]
                 st.rerun()
 
     # --- PHASE 4: UX Fragebogen Interview ---
