@@ -234,50 +234,157 @@ elif st.session_state.step == "evaluation":
         st.write("---")
         
         st.subheader("Schritt 3: TSDI-Persönlichkeitseinschätzung")
-        st.write("Bitte schätzen Sie die Person im Interview auf den 17 Facetten ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu):")
+        st.write("Bitte schätzen Sie die Person im Interview auf den 17 Facetten ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu). Falls Sie zu einer Aussage keine Aussage treffen können, fällen Sie ihr Urteil anhand der gegeben Informationen:")
         
-        with st.form("fragebogen_form"):
+       with st.form("fragebogen_form"):
             
-            # --- Verträglichkeit ---
+            # ==========================================
+            # 🤝 DIMENSION VERTRÄGLICHKEIT (A)
+            # ==========================================
             st.markdown("### 🤝 Dimension Verträglichkeit (A)")
-            a_fr = st.slider("**Freundlichkeit (A-Fr):** Wie gut kommt die Person mit den meisten Menschen aus? (Wirkt fröhlich/angenehm)", 1, 5, 3)
-            a_co = st.slider("**Rücksichtnahme (A-Co):** Wie höflich, freundlich und rücksichtsvoll verhält sich die Person gegenüber anderen?", 1, 5, 3)
-            a_h  = st.slider("**Hilfsbereitschaft (A-H):** Wie gerne und uneigennützig hilft die Person anderen bei Problemen?", 1, 5, 3)
             
-            # --- Gewissenhaftigkeit ---
+            st.markdown("**Facette: Freundlichkeit (A-Fr)**")
+            st.caption("* *Die Person gilt als jemand, mit dem man einfach gut auskommt.* \n"
+                       "* *Die Person kommt mit den meisten Menschen gut zurecht.* \n"
+                       "* *Die Person versucht auch fröhlich zu sein, wenn es nicht so gut läuft.* ")
+            a_fr = st.slider("Deine Einschätzung zu **Freundlichkeit**:", 1, 5, 3, key="s_a_fr")
+            
+            st.markdown("**Facette: Rücksichtnahme (A-Co)**")
+            st.caption("* *Die Person behandelt andere Leute immer freundlich.* \n"
+                       "* *Die Person versucht zu jedem freundlich zu sein, den sie kennt.* \n"
+                       "* *Die Person versucht immer höflich zu sein, auch zu denen, die ihr gegenüber unfreundlich sind.* ")
+            a_co = st.slider("Deine Einschätzung zu **Rücksichtnahme**:", 1, 5, 3, key="s_a_co")
+            
+            st.markdown("**Facette: Hilfsbereitschaft (A-H)**")
+            st.caption("* *Es ist der Person eine Freude, anderen mit ihren Problemen zu helfen.* \n"
+                       "* *Die Person hilft anderen Leuten gerne, auch wenn nichts für sie dabei herausspringt.* \n"
+                       "* *Die Person ist immer großzügig, wenn es darum geht, anderen zu helfen.* ")
+            a_h = st.slider("Deine Einschätzung zu **Hilfsbereitschaft**:", 1, 5, 3, key="s_a_h")
+            
+            st.write("---")
+
+            # ==========================================
+            # 🎯 DIMENSION GEWISSENHAFTIGKEIT (C)
+            # ==========================================
             st.markdown("### 🎯 Dimension Gewissenhaftigkeit (C)")
-            c_hw = st.slider("**Fleiß (C-Hw):** Wie hart, ausdauernd, fokussiert und zielstrebig arbeitet die Person an Aufgaben?", 1, 5, 3)
-            c_o  = st.slider("**Organisation (C-O):** Wie ordentlich, geplant, strukturiert und vorbereitet agiert die Person?", 1, 5, 3)
             
-            # --- Extraversion ---
+            st.markdown("**Facette: Fleiß (C-Hw)**")
+            st.caption("* *Wenn sich die Person zu etwas verpflichtet, führt sie es immer zu Ende aus.* \n"
+                       "* *Die Person schätzt sich selbst als sehr ausdauernde Arbeiterin ein.* \n"
+                       "* *Wenn die Person etwas anfängt, arbeitet sie, bis es zu ihrer Zufriedenheit beendet ist.* ")
+            c_hw = st.slider("Deine Einschätzung zu **Fleiß**:", 1, 5, 3, key="s_c_hw")
+            
+            st.markdown("**Facette: Organisation (C-O)**")
+            st.caption("* *Die Person hält ihre persönlichen Sachen gerne ordentlich und organisiert.* \n"
+                       "* *Die Person versucht einen Plan für Aufgaben zu entwickeln und hält sich daran.* \n"
+                       "* *Die Person versucht vollständig vorbereitet zu sein, bevor sie eine Aufgabe anpacke.* ")
+            c_o = st.slider("Deine Einschätzung zu **Organisation**:", 1, 5, 3, key="s_c_o")
+            
+            st.write("---")
+
+            # ==========================================
+            # 📢 DIMENSION EXTRAVERSION (E)
+            # ==========================================
             st.markdown("### 📢 Dimension Extraversion (E)")
-            e_a  = st.slider("**Durchsetzungsfähigkeit (E-A):** Wie dominant, einflussreich wirkt die Person? Übernimmt sie Führung in Gruppen?", 1, 5, 3)
-            e_sb = st.slider("**Selbstbewusstsein (E-SB):** Wie selbstsicher (vs. schüchtern/zurückhaltend) wirkt die Person im Rampenlicht?", 1, 5, 3)
-            e_so = st.slider("**Soziale Aktivität (E-So):** Wie gerne geht die Person unter Leute, mag Trubel und lernt aktiv Menschen kennen?", 1, 5, 3)
             
-            # --- Neurotizismus ---
+            st.markdown("**Facette: Durchsetzungsfähigkeit (E-A)**")
+            st.caption("* *Die Person spricht lauter, wenn sie meint, einen Beitrag liefern zu können.* \n"
+                       "* *Die Person neigt dazu, in Gruppen die Führung zu übernehmen.* \n"
+                       "* *Die Person hat eine Menge Einfluss auf andere Leute.* ")
+            e_a = st.slider("Deine Einschätzung zu **Durchsetzungsfähigkeit**:", 1, 5, 3, key="s_e_a")
+            
+            st.markdown("**Facette: Selbstbewusstsein (E-SB)**")
+            st.caption("* *Die Person ist eine sehr schüchterne Person.* \n"
+                       "* *Die Freunde der Person halten sie für schüchtern.* \n"
+                       "* *Die Person fühlt sich nicht wohl, wenn sie im Zentrum der Aufmerksamkeit steht.* ")
+            e_sb = st.slider("Deine Einschätzung zu **Selbstbewusstsein**:", 1, 5, 3, key="s_e_sb")
+            
+            st.markdown("**Facette: Soziale Aktivität (E-So)**")
+            st.caption("* *Die Person ist gerne wo viel los ist.* \n"
+                       "* *Die Person gibt sich große Mühe Leute kennenzulernen.*\n"
+                       "* *Die Person mag Partys auf denen viele Leute sind.* ")
+            e_so = st.slider("Deine Einschätzung zu **Soziale Aktivität**:", 1, 5, 3, key="s_e_so")
+            
+            st.write("---")
+
+            # ==========================================
+            # 🛡️ DIMENSION NEUROTIZISMUS (N)
+            # ==========================================
             st.markdown("### 🛡️ Dimension Neurotizismus (N)")
-            n_d  = st.slider("**Depression (N-D):** Wie sehr neigt die Person zu negativen Emotionen, Entmutigung oder Selbstbedauern?", 1, 5, 3)
-            n_ir = st.slider("**Reizbarkeit (N-Ir):** Wie leicht lässt sich die Person emotional aus dem Konzept bringen oder durch Kritik aufregen?", 1, 5, 3)
-            n_st = st.slider("**Nervosität (N-St):** Wie anfällig wirkt die Person für Stress, Erschöpfung, Anspannung oder Unruhe?", 1, 5, 3)
             
-            # --- Offenheit ---
+            st.markdown("**Facette: Depression (N-D)**")
+            st.caption("* *Es gibt Zeiten, in denen sich die Person selbst bedauert.* \n"
+                       "* *Manchmal ist die Person entmutigt und möchte am liebsten aufgeben.* \n"
+                       "* *Die Person fürchtet oft, dass sie ihre Ziele nicht erreichen könnte.* ")
+            n_d = st.slider("Deine Einschätzung zu **Depression**:", 1, 5, 3, key="s_n_d")
+            
+            st.markdown("**Facette: Reizbarkeit (N-Ir)**")
+            st.caption("* *Manchmal regt sich die Person so auf, dass es ihr auf den Magen schlägt.* \n"
+                       "* *Wenn die Person aufgebracht ist, kann sie nicht mehr klar denken.* \n"
+                       "* *Die Person kann Kritik nicht sehr gut akzeptieren.* ")
+            n_ir = st.slider("Deine Einschätzung zu **Reizbarkeit**:", 1, 5, 3, key="s_n_ir")
+            
+            st.markdown("**Facette: Nervosität (N-St)**")
+            st.caption("* *Die Person fühlt sich oft müde und erschöpft.* \n"
+                       "* *Wenn die Person unter großem Stress steht, ist sie oft kurz davor zusammenzubebraten.* \n"
+                       "* *Die Person ist oft zittrig und angespannt.* ")
+            n_st = st.slider("Deine Einschätzung zu **Nervosität**:", 1, 5, 3, key="s_n_st")
+            
+            st.write("---")
+
+            # ==========================================
+            # 💡 DIMENSION OFFENHEIT (O)
+            # ==========================================
             st.markdown("### 💡 Dimension Offenheit (O)")
-            o_in = st.slider("**Intellekt (O-In):** Wie hoch ist die intellektuelle Neugier und das Interesse an komplexen Diskussionen?", 1, 5, 3)
-            o_r  = st.slider("**Reflexion (O-R):** Wie viel Zeit investiert die Person in die Erkundung der eigenen Gefühlswelt oder Verhaltensmotive?", 1, 5, 3)
-            o_sc = st.slider("**Wissenschaftliches Interesse (O-Sc):** Wie fasziniert ist die Person von Naturwundern, Evolution oder dem Universum?", 1, 5, 3)
             
-            # --- Ehrlichkeit-Bescheidenheit ---
+            st.markdown("**Facette: Intellekt (O-In)**")
+            st.caption("* *Die Person mag es, intellektuelle Diskussionen mit Freunden zu führen.* \n"
+                       "* *Die Person findet intellektuelle Themen interessanter als Sport (z.B. Fußball, Tennis).* \n"
+                       "* *Die Person besitzt ein hohes Maß an intellektueller Neugier.* ")
+            o_in = st.slider("Deine Einschätzung zu **Intellekt**:", 1, 5, 3, key="s_o_in")
+            
+            st.markdown("**Facette: Reflexion (O-R)**")
+            st.caption("* *Die Person verbringt viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.* \n"
+                       "* *Die Person verbringt viel Zeit damit, ihre Gefühlswelt zu erkunden.* \n"
+                       "* *Die Person liest gerne Gedichte.* ")
+            o_r = st.slider("Deine Einschätzung zu **Reflexion**:", 1, 5, 3, key="s_o_r")
+            
+            st.markdown("**Facette: Wissenschaftliches Interesse (O-Sc)**")
+            st.caption("* *Die Person hat sich viele Gedanken über den Ursprung des Universums gemacht.*\n"
+                       "* *Die Person denkt oft über die Wunder der Natur nach.* \n"
+                       "* *Die Evolutionstheorie fasziniert die Person.*")
+            o_sc = st.slider("Deine Einschätzung zu **Wissenschaftliches Interesse**:", 1, 5, 3, key="s_o_sc")
+            
+            st.write("---")
+
+            # ==========================================
+            # 💎 DIMENSION EHRLICHKEIT-BESCHEIDENHEIT (HH)
+            # ==========================================
             st.markdown("### 💎 Dimension Ehrlichkeit-Bescheidenheit (HH)")
-            hh_si = st.slider("**Aufrichtigkeit (HH-Si):** Wie authentisch und unverstellt agiert die Person? (Nutzt sie Schmeicheleien für Vorteile?)", 1, 5, 3)
-            hh_fa = st.slider("**Fairness (HH-Fa):** Wie regelkonform und ehrlich verhält sich die Person? (Würde sie stehlen/Bestechung annehmen?)", 1, 5, 3)
-            hh_mo = st.slider("**Bescheidenheit (HH-Mo):** Wie bescheiden schätzt die Person sich ein? (Betrachtet sie sich als gleichwertig?)", 1, 5, 3)
+            
+            st.markdown("**Facette: Aufrichtigkeit (HH-Si)**")
+            st.caption("* *Wenn die Person von jemandem, den sie nicht mag, etwas will, verhält sie sich sehr nett.* \n"
+                       "* *Die Person würde keine Schmeicheleien nutzen, um eine Gehaltserhöhung zu bekommen.* \n"
+                       "* *Wenn die Person von jemandem etwas will, lacht sie auch über dessen schlechteste Witze.* ")
+            hh_si = st.slider("Deine Einschätzung zu **Aufrichtigkeit**:", 1, 5, 3, key="s_hh_si")
+            
+            st.markdown("**Facette: Fairness (HH-Fa)**")
+            st.caption("* *Die Person würde in Versuchung geraten, Diebesgut zu kaufen, wenn sie knapp bei Kasse wäre.*\n"
+                       "* *Die Person würde niemals Bestechungsgeld annehmen, auch wenn es sehr viel wäre.*\n"
+                       "* *Wenn die Person wüsste, dass sie niemals erwischt wird, wäre sie bereit, eine Million zu stehlen.*")
+            hh_fa = st.slider("Deine Einschätzung zu **Fairness**:", 1, 5, 3, key="s_hh_fa")
+            
+            st.markdown("**Facette: Bescheidenheit (HH-Mo)**")
+            st.caption("* *Die Person will, dass alle wissen, dass sie eine wichtige angesehene Person ist.*\n"
+                       "* *Die Person ist eine ganz normale Person, die nicht besser ist als andere.*\n"
+                       "* *Die Person will nicht, dass andere Leute sie behandeln, als ob sie ihnen überlegen sei.*")
+            hh_mo = st.slider("Deine Einschätzung zu **Bescheidenheit**:", 1, 5, 3, key="s_hh_mo")
             
             st.write("")
             anmerkungen = st.text_area("Gibt es noch sonstige Auffälligkeiten oder Bemerkungen zur Person? (Optional)", max_chars=500)
             
             submit_button = st.form_submit_button("Formular absenden", type="primary")
-            
+                 
             if submit_button:
                 with st.spinner("Ihre Antworten werden sicher übertragen..."):
                     
