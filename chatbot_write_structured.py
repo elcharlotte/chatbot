@@ -111,17 +111,17 @@ TSDI_ITEMS = """
 
 ## Dimension Extraversion (E)
 ### 6. Facette "Durchsetzungsfähigkeit" (E-A):
-- Item tsdi42_35_E_A002: Ich spreche lauter, wenn ich meine, einen Beitrag liefern zu können.
-- Item tsdi42_28_E_A004: Ich neige dazu, in Gruppen die Führung zu übernehmen.
-- Item tsdi42_03_E_A009: Ich habe eine menge Einfluss auf andere Leute.
+- Item tsdi42_35_E_A002: Sprechen Sie lauter, wenn Sie meinen, einen wichtigen Beitrag liefern zu können? Wie oft kommt das vor und was sind typische Situationen, in denen Sie lauter sprechen?
+- Item tsdi42_28_E_A004: Neigen Sie dazu, in Gruppen die Führung zu übernehmen? Wie sieht das aus?
+- Item tsdi42_03_E_A009: Was würden Sie sagen: Wie stark ist der Einfluss, den Sie auf andere Leute haben? Worin zeigt sich das?
 ### 7. Facette "Selbstbewusstsein" (E-SB):
-- Item tsdi42_19_E_SB010: Ich bin eine sehr schüchterne Person.
-- Item tsdi42_08_E_SB014: Meine Freunde halten mich für schüchtern.
-- Item tsdi42_18_E_SB026: Ich fühle mich nicht wohl, wenn ich im Zentrum der Aufmerksamkeit stehe.
+- Item tsdi42_19_E_SB010: Sind Sie eine schüchterne Person? Was sind Situationen, in denen Ihre Schüchternheit am sträksten auftritt?
+- Item tsdi42_08_E_SB014: Halten Ihre Freunde Sie für schüchtern? Was, glauben Sie, lässt Ihre Freunde so über Sie denken?
+- Item tsdi42_18_E_SB026: Würden Sie sagen, Sie fühlen sich unwohl, wenn Sie im Zentrum der Aufmerksamkeit stehen? Was an dieser Situation macht Ihnen am meisten zu schaffen?
 ### 8. Facette "Soziale Aktivität" (E-So):
-- Item tsdi42_33_E_So007: Ich bin gerne wo viel los ist.
-- Item tsdi42_26_E_So012: Ich gebe mir große Mühe Leute kennen zu lernen.
-- Item tsdi42_16_E_So028: Ich mag Partys auf denen viele Leute sind.
+- Item tsdi42_33_E_So007: Sind Sie gerne dort, wo viel los ist? An was für Orte oder Situationen denken Sie bei dieser Frage?
+- Item tsdi42_26_E_So012: Geben Sie sich Mühe, neue Leute kennenzulernen? Wenn ja, wie tun Sie das? 
+- Item tsdi42_16_E_So028: Mögen Sie Partys, auf denen viele Leute sind? 
 
 ## Dimension Neurotizismus (N)
 ### 9. Facette "Depression" (N-D):
