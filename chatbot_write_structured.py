@@ -328,7 +328,7 @@ def main():
         Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
         * **Verpflichtung:** Die Teilnahme ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
         * **Ehrlichkeit:** Keine Pflicht zur Wahrheit, aber fiktive Angaben verfälschen die Auswertung.
-        * **Ethikvotum:** Bewilligt unter **[PLATZHALTER: Ethikantrag-ID]**.
+        * **Ethikvotum:** Bewilligt unter **[EG-IIP-2026049]**.
         
         ### Datenschutz
         * **OpenAI API:** Daten werden verschlüsselt übertragen, nicht zum Training genutzt und nach 30 Tagen gelöscht.
