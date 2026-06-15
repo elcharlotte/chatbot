@@ -233,27 +233,42 @@ Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSO
 2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
 """
 
+INIT_PROMPT_STRUCTURED = """
+Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Wie sehr hält man Sie für jemanden, mit dem man einfach gut auskommt?
+"""
+
+INIT_PROMPT_OPEN = """
+Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?
+"""
+
 #--- Condition Configs --------------------------------------------------------------------------------------
 CONDITION_CONFIGS = {
     "structured-write": {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": "[Structured] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Wie sehr hält man Sie für jemanden, mit dem man einfach gut auskommt?" # TODO: Condition label löschen
+            "interviewer_text": f"[Write Structured] {INIT_PROMPT_STRUCTURED}" # TODO: Condition label löschen
         })
     },
     "open-write": {
         "system_prompt": SYSTEM_PROMPT_OPEN,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": "[Open] Vielen Dank für Ihre Teilnahme! Wir beginnen nun mit dem Interview. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?" # TODO: Condition label löschen
+            "interviewer_text": f"[Write Open] {INIT_PROMPT_OPEN}" # TODO: Condition label löschen
         })
     },
     "structured-speech": {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": "[Speech] Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Wie sehr hält man Sie für jemanden, mit dem man einfach gut auskommt?" # TODO: Condition label löschen
+            "interviewer_text": f"[Speech Structured] {INIT_PROMPT_STRUCTURED}" # TODO: Condition label löschen
+        })
+    },
+    "open-speech": {
+        "system_prompt": SYSTEM_PROMPT_OPEN,
+        "init_message": json.dumps({
+            "aktuelle_facette": 1,
+            "interviewer_text": f"[Speech Open] {INIT_PROMPT_OPEN}" # TODO: Condition label löschen
         })
     },
 }
@@ -269,7 +284,7 @@ def main():
         st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        st.session_state.condition = random.choice(["structured-write", "open-write", "structured-speech"])
+        st.session_state.condition = random.choice(["structured-write", "open-write", "structured-speech", "opwn-speech"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
         st.session_state.experiment_start_time = time.time()
