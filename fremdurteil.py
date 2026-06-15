@@ -120,8 +120,17 @@ if 'participant_id' not in st.session_state:
 if 'matrikelnummer' not in st.session_state:
     st.session_state.matrikelnummer = ""
 
+# Falls noch gar keine Urne existiert, holen wir die Liste aus der Nextcloud
 if 'urne' not in st.session_state:
     st.session_state.urne = load_transcript_list()
+
+# Falls die Urne im laufenden Betrieb leergespielt wurde, befüllen wir sie neu!
+if len(st.session_state.urne) == 0:
+    st.session_state.urne = load_transcript_list()
+    # Falls die Nextcloud wirklich komplett leer ist (z.B. Verbindungsfehler),
+    # fangen wir das hier ab, damit es zu keinem Absturz kommt:
+    if not st.session_state.urne:
+        st.session_state.urne = []
 
 if 'aktuelles_transkript_file' not in st.session_state:
     st.session_state.aktuelles_transkript_file = None
