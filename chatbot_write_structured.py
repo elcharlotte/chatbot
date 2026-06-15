@@ -168,6 +168,7 @@ TSDI_ITEMS = """
 """
 
 TOTAL_FACETS = 17
+MAX_INTERACTIONS = 50
 
 #--- System Prompt Structured ------------------------------------------------------------------------
 SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein erfahrener psychologischer Interviewer. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 17 Facetten des erweiterten TSDI systematisch zu erfassen.
@@ -449,10 +450,10 @@ def main():
             st.progress(progress_percentage)
         else:
             # Open condition: Fortschritt über Anzahl der Interaktionen
-            interaction_count = len([m for m in st.session_state.messages if m["role"] == "user"])
-            facet_count_approx = interaction_count // 3
-            progress_percentage = float(facet_count_approx) / float(TOTAL_FACETS)
-            st.markdown(f"Facette {facet_count_approx} von {TOTAL_FACETS}")
+            st.session_state.interaction_count = len([m for m in st.session_state.messages if m["role"] == "user"])
+            interaction_count_capped = min(st.session_state.interaction_count, MAX_INTERACTIONS)
+            progress_percentage = float(interaction_count_capped) / float(MAX_INTERACTIONS)
+            st.markdown(f"Interaktion {st.session_state.interaction_count} von {MAX_INTERACTIONS}")
             st.progress(progress_percentage)
 
         st.divider()
@@ -609,9 +610,9 @@ def main():
             st.markdown(f"Facette {current_facet_count} von {TOTAL_FACETS}")
             st.progress(progress_percentage)
         else:
-            interaction_count_capped = min(st.session_state.interaction_count, OPEN_MAX_INTERACTIONS)
-            progress_percentage = float(interaction_count_capped) / float(OPEN_MAX_INTERACTIONS)
-            st.markdown(f"Interaktion {st.session_state.interaction_count} von {OPEN_MAX_INTERACTIONS}")
+            interaction_count_capped = min(st.session_state.interaction_count, MAX_INTERACTIONS)
+            progress_percentage = float(interaction_count_capped) / float(MAX_INTERACTIONS)
+            st.markdown(f"Interaktion {st.session_state.interaction_count} von {MAX_INTERACTIONS}")
             st.progress(progress_percentage)
 
         st.divider()
