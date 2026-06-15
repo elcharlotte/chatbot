@@ -9,6 +9,7 @@ import random
 import time
 from datetime import datetime
 import io
+import hashlib
 from streamlit_mic_recorder import mic_recorder
 
 # --- KONFIGURATION & HELPER ------------------------------------------------------------------
@@ -174,7 +175,7 @@ SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein erfahrener psychologischer Interviewe
 INTERVIEW-REGELN:
 * Gehe die Facetten streng sequenziell von 1 bis 17 durch.
 * Stelle pro Item EINE verhaltensnahe Frage. Die Items findest du zwischen den Tags <ITEMS> und </ITEMS>.
-* Stelle die Items wenn möglich als offene Fragen, auf die man nicht einfach mit ja oder nein antworten kann, bspw. 'Wie großzügig sind Sie, wenn es darum geht, anderen zu helfen?' oder 'Inwieweit versuchen Sie fröhlich zu sein, auch wenn es nicht so gut läuft?
+* Stelle die Items wenn möglich als offene Fragen, auf die man nicht einfach mit ja oder nein antworten kann, bspw. 'Wie großzügig sind Sie, wenn es darum geht, anderen zu helfen?' oder 'Inwieweit versuchen Sie fröhlich zu sein, auch wenn es nicht so gut läuft?'
 
 * Vermeide Phrasen wie '<Aussage>. Wie sehen Sie das bei sich?' und verschachtelte Sätze.
 * Formuliere die Fragen natürlich und gesprächsnah. Vermeide repetitive Phrasen wie 'Nun zur nächsten Frage:', 'Vielen Dank', 'Das freut mich zu hören', 'interessant' oder 'Das tut mir leid'.
@@ -384,16 +385,20 @@ def main():
         st.title("🎙️ Mikrofon-Test")
         st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet. Sprechen Sie nach dem Starten der Aufnahme ein paar Worte (z. B. 'Hallo, Test').")
         
-        test_recorder = mic_recorder(
-            start_prompt="Test-Aufnahme starten",
-            stop_prompt="Test-Aufnahme stoppen",
-            key="mic_test_recorder"
-        )
-        
-        if test_recorder:
-            audio_bytes = test_recorder['bytes']
-            audio_file = io.BytesIO(audio_bytes)
-            audio_file.name = "test.wav"
+        audio_record = mic_recorder(
+                start_prompt="Aufnahme starten",
+                stop_prompt="Aufnahme stoppen",
+                key="speech_recorder"
+            )
+            
+        if audio_record:
+            audio_bytes = audio_record['bytes']
+            audio_hash = hashlib.md5(audio_bytes).hexdigest()
+
+            if audio_hash != st.session_state.get("last_audio_hash"):
+                st.session_state.last_audio_hash = audio_hash
+                audio_file = io.BytesIO(audio_bytes)
+                audio_file.name = "audio.wav"
             
             with st.spinner("Prüfe Audio-Eingang..."):
                 try:
