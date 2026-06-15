@@ -243,7 +243,7 @@ LEITFADEN:
 {TSDI_BESCHREIBUNGEN} 
 
 {TSDI_ITEMS}
-"""
+
 
 DEINE ANTWORT-STRUKTUR:
 Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
