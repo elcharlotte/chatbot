@@ -153,17 +153,17 @@ TSDI_ITEMS = """
 
 ## Dimension Ehrlichkeit-Bescheidenheit (HH)
 ### 15. Facette "Aufrichtigkeit" (HH-Si):
-- Item x42i47_hh_si001_t2: Wenn ich von einer Person, die ich nicht mag, etwas will, verhalte ich mich dieser Person gegenüber sehr nett um es zu bekommen.
-- Item x42i15_hh_si005_t2: Ich würde keine Schmeicheleien benutzen, um eine Gehaltserhöhung zu bekommen oder befördert zu werden, auch wenn ich wüsste, dass es erfolgreich wäre.
-- Item x42i04_hh_si009_t2: Wenn ich von jemandem etwas will, lache ich auch noch über dessen schlechteste Witze.
+- Item x42i47_hh_si001_t2: Wie oft verhalten Sie sich einer Person, die Sie nicht mögen, gegenüber sehr nett, weil Sie etwas von ihr wollen? Was tun Sie dann konkret?
+- Item x42i15_hh_si005_t2: Würden Sie Schmeicheleien verwenden, um eine Gehaltserhöhung oder Beförderung zu bekommen? Wie sicher sind Sie sich? 
+- Item x42i04_hh_si009_t2:  Angenommen eine Person, von der Sie etwas wollen macht einen schlechten Witz. Würden Sie lachen? Was tun Sie, wenn Ihnen ein Witz gar nicht gefällt, Sie aber etwas von der Person wollen?
 ### 16. Facette "Fairness" (HH-Fa):
-- Item x42i31_hh_fa006_t2: Ich würde in Versuchung geraten, Diebesgut zu kaufen, wenn ich knapp bei Kasse wäre.
-- Item x42i17_hh_fa010_t2: Ich würde niemals Bestechungsgeld annehmen, auch wenn es sehr viel wäre.
-- Item x42i08_hh_fa002_t2: Wenn ich wüsste, dass ich niemals erwischt werde, wäre ich bereit, eine Million zu stehlen.
+- Item x42i31_hh_fa006_t2: Würden Sie in Versuchung geraten, Diebesgut zu kaufen, wenn Sie knapp bei Kasse wären? Wie stark wäre diese Versuchung? 
+- Item x42i17_hh_fa010_t2: Würden Sie behaupten, dass Sie niemals Bestechungsgeld annehmen, egal wie hoch es wäre? Wie sicher sind Sie sich dabei? 
+- Item x42i08_hh_fa002_t2:  Wären Sie bereit, eine Million Euro zu stehlen, wenn Sie wüssten, dass Sie niemals erwischt werden? Was würde für Sie in dieser Situation den Unterschied machen?
 ### 17. Facette "Bescheidenheit" (HH-Mo):
-- Item x42i51_hh_mo008_t2: Ich will nicht, dass andere Leute mich behandeln, als ob ich ihnen überlegen sei.
-- Item x42i34_hh_mo004_t2: Ich bin eine ganz normale Person, die nicht besser ist als andere.
-- Item x42i24_hh_mo016_t2: Ich will, dass alle wissen, dass ich eine wichtige angesehene Person bin.
+- Item x42i51_hh_mo008_t2: Wie finden Sie es, wenn andere Leute Sie behandeln, als ob Sie ihnen überlegen wären? Was beduetet es für Sie, "überlegen" behandelt zu werden?
+- Item x42i34_hh_mo004_t2: Sehen Sie sich als ganz normale Person, die nicht besser ist als andere? Was macht Sie Ihrer Meinung nach zu einer "ganz normalen" Person?
+- Item x42i24_hh_mo016_t2: Wie sehr möchten Sie, dass alle wissen, dass Sie eine wichtige, angesehene Person sind? Was würde Ihnen das Gefühl geben, eine wichtige, angesehene Person zu sein?
 </ITEMS>
 """
 
