@@ -812,7 +812,7 @@ def main():
     elif st.session_state.step == "farewell":
         st.title("Vielen Dank! 🎉")
         st.success("Ihre Daten wurden erfolgreich gespeichert.")
-        st.write("Sie haben die Studie erfolgreich abgeschlossen. Ihre Teilnahme wird für die Übungsleistung angerechnet.")
+        st.write("Sie haben das KI-Interview erfolgreich abgeschlossen. Ihre Teilnahme wird für die Übungsleistung angerechnet.")
         st.divider()
         st.link_button("Zur Uni-Webseite", "https://www.uni-ulm.de/in/psy-dia/forschung/an-studien-teilnehmen/")
 
