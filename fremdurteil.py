@@ -229,11 +229,30 @@ elif st.session_state.step == "evaluation":
         st.success("Ihnen wurde erfolgreich ein Interview-Transkript zugelost!")
         
         st.subheader("Schritt 2: Transkript lesen")
-        st.text_area(
-            label="Inhalt des Gesprächs:", 
-            value=st.session_state.transkript_text, 
-            height=450, 
-            disabled=True
+        
+        # NEU: Ein wunderschöner, kontrastreicher Scroll-Container statt der grauen Textarea
+        # .replace("\n", "<br>") sorgt dafür, dass die Zeilenumbrüche im HTML erhalten bleiben
+        html_transkript = st.session_state.transkript_text.replace("\n", "<br>")
+        
+        st.markdown(
+            f"""
+            <div style="
+                background-color: #f9f9f9;
+                color: #111111;
+                padding: 20px;
+                border-radius: 8px;
+                border: 1px solid #e0e0e0;
+                height: 450px;
+                overflow-y: scroll;
+                font-family: monospace;
+                font-size: 14px;
+                line-height: 1.6;
+                box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            ">
+                {html_transkript}
+            </div>
+            """, 
+            unsafe_allow_html=True
         )
         
         st.write("---")
