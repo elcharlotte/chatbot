@@ -195,7 +195,7 @@ Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSO
 """
 
 #--- System Prompt Open -----------------------------------------------------------------------------
-SYSTEM_PROMPT = f"""Du bist ein erfahrener psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives und offenes Interview zu führen, um die 17 Facetten des erweiterten 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
+SYSTEM_PROMPT_OPEN = f"""Du bist ein erfahrener psychologischer Interviewer. Dein Ziel ist es, ein rein diagnostisches, exploratives und offenes Interview zu führen, um die 17 Facetten des erweiterten 'Trait Self-Descriptive Inventory (TSDI)' effizient zu erfassen.
 
 STRIKTE TURN-TAKING-REGEL (WICHTIGSTE REGEL):
 - Gib pro Interaktion/Nachricht IMMER NUR EINE EINZIGE FRAGE aus.
@@ -255,7 +255,7 @@ Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren 
 """
 
 INIT_PROMPT_OPEN = """
-Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Erzählen Sie doch zu Beginn einfach mal: Was haben Sie gestern so erlebt?
+Vielen Dank für Ihre Teilnahme! Ich bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Lassen Sie uns mit dem ersten Thema beginnen: der Dimension 'Extraversion'. Diese Dimension beschreibt, inwiefern Personen gesellig, gesprächig, freundlich und aktiv sind. Menschen mit hoher Ausprägung fühlen sich wohl in Gruppen und mögen aufregende Situationen, während Personen mit niedriger Ausprägung eher zurückhaltend und bedachtsam sind. Wie würden Sie sich im Vergleich zu anderen Personen hinsichtlich Ihrer Extraversion einschätzen?
 """
 
 #--- Condition Configs --------------------------------------------------------------------------------------
