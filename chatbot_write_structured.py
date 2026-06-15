@@ -139,17 +139,17 @@ TSDI_ITEMS = """
 
 ## Dimension Offenheit (O)
 ### 12. Facette "Intellekt" (O-In):
-- Item tsdi42_31_O_In094: Ich mag es, intellektuelle Diskussionen mit Freunden zu führen.
-- Item tsdi42_23_O_In106: Ich finde intellektuelle Themen interessanter als Fußball, Tennis oder Basketball.
-- Item tsdi42_27_O_In118: Ich besitze ein hohes Maß an intellektueller Neugier.
+- Item tsdi42_31_O_In094: Führen Sie gerne intellektuelle Diskussionen mit Freunden? Worüber diskutieren Sie dabei am liebsten?
+- Item tsdi42_23_O_In106: Finden Sie intellektuelle Themen interessanter als Sport wie Fußball, Tennis oder Basketball?  Was für Themen interessieren Sie dabei besonders?
+- Item tsdi42_27_O_In118: Würden Sie sagen, Sie besitzen ein hohes Maß an intellektueller Neugier? 
 ### 13. Facette "Reflexion" (O-R):
-- Item tsdi42_17_O_R100: Ich verbringe viel Zeit damit, die Beweggründe des Verhaltens anderer Leute zu erkunden.
-- Item tsdi42_42_O_R117: Ich verbringe viel Zeit damit, meine Gefühlswelt zu erkunden.
-- Item tsdi42_34_O_R120: Ich lese gerne Gedichte.
+- Item tsdi42_17_O_R100: Wie viel Zeit verbringen Sie damit, die Beweggründe des Verhaltens anderer Leute zu erkunden? Was versuchen Sie dabei herauszufinden?
+- Item tsdi42_42_O_R117: Wie viel Zeit verbringen Sie damit, Ihre eigene Gefühlswelt zu erkunden? 
+- Item tsdi42_34_O_R120: Lesen Sie gerne Gedichte? Was für Gedichte lesen Sie am liebsten?
 ### 14. Facette "Wissenschaftliches Interesse" (O-Sc):
-- Item tsdi42_13_O_Sc103: Ich denke oft über die Wunder der Natur nach.
-- Item tsdi42_20_O_Sc114: Die Evolutionstheorie fasziniert mich.
-- Item tsdi42_01_O_Sc116: Ich habe mir viele Gedanken über den Ursprung des Universums gemacht.
+- Item tsdi42_13_O_Sc103: Wie oft denken Sie oft über die Wunder der Natur nach? Was für Aspekte der Natur faszinieren Sie dabei am meisten?
+- Item tsdi42_20_O_Sc114: Fasziniert Sie die Evolutionstheorie? 
+- Item tsdi42_01_O_Sc116: Würden Sie sagen, Sie haben sich viele Gedanken über den Ursprung des Universums gemacht? Was für Fragen zum Ursprung des Universums beschäftigen Sie am meisten?
 
 ## Dimension Ehrlichkeit-Bescheidenheit (HH)
 ### 15. Facette "Aufrichtigkeit" (HH-Si):
