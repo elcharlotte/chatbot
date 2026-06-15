@@ -125,17 +125,17 @@ TSDI_ITEMS = """
 
 ## Dimension Neurotizismus (N)
 ### 9. Facette "Depression" (N-D):
-- Item tsdi42_07_N_D039: Es gibt Zeiten in denen ich mich selbst bedaure.
-- Item tsdi42_15_N_D054: Manchmal bin ich entmutigt und möchte am liebsten aufgeben.
-- Item tsdi42_30_N_D055: Ich fürchte oft, dass ich meine Ziele nicht erreichen könnte.
+- Item tsdi42_07_N_D039: Gibt es Zeiten, in denen Sie sich selbst bedauern? Wie oft kommt das vor und was sind typische Anlässe dafür, dass Sie sich selbst bedauern?
+- Item tsdi42_15_N_D054: Sind Sie manchmal entmutigt und möchten am liebsten aufgeben? Wie häufig fühlen Sie sich so? 
+- Item tsdi42_30_N_D055: Befürchten Sie, dass Sie Ihre Ziele nicht erreichen könnten? Wie häufig kommt das vor? 
 ### 10. Facette "Reizbarkeit" (N-Ir):
-- Item tsdi42_09_N_Ir034: Manchmal rege ich mich so auf, dass es mir auf den Magen schlägt.
-- Item tsdi42_05_N_Ir058: Wenn ich aufgebracht bin, kann ich nicht mehr klar denken.
-- Item tsdi42_06_N_Ir070: Ich kann Kritik nicht sehr gut akzeptieren.
+- Item tsdi42_09_N_Ir034: Regen Sie sich manchmal so auf, dass es Ihnen auf den Magen schlägt? Was sind typische Auslöser für diese Reaktion?
+- Item tsdi42_05_N_Ir058: Wie klar können Sie denken, wenn Sie aufgebracht sind? Was passiert dann konkret mit Ihren Gedanken?
+- Item tsdi42_06_N_Ir070: Wie gut können Sie Kritik akzeptieren? Was fällt Ihnen an Kritik besonders schwer?
 ### 11. Facette "Nervosität" (N-St):
-- Item tsdi42_29_N_St037: Ich fühle mich oft müde und erschöpft.
-- Item tsdi42_38_N_St040: Wenn ich unter großem Stress stehe, bin ich oft kurz davor zusammenzubrechen.
-- Item tsdi42_11_N_St043: Ich bin oft zittrig und angespannt.
+- Item tsdi42_29_N_St037: Fühlen Sie sich oft müde und erschöpft? Wie häufig kommt das vor?
+- Item tsdi42_38_N_St040: Wenn Sie unter großem Stress stehen - Sind Sie dann oft kurz davor zusammenzubrechen? Wie häufig erleben Sie das und Was löst diesen Zustand bei Ihnen typischerweise aus?
+- Item tsdi42_11_N_St043: Sind Sie oft zittrig und angespannt? 
 
 ## Dimension Offenheit (O)
 ### 12. Facette "Intellekt" (O-In):
