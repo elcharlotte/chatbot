@@ -167,6 +167,7 @@ TSDI_ITEMS = """
 """
 
 TOTAL_FACETS = 17
+OPEN_MAX_INTERACTIONS = 40  # Annahme für Fortschrittsbalken in der "open"-Bedingung – bei Bedarf anpassen
 
 #--- System Prompt Structured ------------------------------------------------------------------------
 SYSTEM_PROMPT_STRUCTURED = f"""Du bist ein erfahrener psychologischer Interviewer. Dein Ziel ist es, ein strukturiertes Interview zu führen, um die 17 Facetten des erweiterten TSDI systematisch zu erfassen.
