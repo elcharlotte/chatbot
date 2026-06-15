@@ -180,13 +180,7 @@ LEITFADEN:
 {TSDI_BESCHREIBUNGEN} 
 
 {TSDI_ITEMS}
-
-DEINE ANTWORT-STRUKTUR:
-Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
-1. "aktuelle_facette": Eine Zahl von 1 bis 17. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 1. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 2, u.s.w.
-2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
 """
-
 
 def main():
     st.set_page_config(page_title="Persönlichkeits-Diagnostik (Unstrukturiert)", page_icon="🧠")
