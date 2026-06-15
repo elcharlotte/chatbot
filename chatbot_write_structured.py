@@ -428,19 +428,31 @@ def main():
     elif st.session_state.step == "chat_write":
         st.title("Interview im Dialog 💬")
 
-        # Read facet progress
-        if st.session_state.messages:
-            last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
-            try:
-                msg_data = json.loads(last_ai_msg)
-                st.session_state.current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
-            except:
-                pass
+is_structured = st.session_state.condition.startswith("structured")
 
-        progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
-        st.markdown(f"Facette {st.session_state.current_facet_count} von {TOTAL_FACETS}")
-        st.progress(progress_percentage)
+        if is_structured:
+            # Read facet progress
+            if st.session_state.messages:
+                last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
+                try:
+                    msg_data = json.loads(last_ai_msg)
+                    st.session_state.current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
+                except:
+                    pass
+
+            progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
+            st.markdown(f"Facette {st.session_state.current_facet_count} von {TOTAL_FACETS}")
+            st.progress(progress_percentage)
+        else:
+            # Open condition: Fortschritt über Anzahl der Interaktionen
+            interaction_count = len([m for m in st.session_state.messages if m["role"] == "user"])
+            interaction_count_capped = min(interaction_count, OPEN_MAX_INTERACTIONS)
+            progress_percentage = float(interaction_count_capped) / float(OPEN_MAX_INTERACTIONS)
+            st.markdown(f"Interaktion {interaction_count} von {OPEN_MAX_INTERACTIONS}")
+            st.progress(progress_percentage)
+
         st.divider()
+
 
         # Inject CSS for scrollable chat container
         st.markdown("""
