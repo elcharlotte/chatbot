@@ -87,17 +87,17 @@ TSDI_ITEMS = """
 <ITEMS>
 ## Dimension Verträglichkeit (A)
 ### 1. Facette "Freundlichkeit" (A-Fr):
-- Item tsdi42_24_A_Fr066: Man hält mich für jemanden mit dem man einfach gut auskommt.
-- Item tsdi42_12_A_Fr084: Ich komme mit den meisten Menschen gut zurecht.
-- Item tsdi42_36_A_Fr220: Ich versuche auch fröhlich zu sein, wenn es nicht so gut läuft.
+- Item tsdi42_24_A_Fr066: Halten andere Menschen Sie für jemanden, mit dem man einfach gut auskommt? Wenn ja, warum? 
+- Item tsdi42_12_A_Fr084: Würden Sie sagen, dass Sie mit den meisten Menschen gut zurecht kommen? Warum denken Sie das?
+- Item tsdi42_36_A_Fr220: Versuchen Sie, fröhlich zu sein, auch wenn es nicht so gut läuft? Wie oft gelingt Ihnen das? 
 ### 2. Facette "Rücksichtnahme" (A-Co):
-- Item tsdi42_02_A_Co080: Ich behandle andere Leute immer freundlich.
-- Item tsdi42_21_A_Co207: Ich versuche zu jedem freundlich zu sein, den ich kenne.
-- Item tsdi42_22_A_Co209: Ich versuche immer höflich zu sein, auch zu denen, die mir gegenüber unfreundlich sind.
+- Item tsdi42_02_A_Co080: Behandeln Sie andere Leute freundlich? Wie häufig tun Sie das und was bedeutet "freundlich behandeln" für Sie konkret?
+- Item tsdi42_21_A_Co207: Versuchen Sie immer, zu jedem freundlich zu sein, den Sie kennen? Was tun Sie konkret, um zu jedem freundlich zu sein?
+- Item tsdi42_22_A_Co209:  Wie oft gelingt es Ihnen , auch zu Menschen höflich zu sein, die Ihnen gegenüber unfreundlich sind? Was hilft Ihnen, höflich zu bleiben, wenn jemand unfreundlich zu Ihnen ist?
 ### 3. Facette "Hilfsbereitschaft" (A-H):
-- Item tsdi42_10_A_H064: Es ist mir eine Freude, anderen mit ihren Problemen zu helfen.
-- Item tsdi42_40_A_H068: Ich helfe anderen Leuten gerne, auch wenn nichts für mich dabei herausspringt.
-- Item tsdi42_39_A_H213: Ich bin immer großzügig, wenn es darum geht, anderen zu helfen.
+- Item tsdi42_10_A_H064: Würden Sie sagen, es bereitet es Ihnen Freude, anderen mit ihren Problemen zu helfen? Was für Probleme anderer beschäftigen Sie dabei am meisten?
+- Item tsdi42_40_A_H068: Wie oft helfen Sie anderen Leuten, auch wenn nichts für Sie dabei herausspringt? Tun Sie das gerne? was motiviert Sie dabei?
+- Item tsdi42_39_A_H213: Sind Sie großzügig, wenn es darum geht, anderen zu helfen und wenn ja, was tun Sie konkret, wenn Sie anderen helfen?
 
 ## Dimension Gewissenhaftigkeit (C)
 ### 4. Facette "Fleiß" (C-Hw):
