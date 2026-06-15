@@ -590,6 +590,7 @@ def main():
                 st.rerun()
 
     # --- PHASE 3B: CHAT SPEECH (AUDIO-EINGABE & TEXT-AUSGABE) ---
+    # --- PHASE 3B: CHAT SPEECH (AUDIO-EINGABE & TEXT-AUSGABE) ---
     elif st.session_state.step == "chat_speech":
         st.title("Interview im Dialog 💬")
         user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
@@ -648,28 +649,33 @@ def main():
             st.write("---")
             st.write("🎤 **Antwort einsprechen:**")
             
-            recorder_key = f"recorder_{st.session_state.interaction_count}"
-            
+            # HIER IST JETZT DER FESTE KEY FÜR DAS MIKROFON
             audio_record = mic_recorder(
                 start_prompt="Aufnahme starten",
                 stop_prompt="Aufnahme stoppen",
-                key=recorder_key
+                key="interview_speech_recorder"
             )
             
             if audio_record:
                 audio_bytes = audio_record['bytes']
-                audio_file = io.BytesIO(audio_bytes)
-                audio_file.name = "audio.wav"
-                
-                with st.spinner("🎧 Ich höre zu... (Sprache wird verarbeitet)"):
-                    try:
-                        transcript = client.audio.transcriptions.create(
-                            model="whisper-1", 
-                            file=audio_file
-                        )
-                        user_input = transcript.text
-                    except Exception as e:
-                        st.error(f"Spracherkennungs-Fehler: {e}")
+                # Erzeuge einen Hashwert aus den Audiodaten
+                audio_hash = hashlib.md5(audio_bytes).hexdigest()
+
+                # Nur verarbeiten, wenn es sich um eine NEUE Aufnahme handelt
+                if audio_hash != st.session_state.get("last_processed_audio_hash"):
+                    st.session_state.last_processed_audio_hash = audio_hash
+                    audio_file = io.BytesIO(audio_bytes)
+                    audio_file.name = "audio.wav"
+                    
+                    with st.spinner("🎧 Ich höre zu... (Sprache wird verarbeitet)"):
+                        try:
+                            transcript = client.audio.transcriptions.create(
+                                model="whisper-1", 
+                                file=audio_file
+                            )
+                            user_input = transcript.text
+                        except Exception as e:
+                            st.error(f"Spracherkennungs-Fehler: {e}")
 
             if user_input:
                 st.session_state.messages.append({"role": "user", "content": user_input})
@@ -699,8 +705,6 @@ def main():
                     daemon=True
                 ).start()
                 
-                if recorder_key in st.session_state:
-                    del st.session_state[recorder_key]
                 st.rerun()
 
     # --- PHASE 4: UX Fragebogen Interview ---
