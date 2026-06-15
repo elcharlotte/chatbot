@@ -95,7 +95,7 @@ TSDI_ITEMS = """
 - Item tsdi42_21_A_Co207: Versuchen Sie immer, zu jedem freundlich zu sein, den Sie kennen? Was tun Sie konkret, um zu jedem freundlich zu sein?
 - Item tsdi42_22_A_Co209:  Wie oft gelingt es Ihnen , auch zu Menschen höflich zu sein, die Ihnen gegenüber unfreundlich sind? Was hilft Ihnen, höflich zu bleiben, wenn jemand unfreundlich zu Ihnen ist?
 ### 3. Facette "Hilfsbereitschaft" (A-H):
-- Item tsdi42_10_A_H064: Würden Sie sagen, es bereitet es Ihnen Freude, anderen mit ihren Problemen zu helfen? Was für Probleme anderer beschäftigen Sie dabei am meisten?
+- Item tsdi42_10_A_H064: Würden Sie sagen, es bereitet Ihnen Freude, anderen mit ihren Problemen zu helfen? Was für Probleme anderer beschäftigen Sie dabei am meisten?
 - Item tsdi42_40_A_H068: Wie oft helfen Sie anderen Leuten, auch wenn nichts für Sie dabei herausspringt? Tun Sie das gerne? was motiviert Sie dabei?
 - Item tsdi42_39_A_H213: Sind Sie großzügig, wenn es darum geht, anderen zu helfen und wenn ja, was tun Sie konkret, wenn Sie anderen helfen?
 
@@ -714,18 +714,20 @@ def main():
         # st.info("Hier wird der UX-Fragebogen eingebettet (z.B. UEQ, AttrakDiff, NASA-TLX o.ä.).")
 
         with st.form("ux_form"):
-            st.markdown("**Geben Sie an, wie Sie das Interview mit der KI empfunden haben:**")
+            st.markdown("**Geben Sie bitte an, wie Sie das Interview mit der KI empfunden haben:**")
             
             q1 = st.slider("Ich wusste manchmal nicht, wie ich auf eine Frage antworten sollte.", 1, 5, 3)
-            q2 = st.slider("Ich emfpand die Interaktion mit dem KI-Chatbot geistig ermüdend.", 1, 5, 3)
-            q3 = st.slider("Ich denke, das Interview kann ein adequates Bild meiner Persönlichkeit wiederspiegeln.", 1, 5, 3)
+            q2 = st.slider("Ich emfpand die Interaktion mit dem KI-Chatbot ermüdend.", 1, 5, 3)
+            q3 = st.slider("Insgesamt erlaubt die Befragung durch das LLM ein recht angemessenes Bild meiner Persönlichkeit zu zeichnen.", 1, 5, 3)
             q4 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als frustrierend. ", 1, 5, 3)
             q5 = st.slider("Es fiel mir leicht, mich auf das Gespräch zu konzentrieren.", 1, 5, 3)
             q6 = st.slider("Ich emfpand die Interaktion mit dem KI-Chatbota als angenehm. ", 1, 5, 3)
             q7 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als ineffizient (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
-            q8 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als vorhersehbar (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
+            q8 = st.slider("Ich denke die Interaktion mit dem KI-Chatbot hätte effizienter sein können (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
             q9 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als sicher (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
             q10 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als interessant (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
+            q11 = st.slider("Ich fand die Fragen des KI-Chatbot nicht sonderlich gut gewählt.", 1,5,3)
+            q12 = st.sloder("Ich hätte gegenüber einer menschlichen Interviewerin sozial erwünschter reagiert.", 1,5,3)
                     
             submitted = st.form_submit_button("Weiter zur Auswertung")
             if submitted:
@@ -739,7 +741,9 @@ def main():
                     "q7_ineffizient": q7,
                     "q8_vorhersehbar": q8, 
                     "q9_sicher": q9, 
-                    "q10_interessant": q10
+                    "q10_interessant": q10, 
+                    "q11_auswahl": q11, 
+                    "q12_socdes": q12
                 }
                 st.session_state.step = "results"
                 st.rerun()
@@ -818,14 +822,14 @@ def main():
         with st.form("ux_form"):
             st.markdown("**Bitte geben Sie an...:**")
             
-            q11 = st.slider("Ich habe wahrheitsgemäße Angaben in meinen Antworten an die KI gemacht.", 1, 5, 3)
-            q12 = st.slider("Die Einschätzung der KI passt weitestgehend mit meiner eigenen Wahrnehmung zusammen.", 1, 5, 3)
+            q13 = st.slider("Ich habe insgesamt wahrheitsgemäß gegenüber dem KI-Chatbot geantwortet. ", 1, 5, 3)
+            q14 = st.slider("Die Einschätzung der KI passt weitestgehend mit meiner eigenen Wahrnehmung zusammen.", 1, 5, 3)
         
-            submitted = st.form_submit_button("Abschließen & Daten speichern")
+            submitted = st.form_submit_button("Übungsblock abschließen!")
             if submitted:
                 st.session_state.ux_responses_results = {
-                    "q11_wahrheit": q11,
-                    "q12_passung": q12
+                    "q13_wahrheit": q13,
+                    "q14_passung": q14
                 }
 
                 experiment_end_time = time.time()
