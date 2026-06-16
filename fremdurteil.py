@@ -57,20 +57,11 @@ def load_transcript_list():
         # 2. Schritt: Nur die finalen Versionen filtern, die eine Vorab-Version besitzen
         filtered_files = []
         for filename in all_files:
-            # Wir betrachten hier nur die regulären/finalen *.json Dateien
             if filename.endswith(".json") and not filename.endswith("_preliminary.json"):
-                # Erstellt den Namen, den die Vorab-Version haben müsste
-                # (z.B. "aufnahme.json" -> "aufnahme_preliminary.json")
                 preliminary_version_name = filename.replace(".json", "_preliminary.json")
-                
-                # Prüfen, ob diese Vorab-Version ebenfalls im Ordner existiert
                 if preliminary_version_name in all_files:
                     filtered_files.append(filename)
-                # Füge das innerhalb deiner Schleife in load_transcript_list() ein:
-                filename = href.split("/")[-1]
-
-                # DEBUG: Zeigt dir im Terminal oder in der App, was Nextcloud liefert
-                print(f"Gefundener Dateiname: '{filename}'")           
+         
         return filtered_files
 
     except Exception as e:
@@ -79,9 +70,10 @@ def load_transcript_list():
 
 def load_already_assigned_transcripts():
     """
-    Liest den Ergebnisordner in Nextcloud aus und prüft anhand der Dateinamen,
-    welche Targets/Transkripte bereits bewertet/zugelost wurden.
-    Dateiformat: ergebnis_Rater_XXX_Target_DATENAME.json_TIMESTAMP.csv
+    Liest den Ergebnisordner aus und prüft anhand der Dateinamen, welche Targets
+    bereits vergeben oder in Bearbeitung (preliminary) sind.
+    Namensschema: rater_VPCODE_MATRIKEL_target_VPCODE_MATRIKEL[_preliminary][_TIMESTAMP].csv
+    Es wird alles nach '_target_' extrahiert und mit .json gematcht.
     """
     url = f"{NC_URL}{ERGEBNIS_ORDNER}/"
     headers = {"Depth": "1"}
@@ -93,36 +85,40 @@ def load_already_assigned_transcripts():
             for response_elem in root.findall(".//{DAV:}response"):
                 href_elem = response_elem.find("{DAV:}href")
                 if href_elem is not None:
-                    filename = href_elem.text.split("/")[-1]
-                    # Extrahiere das Transkript-File aus dem Standard-Dateinamen
-                    if filename.startswith("ergebnis_Rater_") and "_Target_" in filename:
+                    filename = href_elem.text.split("/")[-1].lower()
+                    
+                    # Filtere relevante Ergebnisdateien
+                    if "rater_" in filename and "_target_" in filename and filename.endswith(".csv"):
                         try:
-                            # Teilt beim Target auf und isoliert das Transkript (inkl. .json)
-                            parts = filename.split("_Target_")[1]
-                            # Sucht das Ende des JSON-Namens
-                            if ".json" in parts:
-                                transcript_file = parts.split(".json")[0] + ".json"
-                                assigned.add(transcript_file)
-                        except:
+                            # Isoliere den Teil nach "_target_"
+                            target_part = filename.split("_target_")[1]
+                            
+                            # Entferne Suffixe wie _preliminary oder Zeitstempel
+                            target_part = target_part.replace("_preliminary", "")
+                            if "_" in target_part:
+                                # Falls ein Zeitstempel am Ende hängt (z.B. _20260616_143000.csv)
+                                target_id = target_part.split("_")[0]
+                            else:
+                                target_id = target_part.replace(".csv", "")
+                            
+                            # Rekonstruiere den ursprünglichen Dateinamen der Urne (.json)
+                            transcript_file = f"{target_id}.json"
+                            assigned.add(transcript_file)
+                        except Exception:
                             pass
         return assigned
     except Exception:
         return set()
 
 def calculate_available_urn():
-    """
-    Berechnet die aktuell verfügbare Urne unter Berücksichtigung aller Nutzer.
-    Falls alle Transkripte bereits vergeben wurden (Urne leer), wird von vorne begonnen.
-    """
+    """Berechnet die aktuell verfügbare Urne."""
     alle_transkripte = load_transcript_list()
     bereits_vergeben = load_already_assigned_transcripts()
     
-    # Filtere alle Transkripte heraus, die schon von IRGENDWEM bearbeitet wurden
-    verfuegbar = [t for t in alle_transkripte if t not in bereits_vergeben]
+    # Filtere belegte Transkripte (sowohl finale als auch preliminary)
+    verfuegbar = [t for t in alle_transkripte if t.lower() not in [b.lower() for b in bereits_vergeben]]
     
-    # FALLS MEHR NUTZER ALS TRANSKRIPTE: Runde zurücksetzen (Von vorne beginnen)
     if alle_transkripte and not verfuegbar:
-        # Die Urne ist für diese Runde leer -> Wir geben für die neue Runde wieder alle frei
         return alle_transkripte, True
         
     return verfuegbar, False
@@ -135,20 +131,12 @@ def read_and_format_json_transcript(filename):
         raise Exception(f"Datei konnte nicht geladen werden (Status {response.status_code})")
         
     data = response.json()
-    
-    # VP-Code des Interviewten extrahieren
     vp_code = data.get("participant_id", data.get("id", filename.replace(".json", "")))
     
-    # KI-Bewertung extrahieren (Fällt auf Standard 3 zurück, falls im JSON nicht vorhanden)
     ai_assessment = data.get("ai_assessment", {
-        "Extraversion": 3,
-        "Verträglichkeit": 3,
-        "Gewissenhaftigkeit": 3,
-        "Neurotizismus": 3,
-        "Offenheit": 3
+        "Extraversion": 3, "Verträglichkeit": 3, "Gewissenhaftigkeit": 3, "Neurotizismus": 3, "Offenheit": 3
     })
     
-    # Chat-Verlauf formatieren
     formatted_chat = []
     chat_verlauf = data.get("chat", [])
     for message in chat_verlauf:
@@ -178,50 +166,36 @@ def read_and_format_json_transcript(filename):
     return vp_code, full_transcript_text, ai_assessment
 
 def upload_results_to_nextcloud(filename, csv_data):
-    """Lädt die CSV-Ergebnisdatei via HTTP PUT in die Nextcloud hoch."""
+    """Lädt eine CSV-Ergebnisdatei via HTTP PUT in die Nextcloud hoch."""
     url = f"{NC_URL}{ERGEBNIS_ORDNER}/{filename}"
     headers = {"Content-Type": "text/csv; charset=utf-8"}
     response = requests.put(url, data=csv_data.encode('utf-8'), auth=AUTH, headers=headers)
     if response.status_code not in [201, 204]:
         raise Exception(f"Upload fehlgeschlagen mit Status {response.status_code}")
 
+def delete_preliminary_file(filename):
+    """Löscht die temporäre Vorab-Datei via HTTP DELETE, wenn das Formular final gesendet wurde."""
+    url = f"{NC_URL}{ERGEBNIS_ORDNER}/{filename}"
+    try:
+        requests.delete(url, auth=AUTH)
+    except:
+        pass
+
+
 # 3. SESSION STATE INITIALISIERUNG
-if 'step' not in st.session_state:
-    st.session_state.step = "welcome"
-
-if 'participant_id' not in st.session_state:
-    st.session_state.participant_id = ""
-
-if 'matrikelnummer' not in st.session_state:
-    st.session_state.matrikelnummer = ""
-
-if 'alter' not in st.session_state:
-    st.session_state.alter = ""
-
-if 'geschlecht' not in st.session_state:
-    st.session_state.geschlecht = "Keine Angabe"
-
-if 'consent_given' not in st.session_state:
-    st.session_state.consent_given = False
-
-# Globale Urne wird jetzt live beim Klicken berechnet, wir initialisieren hier nur einen Platzhalter
-if 'urne' not in st.session_state:
-    st.session_state.urne = []
-
-if 'aktuelles_transkript_file' not in st.session_state:
-    st.session_state.aktuelles_transkript_file = None
-
-if 'vp_code' not in st.session_state:
-    st.session_state.vp_code = ""
-
-if 'transkript_text' not in st.session_state:
-    st.session_state.transkript_text = ""
-
-if 'ai_scores' not in st.session_state:
-    st.session_state.ai_scores = {}
-
-if 'user_scores' not in st.session_state:
-    st.session_state.user_scores = {}
+if 'step' not in st.session_state: st.session_state.step = "welcome"
+if 'participant_id' not in st.session_state: st.session_state.participant_id = ""
+if 'matrikelnummer' not in st.session_state: st.session_state.matrikelnummer = ""
+if 'alter' not in st.session_state: st.session_state.alter = ""
+if 'geschlecht' not in st.session_state: st.session_state.geschlecht = "Keine Angabe"
+if 'consent_given' not in st.session_state: st.session_state.consent_given = False
+if 'urne' not in st.session_state: st.session_state.urne = []
+if 'aktuelles_transkript_file' not in st.session_state: st.session_state.aktuelles_transkript_file = None
+if 'vp_code' not in st.session_state: st.session_state.vp_code = ""
+if 'transkript_text' not in st.session_state: st.session_state.transkript_text = ""
+if 'ai_scores' not in st.session_state: st.session_state.ai_scores = {}
+if 'user_scores' not in st.session_state: st.session_state.user_scores = {}
+if 'preliminary_filename' not in st.session_state: st.session_state.preliminary_filename = ""
 
 
 # --- PHASE 1: WILLKOMMEN & DATENEINGABE ---
@@ -239,12 +213,10 @@ if st.session_state.step == "welcome":
     Ein Versuchspersonencode könnte beispielsweise so aussehen: 04ERNS24
     """)
     
-    # Pflichtangaben
     vp_code_input = st.text_input("VP-Code (Dein Teilnehmer-Code)*", placeholder="z.B. 04ERNS24")
     matrikel_input = st.text_input("Matrikelnummer*", placeholder="z.B. 1234567")
     
     st.write("---")
-    # Freiwillige Angaben
     st.subheader("Demografische Angaben (Freiwillig)")
     alter_input = st.text_input("Alter (Optional)", placeholder="z.B. 23")
     geschlecht_input = st.selectbox("Geschlecht (Optional)", ["Keine Angabe", "Weiblich", "Männlich", "Divers"])
@@ -253,8 +225,9 @@ if st.session_state.step == "welcome":
         if not vp_code_input.strip() or not matrikel_input.strip():
             st.error("Bitte füllen Sie die Pflichtfelder (*) aus.")
         else:
-            st.session_state.participant_id = vp_code_input.strip()
-            st.session_state.matrikelnummer = matrikel_input.strip()
+            # Bereinige die IDs direkt für Dateinamen (Alphanumerisch)
+            st.session_state.participant_id = "".join(x for x in vp_code_input.strip() if x.isalnum())
+            st.session_state.matrikelnummer = "".join(x for x in matrikel_input.strip() if x.isalnum())
             st.session_state.alter = alter_input.strip() if alter_input.strip() else "Keine Angabe"
             st.session_state.geschlecht = geschlecht_input
             st.session_state.step = "consent"
@@ -272,7 +245,6 @@ elif st.session_state.step == "consent":
     * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung.
     """)
     
-    # Nicht verpflichtende Checkbox
     consent_checked = st.checkbox("Ich stimme der Nutzung meiner anonymisierten Daten für zusätzliche Forschungszwecke freiwillig zu.")
     
     if st.button("Übungsblock starten & Transkript zulosen", type="primary"):
@@ -287,38 +259,52 @@ elif st.session_state.step == "evaluation":
     if st.session_state.aktuelles_transkript_file is None:
         st.subheader("Schritt 1: Transkript erhalten")
         st.write("Klicken Sie auf den Button, um ein zufälliges Interview-Transkript aus dem System zugelost zu bekommen.")
-        st.write("_Hinweis: Das System stellt sicher, dass Sie ein Transkript bekommen, das von anderen noch nicht oder am seltensten bewertet wurde._")
         
         if st.button("🎲 Transkript zufällig zulosen", type="primary"):
-            with st.spinner("Urne wird mit Nextcloud abgeglichen und Transkript geladen..."):
-                # LIVE-ABGLEICH: Was ist jetzt noch in der globalen Urne frei?
+            with st.spinner("Urne wird mit Nextcloud abgeglichen und Transkript reserviert..."):
                 aktuelle_urne, von_vorne_begonnen = calculate_available_urn()
                 st.session_state.urne = aktuelle_urne
                 
                 if not st.session_state.urne:
-                    st.error("Keine Transkripte im Nextcloud-Ordner gefunden.")
+                    st.error("Keine freien Transkripte im Nextcloud-Ordner gefunden.")
                 else:
                     if von_vorne_begonnen:
                         st.toast("🔄 Info: Alle Transkripte wurden bereits einmal verteilt! Eine neue Runde startet von vorne.", icon="ℹ️")
                     
-                    # Zufällige Ziehung aus den verbleibenden
                     gezogenes_file = random.choice(st.session_state.urne)
                     
                     try:
                         vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
+                        
+                        # Generiere Dateinamen-Struktur laut Vorgabe
+                        rater_string = f"rater_{st.session_state.participant_id}_{st.session_state.matrikelnummer}"
+                        
+                        # Das Target-Transkript-File (z.B. "vp_12345.json") extrahieren ohne Endung
+                        target_clean_id = gezogenes_file.replace(".json", "")
+                        target_string = f"target_{target_clean_id}"
+                        
+                        # 1) PRELIMINARY DATEINAME (Sofort hochladen um zu blockieren)
+                        prelim_filename = f"{rater_string}_{target_string}_preliminary.csv"
+                        
+                        # Ein minimaler Platzhalter-String für die Vorab-Datei
+                        placeholder_csv = "Status;Zeitstempel\npreliminary;" + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        upload_results_to_nextcloud(prelim_filename, placeholder_csv)
+                        
+                        # Session States belegen
+                        st.session_state.preliminary_filename = prelim_filename
                         st.session_state.aktuelles_transkript_file = gezogenes_file
                         st.session_state.vp_code = vp_code
                         st.session_state.transkript_text = text
                         st.session_state.ai_scores = ai_scores
                         st.rerun()
+                        
                     except Exception as e:
-                        st.error(f"Fehler beim Laden der Datei: {e}")
+                        st.error(f"Fehler beim Reservieren der Datei: {e}")
 
     elif not st.session_state.user_scores:
-        st.success("Ihnen wurde erfolgreich ein Interview-Transkript zugelost!")
+        st.success("Ihnen wurde erfolgreich ein Interview-Transkript zugelost und für Sie reserviert!")
         
         st.subheader("Schritt 2: Transkript lesen")
-        
         html_transkript = st.session_state.transkript_text.replace("\n", "<br>")
         st.markdown(
             f"""
@@ -332,17 +318,13 @@ elif st.session_state.step == "evaluation":
         )
         
         st.write("---")
-        
         st.subheader("Schritt 3: TSDI-Persönlichkeitseinschätzung")
-        st.write("Bitte schätzen Sie die Person hinsichtlich ihrer Persönlichkeit ein (1 = trifft gar nicht zu, 5 = trifft vollkommen zu). Falls Sie zu einer Aussage keine Aussage treffen können, fällen Sie ihr Urteil anhand der gegeben Informationen:")
-
+        
         with st.form("fragebogen_form"):
-            
             # ==========================================
             # 🤝 DIMENSION VERTRÄGLICHKEIT (A)
             # ==========================================
             st.markdown("## 🤝 Dimension Verträglichkeit (A)")
-            
             st.markdown("### 1. Facette: Freundlichkeit (A-Fr)")
             a_fr_1 = st.slider("Die Person gilt als jemand, mit dem man einfach gut auskommt.", 1, 5, 3, key="x42i29")
             a_fr_2 = st.slider("Die Person kommt mit den meisten Menschen gut zurecht.", 1, 5, 3, key="x42i14")
@@ -358,13 +340,10 @@ elif st.session_state.step == "evaluation":
             a_h_2 = st.slider("Die Person hilft anderen Leuten gerne, auch wenn nichts für sie dabei herausspringt.", 1, 5, 3, key="x42i48")
             a_h_3 = st.slider("Die Person ist immer großzügig, wenn es darum geht, anderen zu helfen.", 1, 5, 3, key="x42i46")
             
-            st.write("---")
-
             # ==========================================
             # 🎯 DIMENSION GEWISSENHAFTIGKEIT (C)
             # ==========================================
             st.markdown("## 🎯 Dimension Gewissenhaftigkeit (C)")
-            
             st.markdown("### 4. Facette: Fleiß (C-Hw)")
             c_hw_1 = st.slider("Wenn sich die Person zu etwas verpflichtet, führt sie es immer zu Ende aus.", 1, 5, 3, key="x42i05")
             c_hw_2 = st.slider("Die Person schätzt sich selbst als sehr ausdauernde Arbeiterin ein.", 1, 5, 3, key="x42i30")
@@ -375,35 +354,29 @@ elif st.session_state.step == "evaluation":
             c_o_2 = st.slider("Die Person versucht einen Plan für Aufgaben zu entwickeln und hält sich daran.", 1, 5, 3, key="x42i49")
             c_o_3 = st.slider("Die Person versucht vollständig vorbereitet zu sein, bevor sie eine Aufgabe anpackt.", 1, 5, 3, key="x42i39")
             
-            st.write("---")
-
             # ==========================================
             # 📢 DIMENSION EXTRAVERSION (E)
             # ==========================================
             st.markdown("## 📢 Dimension Extraversion (E)")
-            
             st.markdown("### 6. Facette: Durchsetzungsfähigkeit (E-A)")
             e_a_1 = st.slider("Die Person spricht lauter, wenn sie meint, einen Beitrag liefern zu können.", 1, 5, 3, key="x42i42")
             e_a_2 = st.slider("Die Person neigt dazu, in Gruppen die Führung zu übernehmen.", 1, 5, 3, key="x42i35")
             e_a_3 = st.slider("Die Person hat eine Menge Einfluss auf andere Leute.", 1, 5, 3, key="x42i03")
             
             st.markdown("### 7. Facette: Selbstbewusstsein (E-SB)")
-            e_sb_1 = st.slider("Die Person ist eine sehr schüchterne Person. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i23")
-            e_sb_2 = st.slider("Die Freunde der Person halten sie für schüchtern. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i10")
-            e_sb_3 = st.slider("Die Person fühlt sich nicht wohl, wenn sie im Zentrum der Aufmerksamkeit steht. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i22")
+            e_sb_1 = st.slider("Die Person ist eine sehr schüchterne Person. (Invertiert)", 1, 5, 3, key="x42i23")
+            e_sb_2 = st.slider("Die Freunde der Person halten sie für schüchtern. (Invertiert)", 1, 5, 3, key="x42i10")
+            e_sb_3 = st.slider("Die Person fühlt sich nicht wohl, wenn sie im Zentrum der Aufmerksamkeit steht. (Invertiert)", 1, 5, 3, key="x42i22")
             
             st.markdown("### 8. Facette: Soziale Aktivität (E-So)")
             e_so_1 = st.slider("Die Person ist gerne wo viel los ist.", 1, 5, 3, key="x42i40")
             e_so_2 = st.slider("Die Person gibt sich große Mühe Leute kennenzulernen.", 1, 5, 3, key="x42i32")
             e_so_3 = st.slider("Die Person mag Partys auf denen viele Leute sind.", 1, 5, 3, key="x42i20")
             
-            st.write("---")
-
             # ==========================================
             # 🛡️ DIMENSION NEUROTIZISMUS (N)
             # ==========================================
             st.markdown("## 🛡️ Dimension Neurotizismus (N)")
-            
             st.markdown("### 9. Facette: Depression (N-D)")
             n_d_1 = st.slider("Es gibt Zeiten, in denen sich die Person selbst bedauert.", 1, 5, 3, key="x42i09")
             n_d_2 = st.slider("Manchmal ist die Person entmutigt und möchte am liebsten aufgeben.", 1, 5, 3, key="x42i19")
@@ -419,16 +392,13 @@ elif st.session_state.step == "evaluation":
             n_st_2 = st.slider("Wenn die Person unter großem Stress steht, ist sie oft kurz davor zusammenzubrechen.", 1, 5, 3, key="x42i45")
             n_st_3 = st.slider("Die Person ist oft zittrig und angespannt.", 1, 5, 3, key="x42i13")
             
-            st.write("---")
-
             # ==========================================
             # 💡 DIMENSION OFFENHEIT (O)
             # ==========================================
             st.markdown("## 💡 Dimension Offenheit (O)")
-            
             st.markdown("### 12. Facette: Intellekt (O-In)")
             o_in_1 = st.slider("Die Person mag es, intellektuelle Diskussionen mit Freunden zu führen.", 1, 5, 3, key="x42i38")
-            o_in_2 = st.slider("Die Person findet intellektuelle Themen interessanter als Sport (z.B. Fußball, Tennis).", 1, 5, 3, key="x42i28")
+            o_in_2 = st.slider("Die Person findet intellektuelle Themen interessanter als Sport.", 1, 5, 3, key="x42i28")
             o_in_3 = st.slider("Die Person besitzt ein hohes Maß an intellektueller Neugier.", 1, 5, 3, key="x42i33")
             
             st.markdown("### 13. Facette: Reflexion (O-R)")
@@ -441,25 +411,22 @@ elif st.session_state.step == "evaluation":
             o_sc_2 = st.slider("Die Person denkt oft über die Wunder der Natur nach.", 1, 5, 3, key="x42i16")
             o_sc_3 = st.slider("Die Evolutionstheorie fasziniert die Person.", 1, 5, 3, key="x42i25")
             
-            st.write("---")
-
             # ==========================================
             # 💎 DIMENSION EHRLICHKEIT-BESCHEIDENHEIT (HH)
             # ==========================================
             st.markdown("## 💎 Dimension Ehrlichkeit-Bescheidenheit (HH)")
-            
             st.markdown("### 15. Facette: Aufrichtigkeit (HH-Si)")
-            hh_si_1 = st.slider("Wenn die Person von jemandem, den sie nicht mag, etwas will, verhält sie sich sehr nett. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i47")
+            hh_si_1 = st.slider("Wenn die Person von jemandem, den sie nicht mag, etwas will, verhält sie sich sehr nett. (Invertiert)", 1, 5, 3, key="x42i47")
             hh_si_2 = st.slider("Die Person würde keine Schmeicheleien nutzen, um eine Gehaltserhöhung zu bekommen.", 1, 5, 3, key="x42i15")
-            hh_si_3 = st.slider("Wenn die Person von jemandem etwas will, lache sie auch über dessen schlechteste Witze. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i04")
+            hh_si_3 = st.slider("Wenn die Person von jemandem etwas will, lache sie auch über dessen schlechteste Witze. (Invertiert)", 1, 5, 3, key="x42i04")
             
             st.markdown("### 16. Fairness (HH-Fa)")
-            hh_fa_1 = st.slider("Die Person würde in Versuchung geraten, Diebesgut zu kaufen, wenn sie knapp bei Kasse wäre. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i31")
+            hh_fa_1 = st.slider("Die Person würde in Versuchung geraten, Diebesgut zu kaufen, wenn sie knapp bei Kasse wäre. (Invertiert)", 1, 5, 3, key="x42i31")
             hh_fa_2 = st.slider("Die Person würde niemals Bestechungsgeld annehmen, auch wenn es sehr viel wäre.", 1, 5, 3, key="x42i17")
-            hh_fa_3 = st.slider("Wenn die Person wüsste, dass sie niemals erwischt wird, wäre sie bereit, eine Million zu stehlen. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i08")
+            hh_fa_3 = st.slider("Wenn die Person wüsste, dass sie niemals erwischt wird, wäre sie bereit, eine Million zu stehlen. (Invertiert)", 1, 5, 3, key="x42i08")
             
             st.markdown("### 17. Bescheidenheit (HH-Mo)")
-            hh_mo_1 = st.slider("Die Person will, dass alle wissen, dass sie eine wichtige angesehene Person ist. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i24")
+            hh_mo_1 = st.slider("Die Person will, dass alle wissen, dass sie eine wichtige angesehene Person ist. (Invertiert)", 1, 5, 3, key="x42i24")
             hh_mo_2 = st.slider("Die Person ist eine ganz normale Person, die nicht besser ist als andere.", 1, 5, 3, key="x42i34")
             hh_mo_3 = st.slider("Die Person will nicht, dass andere Leute sie behandeln, als ob sie ihnen überlegen sei.", 1, 5, 3, key="x42i51")
             
@@ -481,17 +448,13 @@ elif st.session_state.step == "evaluation":
                     facette_a_fr = (a_fr_1 + a_fr_2 + a_fr_3) / 3
                     facette_a_co = (a_co_1 + a_co_2 + a_co_3) / 3
                     facette_a_h  = (a_h_1 + a_h_2 + a_h_3) / 3
-                    
                     facette_c_hw = (c_hw_1 + c_hw_2 + c_hw_3) / 3
                     facette_c_o  = (c_o_1 + c_o_2 + c_o_3) / 3
-                    
                     facette_e_a  = (e_a_1 + e_a_2 + e_a_3) / 3
                     facette_e_so = (e_so_1 + e_so_2 + e_so_3) / 3
-                    
                     facette_n_d  = (n_d_1 + n_d_2 + n_d_3) / 3
                     facette_n_ir = (n_ir_1 + n_ir_2 + n_ir_3) / 3
                     facette_n_st = (n_st_1 + n_st_2 + n_st_3) / 3
-                    
                     facette_o_in = (o_in_1 + o_in_2 + o_in_3) / 3
                     facette_o_r  = (o_r_1 + o_r_2 + o_r_3) / 3
                     facette_o_sc = (o_sc_1 + o_sc_2 + o_sc_3) / 3
@@ -541,13 +504,11 @@ elif st.session_state.step == "evaluation":
                         "x42i_hh_fa_1": hh_fa_1, "x42i_hh_fa_2": hh_fa_2, "x42i_hh_fa_3": hh_fa_3,
                         "x42i_hh_mo_1": hh_mo_1, "x42i_hh_mo_2": hh_mo_2, "x42i_hh_mo_3": hh_mo_3,
                         
-                        # Aggregierte Globale Werte
                         "USER_Extraversion": st.session_state.user_scores["Extraversion"],
                         "USER_Vertraeglichkeit": st.session_state.user_scores["Verträglichkeit"],
                         "USER_Gewissenhaftigkeit": st.session_state.user_scores["Gewissenhaftigkeit"],
                         "USER_Neurotizismus": st.session_state.user_scores["Neurotizismus"],
                         "USER_Offenheit": st.session_state.user_scores["Offenheit"],
-                        
                         "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
                         "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
                         "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
@@ -559,13 +520,22 @@ elif st.session_state.step == "evaluation":
                     df = pd.DataFrame([ergebnis_daten])
                     csv_string = df.to_csv(index=False, sep=";")
                     
-                    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    clean_target_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
-                    clean_rater_name = "".join(x for x in st.session_state.participant_id if x.isalnum() or x in "._-").strip()
-                    dateiname = f"ergebnis_Rater_{clean_rater_name}_Target_{clean_target_name}_{timestamp_str}.csv"
+                    # 2) FINALE DATEI HOCHLADEN (Laut neuem Schema)
+                    # Struktur: rater_VPCODE_MATRIKEL_target_TARGETID.csv
+                    rater_part = f"rater_{st.session_state.participant_id}_{st.session_state.matrikelnummer}"
+                    target_clean_id = st.session_state.aktuelles_transkript_file.replace(".json", "")
+                    target_part = f"target_{target_clean_id}"
+                    
+                    finaler_dateiname = f"{rater_part}_{target_part}.csv"
                     
                     try:
-                        upload_results_to_nextcloud(dateiname, csv_string)
+                        # Finale Datei hochladen
+                        upload_results_to_nextcloud(finaler_dateiname, csv_string)
+                        
+                        # Die temporäre 'preliminary'-Datei löschen
+                        if st.session_state.preliminary_filename:
+                            delete_preliminary_file(st.session_state.preliminary_filename)
+                            
                         st.rerun()
                     except Exception as e:
                         st.error(f"Fehler beim Speichern: {e}")
@@ -578,7 +548,6 @@ elif st.session_state.step == "evaluation":
         
         st.write("---")
         st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
-        st.write("Hier sehen Sie Ihre berechneten Dimensionen im Vergleich zu den globalen KI-Werten:")
         
         vergleichs_daten = []
         gesamte_abweichung = 0
@@ -589,12 +558,9 @@ elif st.session_state.step == "evaluation":
             diff = round(abs(user_val - ai_val), 2)
             gesamte_abweichung += diff
             
-            if diff <= 0.5:
-                feedback = "🎯 Nahezu identisch!"
-            elif diff <= 1.2:
-                feedback = "👍 Sehr nah dran"
-            else:
-                feedback = "🔄 Andere Wahrnehmung"
+            if diff <= 0.5: feedback = "🎯 Nahezu identisch!"
+            elif diff <= 1.2: feedback = "👍 Sehr nah dran"
+            else: feedback = "🔄 Andere Wahrnehmung"
                 
             vergleichs_daten.append({
                 "Big-Five Dimension": dimension,
@@ -610,15 +576,15 @@ elif st.session_state.step == "evaluation":
         gesamte_abweichung = round(gesamte_abweichung, 2)
         st.write("")
         if gesamte_abweichung <= 2.5:
-            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! Ihre berechneten Skalenwerte spiegeln das KI-Profil bemerkenswert präzise wider (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
         elif gesamte_abweichung <= 5.0:
-            st.info(f"📊 **Fazit:** Solide Annäherung. Sie haben die Tendenzen der Person im Kern ähnlich bewertet wie die KI (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            st.info(f"📊 **Fazit:** Solide Annäherung. (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
         else:
-            st.info(f"👥 **Fazit:** Spannende Nuancen! Ihre menschliche Fremdbeurteilung weicht punktuell von den mathematischen KI-Scores ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            st.info(f"👥 **Fazit:** Spannende Nuancen! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
 
         st.write("---")
-        
         if st.button("Nächste Teilnahme starten"):
+            # Setze relevanten State zurück
             st.session_state.step = "welcome"
             st.session_state.participant_id = ""
             st.session_state.matrikelnummer = ""
@@ -630,6 +596,7 @@ elif st.session_state.step == "evaluation":
             st.session_state.transkript_text = ""
             st.session_state.ai_scores = {}
             st.session_state.user_scores = {}
+            st.session_state.preliminary_filename = ""
             st.rerun()
 
 # ==========================================
@@ -647,41 +614,32 @@ if admin_password == ADMIN_PASSWORT_PROV:
     st.write("---")
     st.header("🛠️ Forschungs-Dashboard (Admin-Ansicht)")
     
-    # 1. Metriken live abfragen
     alle_dateien = load_transcript_list()
     bereits_vergeben = load_already_assigned_transcripts()
     verbleibend_in_urne, _ = calculate_available_urn()
     
     col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Gesamtanzahl Nextcloud", len(alle_dateien))
-    with col2:
-        st.metric("Noch frei (in aktueller Runde)", len(verbleibend_in_urne))
-    with col3:
-        st.metric("Bereits zugeteilt (Historie)", len(bereits_vergeben))
+    with col1: st.metric("Gesamtanzahl Nextcloud", len(alle_dateien))
+    with col2: st.metric("Noch frei (in aktueller Runde)", len(verbleibend_in_urne))
+    with col3: st.metric("Bereits zugeteilt (Historie/Prelim)", len(bereits_vergeben))
         
-    aktuell_gezogen = st.session_state.aktuelles_transkript_file
+    aktuellt_gezogen = st.session_state.aktuelles_transkript_file
     if aktuell_gezogen:
-        st.info(f"👀 **Aktuell in Bearbeitung:** `{aktuell_gezogen}` (Rater: `{st.session_state.participant_id}`)")
+        st.info(f"👀 **Aktuell in Bearbeitung:** `{aktuellt_gezogen}`")
 
-    # 2. Detailtabellen anzeigen
-    tab1, tab2 = st.tabs(["📋 Freie Transkripte", "✅ Bereits vergeben (Historie)"])
-    
+    tab1, tab2 = st.tabs(["📋 Freie Transkripte", "✅ Bereits vergeben / Blockiert"])
     with tab1:
         st.subheader("Verfügbare Dateien im aktuellen Pool")
         if verbleibend_in_urne:
-            df_frei = pd.DataFrame(verbleibend_in_urne, columns=["Dateiname (Noch im Topf)"])
-            st.dataframe(df_frei, use_container_width=True)
+            st.dataframe(pd.DataFrame(verbleibend_in_urne, columns=["Dateiname"]), use_container_width=True)
         else:
-            st.warning("Die Urne ist komplett leer! Beim nächsten Klick startet automatisch eine neue Runde.")
-            
+            st.warning("Die Urne ist komplett leer!")
     with tab2:
-        st.subheader("Ausgelesene Zuweisungen aus Nextcloud-Ergebnissen")
+        st.subheader("Ausgelesene Zuweisungen")
         if bereits_vergeben:
-            df_gezogen = pd.DataFrame(list(bereits_vergeben), columns=["Dateiname (Bereits bewertet)"])
-            st.dataframe(df_gezogen, use_container_width=True)
+            st.dataframe(pd.DataFrame(list(bereits_vergeben), columns=["Gezogene Targets (.json)"]), use_container_width=True)
         else:
-            st.info("Bisher wurden laut Nextcloud-Ergebnisordner noch keine Transkripte final bewertet.")
+            st.info("Bisher wurden keine Transkripte gezogen.")
 
 elif admin_password:
     st.sidebar.error("❌ Falsches Passwort.")
