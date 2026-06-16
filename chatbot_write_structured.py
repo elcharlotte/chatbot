@@ -678,7 +678,7 @@ def main():
             q3 = st.slider("Insgesamt erlaubt die Befragung durch das LLM ein recht angemessenes Bild meiner Persönlichkeit zu zeichnen.", 1, 5, 3)
             q4 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als frustrierend. ", 1, 5, 3)
             q5 = st.slider("Es fiel mir leicht, mich auf das Gespräch zu konzentrieren.", 1, 5, 3)
-            q6 = st.slider("Ich emfpand die Interaktion mit dem KI-Chatbota als angenehm. ", 1, 5, 3)
+            q6 = st.slider("Ich emfpand die Interaktion mit dem KI-Chatbot als angenehm. ", 1, 5, 3)
             q7 = st.slider("Ich denke die Interaktion mit dem KI-Chatbot hätte effizienter sein können.", 1, 5, 3) # gefixt: q7 statt q8 im slider key
             q9 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als sicher.", 1, 5, 3)
             q10 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als interessant.", 1, 5, 3)
