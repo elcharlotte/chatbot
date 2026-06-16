@@ -29,7 +29,7 @@ AUTH = HTTPBasicAuth(NC_USER, NC_PASS)
 
 # 2. UTILITY FUNKTIONEN (Nextcloud-Interaktion)
 def load_transcript_list():
-    """Liest alle .json Dateien via WebDAV PROPFIND aus der Nextcloud."""
+    """Liest alle .json Dateien, die auf '_preliminary' enden, via WebDAV PROPFIND aus der Nextcloud."""
     url = f"{NC_URL}{TRANSKRIPT_ORDNER}/"
     headers = {"Depth": "1"}
     try:
@@ -45,7 +45,8 @@ def load_transcript_list():
             if href_elem is not None:
                 href = href_elem.text
                 filename = href.split("/")[-1]
-                if filename.endswith(".json"):
+                # Filtert nur Dateien, die auf "_preliminary.json" enden
+                if filename.endswith("_preliminary.json"):
                     files.append(filename)
         return files
     except Exception as e:
