@@ -465,7 +465,7 @@ elif st.session_state.step == "evaluation":
                         "x42i_o_sc_1": o_sc_1,   "x42i_o_sc_2": o_sc_2,   "x42i_o_sc_3": o_sc_3,
                         "x42i_hh_si_1": hh_si_1, "x42i_hh_si_2": hh_si_2, "x42i_hh_si_3": hh_si_3,
                         "x42i_hh_fa_1": hh_fa_1, "x42i_hh_fa_2": hh_fa_2, "x42i_hh_fa_3": hh_fa_3,
-                        "x42i_hh_mo_1": hh_mo_1, "x42i_hh_mo_2": hh_mo_2, "x42i_hh_mo_3": hh_mo_3
+                        "x42i_hh_mo_1": hh_mo_1, "x42i_hh_mo_2": hh_mo_2, "x42i_hh_mo_3": hh_mo_3,
                         
                         # Aggregierte Globale Werte
                         "USER_Extraversion": st.session_state.user_scores["Extraversion"],
