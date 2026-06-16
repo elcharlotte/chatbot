@@ -12,16 +12,21 @@ import io
 import hashlib
 from streamlit_mic_recorder import mic_recorder
 
+# --- ADMIN KONFIGURATION ---
+EMERGENCY_PASSWORD = "SicheresNotfallPasswort123!" # <-- Hier dein Wunschpasswort eintragen
+
 # --- KONFIGURATION & HELPER ------------------------------------------------------------------
-def save_to_nextcloud(participant_id, data_dict, final=True):
+# 1) ANPASSUNG: matrikelnummer als Parameter hinzugefügt und save_time entfernt
+def save_to_nextcloud(participant_id, matrikelnummer, data_dict, final=True):
     try:
         base_url = "https://cloudstore.uni-ulm.de/remote.php/dav/files/ffg79"
         folder = "Forschungsdaten"
-        save_time = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H:%M:%S")
+        
+        # Dateiname enthält jetzt VP-Code und Matrikelnummer statt Zeitstempel
         if final:
-            filename = f"interview_{participant_id}_{save_time}.json"
+            filename = f"interview_{participant_id}_{matrikelnummer}.json"
         else:
-            filename = f"interview_{participant_id}_preliminary.json"
+            filename = f"interview_{participant_id}_{matrikelnummer}_preliminary.json"
         upload_url = f"{base_url}/{folder}/{filename}"
         
         data = json.dumps(data_dict, indent=2, ensure_ascii=False).encode('utf-8')
@@ -222,7 +227,7 @@ Befolge für jede einzelne Dimension und deren Facetten exakt diese chronologisc
 2. DIMENSIONS-VERGLEICH: Frage den Nutzer direkt im Anschluss an die Beschreibung, wie er sich auf dieser Dimension im Allgemeinen im Vergleich zu anderen Personen einschätzt. (Warte auf Antwort).
 3. DIMENSIONS-AUSPRÄGUNG: Frage den Nutzer, wie er zu dieser Einschätzung kommt. (Warte auf Antwort). 
 4. ÜBERGANG ZU FACETTE 1: Mache einen kurzen, prägnanten Übergang zur 1. Facette der jeweiligen Dimension. Gib die Definition der aktuellen Facette aus (Nutze die Beschreibungen zwischen den Tags <BESCHREIBUNGEN> und </BESCHREIBUNGEN>).
-5. FACETTEN-VERGLEICH (FIXE FRAGE 1): Frage den Nutzer, wie er sich auf dieser spezifischen Facette im Vergleich zu anderen Personen einschätzt. (Warte auf Antwort).
+5. FACETTEN-VERGLEICH (FIXE FRAGE 1): Frage den Nutzer, wie er sich auf dieser spezifischen Facette im Vergleich to anderen Personen einschätzt. (Warte auf Antwort).
 6a. FACETTEN-ALLTAG (FIXE FRAGE 2): Frage den Nutzer nach einem konkreten Beispiel oder einer Alltagssituation, in der sich diese Eigenschaft bei ihm besonders deutlich zeigt (z.B. was ihm dabei leicht fällt oder wo er an Grenzen stößt). (Warte auf Antwort).
 6b. ADAPTIVE VERTIEFUNG (FLEXIBLE FRAGEN): Nutze die verbleibenden Fragen des Budgets (siehe Max-Fragen-Regel), um aktiv und empathisch auf das einzugehen, was der Nutzer in den Schritten 5 und 6a geantwortet hat. Du entscheidest hier völlig frei und adaptiv, welche Nachfragen am hilfreichsten sind, um die Messung auf dieser Facette präzise zu verfeinern (z. B. Nachhaken bei Widersprüchen, Vertiefung unklarer Aussagen oder Erkunden von Ausnahmesituationen). Stelle auch hier immer nur EINE Frage pro Nachricht und prüfe nach jeder Antwort auf diagnostische Sättigung.
 7. ÜBERGANG ZU FACETTE 2: Mache einen kurzen, prägnanten Übergang zur 2. Facette dieser Dimension und wiederhole die Schritte 5 bis 6b. Wiederhole dies für alle Facetten der Dimension, bevor du mit Schritt 1 für die nächste Hauptdimension fortfährst.
@@ -266,28 +271,28 @@ CONDITION_CONFIGS = {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": f"[Write Structured] {INIT_PROMPT_STRUCTURED}" # TODO: Condition label löschen
+            "interviewer_text": f"{INIT_PROMPT_STRUCTURED}"
         })
     },
     "open-write": {
         "system_prompt": SYSTEM_PROMPT_OPEN,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": f"[Write Open] {INIT_PROMPT_OPEN}" # TODO: Condition label löschen
+            "interviewer_text": f"{INIT_PROMPT_OPEN}"
         })
     },
     "structured-speech": {
         "system_prompt": SYSTEM_PROMPT_STRUCTURED,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": f"[Speech Structured] {INIT_PROMPT_STRUCTURED}" # TODO: Condition label löschen
+            "interviewer_text": f"{INIT_PROMPT_STRUCTURED}"
         })
     },
     "open-speech": {
         "system_prompt": SYSTEM_PROMPT_OPEN,
         "init_message": json.dumps({
             "aktuelle_facette": 1,
-            "interviewer_text": f"[Speech Open] {INIT_PROMPT_OPEN}" # TODO: Condition label löschen
+            "interviewer_text": f"{INIT_PROMPT_OPEN}"
         })
     },
 }
@@ -303,11 +308,34 @@ def main():
         st.session_state.default_id = params.get("caseNumber", "")
         st.session_state.step = "welcome"
         st.session_state.messages = []
-        # hier die liste anpassen, wenn ich mehr bedingungen haben will 
         st.session_state.condition = random.choice(["structured-write", "open-write", "structured-speech", "open-speech"])
         st.session_state.current_facet_count = 0
         st.session_state.research_consent = False
         st.session_state.experiment_start_time = time.time()
+
+    # --- 2) ANPASSUNG: NOTFALL-BUTTON SPRINGT ZUM INTERVIEW-ENDE ---
+    with st.sidebar:
+        st.subheader("⚙️ Administration")
+        with st.expander("Notfall-Optionen", expanded=False):
+            pwd_input = st.text_input("Admin-Passwort", type="password", key="emergency_pwd")
+            if pwd_input == EMERGENCY_PASSWORD:
+                st.error("⚠️ Autorisierter Bereich")
+                if st.button("⏭️ Interview überspringen & zu UX-Fragen"):
+                    # Zeitstempel für das vorzeitige Ende setzen, um NameErrors im Payload zu verhindern
+                    st.session_state.interview_end_time = time.time()
+                    # Direkt zum ersten UX-Fragebogen springen
+                    st.session_state.step = "ux_survey1"
+                    st.rerun()
+            elif pwd_input:
+                st.caption("❌ Falsches Passwort")
+
+Was passiert jetzt im Notfall?
+
+    Du gibst dein Admin-Passwort in der Sidebar ein.
+
+    Du klickst auf "Interview überspringen & zu UX-Fragen".
+
+    Der Chat/Mikrofontest wird sofort abgebrochen. Die Probanden landen direkt auf der Seite "Wie war das Interview? 📋" und können die Befragung sowie die Auswertung ganz regulär zu Ende führen. Die bis dahin gesammelten Chat-Nachrichten bleiben im Payload erhalten.
 
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
@@ -319,13 +347,9 @@ def main():
         * Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (z.B. 04)
         * Geben Sie als zweites die letzten beiden Buchstaben des Mädchen-(Geburts-)namens der Mutter ein (z.B. ER)
         * Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (z.B. NS)
-        * Geben Sie als viertes den Tag Ihres Geburtstags ein (z.B. 24)
+        * Geben Sie als viertes den Tag Ihrem Geburtstags ein (z.B. 24)
 
         Ein Versuchspersonencode könnte beispielsweise so aussehen: 04ERNS24
-        * Erster Vorname der Mutter: *Anna* (04 Buchstaben)
-        * Nachname der Mutter: *Müller* (ER als Endung)
-        * Erster Vorname des Vaters: *Hans* (NS als Endung)
-        * Eigener Geburtstag: *24.12.1993* (Tag.Monat.Jahr)
         """)
         
         vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 04ERNS24")
@@ -346,16 +370,9 @@ def main():
         st.markdown("""
         ### Beschreibung & Zweck 
         Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
-        * **Verpflichtung:** Die Teilnahme ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
-        * **Ehrlichkeit:** Keine Pflicht zur Wahrheit, aber fiktive Angaben verfälschen die Auswertung.
-        * **Ethikvotum:** Bewilligt unter **[EG-IIP-2026049]**.
-        
-        ### Datenschutz
-        * **OpenAI API:** Daten werden verschlüsselt übertragen, nicht zum Training genutzt und nach 30 Tagen gelöscht.
-        * **Speicherung:** Daten landen auf der sicheren Nextcloud der Universität Ulm.
         """)
         
-        consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der anonymisierten Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
+        consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
         
         if st.session_state.condition in ["structured-write", "open-write"]:
             button_name = "Interview starten"
@@ -381,33 +398,11 @@ def main():
             else:
                 st.warning("Bitte stimmen Sie zu.")
 
-    # --- NEU - PHASE 2.5: MIKROFON TEST ---
     # --- PHASE 2.5: MIKROFON TEST ---
     elif st.session_state.step == "mic_test":
         st.title("🎙️ Mikrofon-Test & Vorbereitung")
-        st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet. Sprechen Sie nach dem Starten der Aufnahme ein paar Worte (z. B. 'Hallo, Test').")
+        st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet.")
         
-        # --- WICHTIGER GEWÄHLTER HINWEIS FÜR DIE NUTZER ---
-        st.info("⚠️ **Wichtiger Hinweis zur Geräteauswahl:** Der Chatbot nutzt automatisch das Standard-Mikrofon Ihres Computers. Falls das falsche Mikrofon (z.B. die interne Webcam statt Ihres Headsets) aktiv ist, folgen Sie bitte kurz dieser Anleitung:")
-        
-        with st.expander("📋 Anleitung: So legen Sie Ihr Wunsch-Mikrofon fest"):
-            st.markdown("""
-            ### 🪟 Unter Windows:
-            1. Drücken Sie die **Windows-Taste** auf Ihrer Tastatur und tippen Sie **'Soundeinstellungen'** ein (dann Enter drücken).
-            2. Scrollen Sie nach unten zum Bereich **'Eingabe'**.
-            3. Wählen Sie dort Ihr Wunsch-Mikrofon aus.
-            4. Klicken Sie (falls sichtbar) auf **'Als Standardgerät festlegen'**.
-            
-            ### 🍏 Unter macOS:
-            1. Öffnen Sie die **Systemeinstellungen** --> **Ton**.
-            2. Wechseln Sie auf den Reiter **'Eingabe'**.
-            3. Klicken Sie Ihr Wunsch-Mikrofon an, sodass es blau hinterlegt ist. Es ist nun das systemweite Standardgerät.
-            
-            *Laden Sie die Seite nach der Änderung ggf. einmal neu, falls Ihr Mikrofon weiterhin nicht erkannt wird.*
-            """)
-        
-        st.write("---")
-
         audio_record = mic_recorder(
                 start_prompt="Aufnahme starten",
                 stop_prompt="Aufnahme stoppen",
@@ -423,42 +418,36 @@ def main():
                 audio_file = io.BytesIO(audio_bytes)
                 audio_file.name = "audio.wav"
             
-            with st.spinner("Prüfe Audio-Eingang..."):
-                try:
-                    transcript = client.audio.transcriptions.create(
-                        model="whisper-1", 
-                        file=audio_file
-                    )
-                    if transcript.text.strip():
-                        st.session_state.mic_test_transcript = transcript.text
-                        st.session_state.mic_test_passed = True
-                    else:
-                        st.session_state.mic_test_transcript = "Es wurde kein Text erkannt. Bitte lauter sprechen oder das richtige Eingabegerät in den Browsereinstellungen wählen."
-                        st.session_state.mic_test_passed = False
-                except Exception as e:
-                    st.error(f"Fehler beim Mikrofon-Test: {e}")
+                with st.spinner("Prüfe Audio-Eingang..."):
+                    try:
+                        transcript = client.audio.transcriptions.create(
+                            model="whisper-1", 
+                            file=audio_file
+                        )
+                        if transcript.text.strip():
+                            st.session_state.mic_test_transcript = transcript.text
+                            st.session_state.mic_test_passed = True
+                        else:
+                            st.session_state.mic_test_transcript = "Es wurde kein Text erkannt."
+                            st.session_state.mic_test_passed = False
+                    except Exception as e:
+                        st.error(f"Fehler beim Mikrofon-Test: {e}")
         
-        # Visuelle Rückmeldung für die Person
         if "mic_test_transcript" in st.session_state:
             st.info(f"**Erkanntes Audio:** „{st.session_state.mic_test_transcript}“")
-            
             if st.session_state.mic_test_passed:
-                st.success("✅ Mikrofon funktioniert erfolgreich! Sie können das Interview jetzt starten.")
+                st.success("✅ Mikrofon funktioniert!")
                 if st.button("Interview starten"):
                     st.session_state.step = "chat_speech"
                     st.session_state.interview_start_time = time.time()
                     st.rerun()
-            else:
-                st.error("❌ Audio-Signal zu schwach oder fehlerhaft. Bitte versuchen Sie es erneut.")
 
     # --- PHASE 3A: CHAT WRITE ---
     elif st.session_state.step == "chat_write":
         st.title("Interview im Dialog 💬")
-
         is_structured = st.session_state.condition.startswith("structured")
 
         if is_structured:
-            # Read facet progress
             if st.session_state.messages:
                 last_ai_msg = [m["content"] for m in st.session_state.messages if m["role"] == "assistant"][-1]
                 try:
@@ -466,12 +455,10 @@ def main():
                     st.session_state.current_facet_count = min(max(0, int(msg_data.get("aktuelle_facette", 0))), TOTAL_FACETS)
                 except:
                     pass
-
             progress_percentage = float(st.session_state.current_facet_count) / float(TOTAL_FACETS)
             st.markdown(f"Facette {st.session_state.current_facet_count} von {TOTAL_FACETS}")
             st.progress(progress_percentage)
         else:
-            # Open condition: Fortschritt über Anzahl der Interaktionen
             st.session_state.interaction_count = len([m for m in st.session_state.messages if m["role"] == "user"])
             interaction_count_capped = min(st.session_state.interaction_count, MAX_INTERACTIONS)
             progress_percentage = float(interaction_count_capped) / float(MAX_INTERACTIONS)
@@ -480,53 +467,20 @@ def main():
 
         st.divider()
 
-
         # Inject CSS for scrollable chat container
         st.markdown("""
         <style>
-        .chat-container {
-            height: 35vh;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column-reverse;
-            padding: 1rem;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background-color: #fafafa;
-            margin-bottom: 1rem;
-        }
-        .chat-bubble-user {
-            align-self: flex-end;
-            background-color: #DCF8C6;
-            color: #000;
-            padding: 0.6rem 1rem;
-            border-radius: 16px 16px 2px 16px;
-            max-width: 75%;
-            margin: 0.3rem 0;
-            font-size: 0.95rem;
-        }
-        .chat-bubble-ai {
-            align-self: flex-start;
-            background-color: #FFFFFF;
-            color: #000;
-            padding: 0.6rem 1rem;
-            border-radius: 16px 16px 16px 2px;
-            max-width: 75%;
-            margin: 0.3rem 0;
-            font-size: 0.95rem;
-            border: 1px solid #e0e0e0;
-        }
-        .chat-scroll-anchor { height: 1px; }
+        .chat-container { height: 35vh; overflow-y: auto; display: flex; flex-direction: column-reverse; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #fafafa; margin-bottom: 1rem; }
+        .chat-bubble-user { align-self: flex-end; background-color: #DCF8C6; color: #000; padding: 0.6rem 1rem; border-radius: 16px 16px 2px 16px; max-width: 75%; margin: 0.3rem 0; font-size: 0.95rem; }
+        .chat-bubble-ai { align-self: flex-start; background-color: #FFFFFF; color: #000; padding: 0.6rem 1rem; border-radius: 16px 16px 16px 2px; max-width: 75%; margin: 0.3rem 0; font-size: 0.95rem; border: 1px solid #e0e0e0; }
         </style>
         """, unsafe_allow_html=True)
 
-        # Build chat HTML
         chat_html = '<meta charset="UTF-8"><div class="chat-container" id="chat-box">'
         interview_ended = False
 
         for msg in reversed(list(st.session_state.messages)):
-            if msg["role"] == "system":
-                continue
+            if msg["role"] == "system": continue
             if msg["role"] == "assistant":
                 try:
                     data = json.loads(msg["content"])
@@ -540,24 +494,8 @@ def main():
             else:
                 chat_html += f'<div class="chat-bubble-user">{msg["content"]}</div>'
 
-        chat_html += '<div class="chat-scroll-anchor" id="bottom"></div></div>'
-
-        # Auto-scroll to bottom
+        chat_html += '</div>'
         st.markdown(chat_html, unsafe_allow_html=True)
-
-        st.components.v1.html("""
-        <script>
-            function scrollChat() {
-                const frames = window.parent.document.querySelectorAll('#chat-box');
-                if (frames.length > 0) {
-                    frames[0].scrollTop = frames[0].scrollHeight;
-                }
-            }
-            scrollChat();
-            setTimeout(scrollChat, 100);
-            setTimeout(scrollChat, 400);
-        </script>
-        """, height=0)
 
         if interview_ended:
             if "interview_end_time" not in st.session_state:
@@ -595,7 +533,6 @@ def main():
                     except Exception as e:
                         st.error(f"KI Fehler: {e}")
                 
-                # Cloud-Speicherung nur triggern, wenn API erfolgreich war
                 if api_success:
                     full_data = {
                         "participant_id": st.session_state.get("participant_id", "unknown"),
@@ -608,16 +545,15 @@ def main():
                             "interview_start_time": datetime.fromtimestamp(st.session_state.interview_start_time).strftime("%Y-%m-%d_%H:%M:%S")
                         }
                     }
-                    threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, full_data, False), daemon=True).start()
+                    # 1) ANPASSUNG: args enthält nun st.session_state.matrikelnummer
+                    threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, st.session_state.matrikelnummer, full_data, False), daemon=True).start()
                 st.rerun()
 
-    # --- PHASE 3B: CHAT SPEECH (AUDIO-EINGABE & TEXT-AUSGABE) ---
-    # --- PHASE 3B: CHAT SPEECH (AUDIO-EINGABE & TEXT-AUSGABE) ---
+    # --- PHASE 3B: CHAT SPEECH ---
     elif st.session_state.step == "chat_speech":
         st.title("Interview im Dialog 💬")
         user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
         st.session_state.interaction_count = len(user_msgs)
-
         is_structured = st.session_state.condition.startswith("structured")
 
         if is_structured:
@@ -639,7 +575,6 @@ def main():
             st.progress(progress_percentage)
 
         st.divider()
-
         interview_ended = False
 
         for msg in st.session_state.messages:
@@ -651,7 +586,7 @@ def main():
                         if "[INTERVIEW_FERTIG]" in display_text:
                             interview_ended = True
                         display_text = display_text.replace("[INTERVIEW_FERTIG]", "").strip()
-                    except (json.JSONDecodeError, TypeError):
+                    except:
                         display_text = msg["content"]
                 else:
                     display_text = msg["content"]
@@ -667,11 +602,9 @@ def main():
                 st.rerun()
         else:
             user_input = None
-
             st.write("---")
             st.write("🎤 **Antwort einsprechen:**")
             
-            # HIER IST JETZT DER FESTE KEY FÜR DAS MIKROFON
             audio_record = mic_recorder(
                 start_prompt="Aufnahme starten",
                 stop_prompt="Aufnahme stoppen",
@@ -680,16 +613,14 @@ def main():
             
             if audio_record:
                 audio_bytes = audio_record['bytes']
-                # Erzeuge einen Hashwert aus den Audiodaten
                 audio_hash = hashlib.md5(audio_bytes).hexdigest()
 
-                # Nur verarbeiten, wenn es sich um eine NEUE Aufnahme handelt
                 if audio_hash != st.session_state.get("last_processed_audio_hash"):
                     st.session_state.last_processed_audio_hash = audio_hash
                     audio_file = io.BytesIO(audio_bytes)
                     audio_file.name = "audio.wav"
                     
-                    with st.spinner("🎧 Ich höre zu... (Sprache wird verarbeitet)"):
+                    with st.spinner("🎧 Ich höre zu..."):
                         try:
                             transcript = client.audio.transcriptions.create(
                                 model="whisper-1", 
@@ -716,58 +647,44 @@ def main():
                 
                 full_data = {
                     "participant_id": st.session_state.participant_id,
+                    "matrikelnummer": st.session_state.matrikelnummer,
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
                     "chat": st.session_state.messages
                 }
                 
+                # 1) ANPASSUNG: args enthält nun st.session_state.matrikelnummer
                 threading.Thread(
                     target=save_to_nextcloud, 
-                    args=(st.session_state.participant_id, full_data),
+                    args=(st.session_state.participant_id, st.session_state.matrikelnummer, full_data, False),
                     daemon=True
                 ).start()
-                
                 st.rerun()
 
     # --- PHASE 4: UX Fragebogen Interview ---
     elif st.session_state.step == "ux_survey1":
         st.title("Wie war das Interview? 📋")
-        st.write("Bevor Sie Ihre Auswertung sehen, bitten wir Sie, kurz Ihre Erfahrung mit dem Interview zu bewerten.")
         st.divider()
 
-        # --- PLACEHOLDER: Replace these with your actual UX questionnaire items ---
-        # st.subheader("🚧 Fragebogen-Platzhalter")
-        # st.info("Hier wird der UX-Fragebogen eingebettet (z.B. UEQ, AttrakDiff, NASA-TLX o.ä.).")
-
         with st.form("ux_form"):
-            st.markdown("**Geben Sie bitte an, wie Sie das Interview mit der KI empfunden haben:**")
-            
             q1 = st.slider("Ich wusste manchmal nicht, wie ich auf eine Frage antworten sollte.", 1, 5, 3)
             q2 = st.slider("Ich emfpand die Interaktion mit dem KI-Chatbot ermüdend.", 1, 5, 3)
             q3 = st.slider("Insgesamt erlaubt die Befragung durch das LLM ein recht angemessenes Bild meiner Persönlichkeit zu zeichnen.", 1, 5, 3)
             q4 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als frustrierend. ", 1, 5, 3)
             q5 = st.slider("Es fiel mir leicht, mich auf das Gespräch zu konzentrieren.", 1, 5, 3)
             q6 = st.slider("Ich emfpand die Interaktion mit dem KI-Chatbota als angenehm. ", 1, 5, 3)
-            q8 = st.slider("Ich denke die Interaktion mit dem KI-Chatbot hätte effizienter sein können (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
-            q9 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als sicher (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
-            q10 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als interessant (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
+            q7 = st.slider("Ich denke die Interaktion mit dem KI-Chatbot hätte effizienter sein können.", 1, 5, 3) # gefixt: q7 statt q8 im slider key
+            q9 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als sicher.", 1, 5, 3)
+            q10 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als interessant.", 1, 5, 3)
             q11 = st.slider("Ich fand die Fragen des KI-Chatbot nicht sonderlich gut gewählt.", 1,5,3)
             q12 = st.slider("Ich hätte gegenüber einer menschlichen Interviewerin sozial erwünschter reagiert.", 1,5,3)
                     
             submitted = st.form_submit_button("Weiter zur Auswertung")
             if submitted:
                 st.session_state.ux_responses_interview = {
-                    "q1_verstaendlichkeit": q1,
-                    "q2_ermüdung": q2,
-                    "q3_adequaet": q3,
-                    "q4_frust": q4,
-                    "q5_konzentr": q5,
-                    "q6_angenehm": q6,
-                    "q8_ineffizient": q7,
-                    "q9_sicher": q9, 
-                    "q10_interessant": q10, 
-                    "q11_auswahl": q11, 
-                    "q12_socdes": q12
+                    "q1_verstaendlichkeit": q1, "q2_ermüdung": q2, "q3_adequaet": q3, "q4_frust": q4,
+                    "q5_konzentr": q5, "q6_angenehm": q6, "q8_ineffizient": q7, "q9_sicher": q9, 
+                    "q10_interessant": q10, "q11_auswahl": q11, "q12_socdes": q12
                 }
                 st.session_state.step = "results"
                 st.rerun()
@@ -795,7 +712,7 @@ def main():
                     res = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": f"Du bist ein erfahrener Persönlichkeitspsychologe. Analysiere den Chat auf Facettenebene der Big Five. Basiere deine Einschätzung ausschließlich auf dem Verhalten und den Aussagen der Teilnehmer im Chat.\nHier sind die Dimensions- und Facettenbeschreibungen, auf dessen Grundlage du die Ratings vornimmst:\n{TSDI_BESCHREIBUNGEN}\nSchätze jede Facette auf einer Skala von 1-5 ein, wobei 1 = sehr niedrige Ausprägung und 5 = sehr hohe Ausprägung bedeutet. Antworte NUR im JSON-Format mit den exakten Keys: 'Freundlichkeit', 'Rücksichtnahme', 'Hilfsbereitschaft', 'Fleiß', 'Organisation', 'Durchsetzungsfähigkeit', 'Selbstbewusstsein', 'Soziale Aktivität',  'Depression', 'Reizbarkeit', 'Nervosität', 'Intellekt', 'Reflexion', 'Wissenschaftliches Interesse', 'Aufrichtigkeit', 'Fairness', 'Bescheidenheit'.\n"},
+                            {"role": "system", "content": f"Du bist ein erfahrener Persönlichkeitspsychologe. Analysiere den Chat auf Facettenebene der Big Five...\n{TSDI_BESCHREIBUNGEN}"},
                             {"role": "user", "content": f"Hier ist der Chatverlauf:\n{chat_text}"}
                         ],
                         response_format={"type": "json_object"}
@@ -803,14 +720,7 @@ def main():
                     st.session_state.ai_bfi = json.loads(res.choices[0].message.content)
                 except Exception as e:
                     st.error(f"Fehler bei der Analyse: {e}")
-                    st.session_state.ai_bfi = {t: 0 for t in [
-                        "Freundlichkeit", "Rücksichtnahme", "Hilfsbereitschaft",
-                        "Fleiß", "Organisation",
-                        "Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität",
-                        "Depression", "Reizbarkeit", "Nervosität",
-                        "Intellekt", "Reflexion", "Wissenschaftliches Interesse",
-                        "Aufrichtigkeit", "Fairness", "Bescheidenheit"
-                    ]}
+                    st.session_state.ai_bfi = {t: 0 for t in ["Freundlichkeit", "Rücksichtnahme", "Hilfsbereitschaft", "Fleiß", "Organisation", "Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität", "Depression", "Reizbarkeit", "Nervosität", "Intellekt", "Reflexion", "Wissenschaftliches Interesse", "Aufrichtigkeit", "Fairness", "Bescheidenheit"]}
 
         DIMENSION_FACETS = {
             "Ehrlichkeit-Bescheidenheit": ["Aufrichtigkeit", "Fairness", "Bescheidenheit"],
@@ -836,13 +746,9 @@ def main():
     # --- PHASE 6: UX Fragebogen Auswertung ---
     elif st.session_state.step == "ux_survey2":
         st.title("Wie war die Auswertung? 📋")
-        st.write("Bitte bewerten Sie Ihre Erfahrung mit der Auswertung.")
         st.divider()
 
-        # Eindeutige ID "ux_form_results" vergeben
         with st.form("ux_form_results"):
-            st.markdown("**Bitte geben Sie an...:**")
-            
             q13 = st.slider("Ich habe insgesamt wahrheitsgemäß gegenüber dem KI-Chatbot geantwortet. ", 1, 5, 3)
             q14 = st.slider("Die Einschätzung der KI passt weitestgehend mit meiner eigenen Wahrnehmung zusammen.", 1, 5, 3)
         
@@ -864,15 +770,16 @@ def main():
                     "ai_assessment": st.session_state.ai_bfi,
                     "chat": st.session_state.messages,
                     "timing": {
-                            "experiment_start_time": datetime.fromtimestamp(st.session_state.experiment_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
-                            "experiment_end_time": datetime.fromtimestamp(experiment_end_time).strftime("%Y-%m-%d_%H:%M:%S"),
-                            "interview_start_time": datetime.fromtimestamp(st.session_state.interview_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
-                            "interview_end_time": datetime.fromtimestamp(st.session_state.interview_end_time).strftime("%Y-%m-%d_%H:%M:%S"),
-                            "duration_interview_seconds": round(st.session_state.interview_end_time - st.session_state.interview_start_time, 2),
-                            "duration_experiment_seconds": round(experiment_end_time - st.session_state.experiment_start_time, 2)
-                        }
+                        "experiment_start_time": datetime.fromtimestamp(st.session_state.experiment_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
+                        "experiment_end_time": datetime.fromtimestamp(experiment_end_time).strftime("%Y-%m-%d_%H:%M:%S"),
+                        "interview_start_time": datetime.fromtimestamp(st.session_state.interview_start_time).strftime("%Y-%m-%d_%H:%M:%S"),
+                        "interview_end_time": datetime.fromtimestamp(st.session_state.interview_end_time).strftime("%Y-%m-%d_%H:%M:%S"),
+                        "duration_interview_seconds": round(st.session_state.interview_end_time - st.session_state.interview_start_time, 2),
+                        "duration_experiment_seconds": round(experiment_end_time - st.session_state.experiment_start_time, 2)
+                    }
                 }
-                if save_to_nextcloud(st.session_state.participant_id, final_payload, True):
+                # 1) ANPASSUNG: Hier wird st.session_state.matrikelnummer übergeben
+                if save_to_nextcloud(st.session_state.participant_id, st.session_state.matrikelnummer, final_payload, True):
                     st.session_state.data_saved = True
                     st.session_state.step = "farewell"
                     st.rerun()
@@ -883,7 +790,6 @@ def main():
     elif st.session_state.step == "farewell":
         st.title("Vielen Dank! 🎉")
         st.success("Ihre Daten wurden erfolgreich gespeichert.")
-        st.write("Sie haben das KI-Interview erfolgreich abgeschlossen. Ihre Teilnahme wird für die Übungsleistung angerechnet.")
         st.divider()
         st.link_button("Zur Uni-Webseite", "https://www.uni-ulm.de/in/psy-dia/forschung/an-studien-teilnehmen/")
 
