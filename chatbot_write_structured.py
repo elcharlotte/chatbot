@@ -743,7 +743,7 @@ def main():
                     chat_text = "\n".join(clean_messages)
                     
                     # Hier erzwingen wir das Wort JSON im System-Prompt für BEIDE Bedingungen
-                   analysis_system_prompt = (
+                    analysis_system_prompt = (
                     "Du bist ein erfahrener Persönlichkeitspsychologe. "
                     "Analysiere den übermittelten Chatverlauf auf Facettenebene der Big Five. "
                     "Du MUSST deine Antwort als valides JSON-Objekt formatieren. "
