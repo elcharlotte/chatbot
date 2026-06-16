@@ -52,6 +52,56 @@ def load_transcript_list():
         st.error(f"Verbindungsfehler zur Nextcloud: {e}")
         return []
 
+def load_already_assigned_transcripts():
+    """
+    Liest den Ergebnisordner in Nextcloud aus und prüft anhand der Dateinamen,
+    welche Targets/Transkripte bereits bewertet/zugelost wurden.
+    Dateiformat: ergebnis_Rater_XXX_Target_DATENAME.json_TIMESTAMP.csv
+    """
+    url = f"{NC_URL}{ERGEBNIS_ORDNER}/"
+    headers = {"Depth": "1"}
+    assigned = set()
+    try:
+        response = requests.request("PROPFIND", url, auth=AUTH, headers=headers)
+        if response.status_code in [207, 200]:
+            root = ET.fromstring(response.content)
+            for response_elem in root.findall(".//{DAV:}response"):
+                href_elem = response_elem.find("{DAV:}href")
+                if href_elem is not None:
+                    filename = href_elem.text.split("/")[-1]
+                    # Extrahiere das Transkript-File aus dem Standard-Dateinamen
+                    if filename.startswith("ergebnis_Rater_") and "_Target_" in filename:
+                        try:
+                            # Teilt beim Target auf und isoliert das Transkript (inkl. .json)
+                            parts = filename.split("_Target_")[1]
+                            # Sucht das Ende des JSON-Namens
+                            if ".json" in parts:
+                                transcript_file = parts.split(".json")[0] + ".json"
+                                assigned.add(transcript_file)
+                        except:
+                            pass
+        return assigned
+    except Exception:
+        return set()
+
+def calculate_available_urn():
+    """
+    Berechnet die aktuell verfügbare Urne unter Berücksichtigung aller Nutzer.
+    Falls alle Transkripte bereits vergeben wurden (Urne leer), wird von vorne begonnen.
+    """
+    alle_transkripte = load_transcript_list()
+    bereits_vergeben = load_already_assigned_transcripts()
+    
+    # Filtere alle Transkripte heraus, die schon von IRGENDWEM bearbeitet wurden
+    verfuegbar = [t for t in alle_transkripte if t not in bereits_vergeben]
+    
+    # FALLS MEHR NUTZER ALS TRANSKRIPTE: Runde zurücksetzen (Von vorne beginnen)
+    if alle_transkripte and not verfuegbar:
+        # Die Urne ist für diese Runde leer -> Wir geben für die neue Runde wieder alle frei
+        return alle_transkripte, True
+        
+    return verfuegbar, False
+
 def read_and_format_json_transcript(filename):
     """Lädt die JSON-Datei, extrahiert ID, Chat und das KI-Assessment."""
     url = f"{NC_URL}{TRANSKRIPT_ORDNER}/{filename}"
@@ -120,26 +170,18 @@ if 'participant_id' not in st.session_state:
 if 'matrikelnummer' not in st.session_state:
     st.session_state.matrikelnummer = ""
 
-# Neue Session States für freiwillige demografische Daten
 if 'alter' not in st.session_state:
     st.session_state.alter = ""
 
 if 'geschlecht' not in st.session_state:
     st.session_state.geschlecht = "Keine Angabe"
 
-# Session State für Consent-Status
 if 'consent_given' not in st.session_state:
     st.session_state.consent_given = False
 
-# Falls noch gar keine Urne existiert, holen wir die Liste aus der Nextcloud
+# Globale Urne wird jetzt live beim Klicken berechnet, wir initialisieren hier nur einen Platzhalter
 if 'urne' not in st.session_state:
-    st.session_state.urne = load_transcript_list()
-
-# Falls die Urne im laufenden Betrieb leergespielt wurde, befüllen wir sie neu!
-if len(st.session_state.urne) == 0:
-    st.session_state.urne = load_transcript_list()
-    if not st.session_state.urne:
-        st.session_state.urne = []
+    st.session_state.urne = []
 
 if 'aktuelles_transkript_file' not in st.session_state:
     st.session_state.aktuelles_transkript_file = None
@@ -209,7 +251,6 @@ elif st.session_state.step == "consent":
     consent_checked = st.checkbox("Ich stimme der Nutzung meiner anonymisierten Daten für zusätzliche Forschungszwecke freiwillig zu.")
     
     if st.button("Übungsblock starten & Transkript zulosen", type="primary"):
-        # Speichert die Entscheidung, blockiert aber nicht mehr das Weitergehen
         st.session_state.consent_given = consent_checked
         st.session_state.step = "evaluation"
         st.rerun()
@@ -221,15 +262,23 @@ elif st.session_state.step == "evaluation":
     if st.session_state.aktuelles_transkript_file is None:
         st.subheader("Schritt 1: Transkript erhalten")
         st.write("Klicken Sie auf den Button, um ein zufälliges Interview-Transkript aus dem System zugelost zu bekommen.")
+        st.write("_Hinweis: Das System stellt sicher, dass Sie ein Transkript bekommen, das von anderen noch nicht oder am seltensten bewertet wurde._")
         
-        if not st.session_state.urne:
-            st.warning("Keine Transkripte im Nextcloud-Ordner gefunden oder Urne leer.")
-        else:
-            if st.button("🎲 Transkript zufällig zulosen", type="primary"):
-                gezogenes_file = random.choice(st.session_state.urne)
-                st.session_state.urne.remove(gezogenes_file)
+        if st.button("🎲 Transkript zufällig zulosen", type="primary"):
+            with st.spinner("Urne wird mit Nextcloud abgeglichen und Transkript geladen..."):
+                # LIVE-ABGLEICH: Was ist jetzt noch in der globalen Urne frei?
+                aktuelle_urne, von_vorne_begonnen = calculate_available_urn()
+                st.session_state.urne = aktuelle_urne
                 
-                with st.spinner("Transkript wird geladen..."):
+                if not st.session_state.urne:
+                    st.error("Keine Transkripte im Nextcloud-Ordner gefunden.")
+                else:
+                    if von_vorne_begonnen:
+                        st.toast("🔄 Info: Alle Transkripte wurden bereits einmal verteilt! Eine neue Runde startet von vorne.", icon="ℹ️")
+                    
+                    # Zufällige Ziehung aus den verbleibenden
+                    gezogenes_file = random.choice(st.session_state.urne)
+                    
                     try:
                         vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
                         st.session_state.aktuelles_transkript_file = gezogenes_file
@@ -437,7 +486,7 @@ elif st.session_state.step == "evaluation":
                         "Offenheit": round(user_offenheit, 2)
                     }
                     
-                    # 3. CSV-Datenstruktur zusammenstellen (Inklusive Alter, Geschlecht und Consent)
+                    # 3. CSV-Datenstruktur zusammenstellen
                     ergebnis_daten = {
                         "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "Rater_VP_Code": st.session_state.participant_id,      
@@ -448,7 +497,7 @@ elif st.session_state.step == "evaluation":
                         "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
                         "Bewerteter_Target_VP_Code": st.session_state.vp_code, 
                         
-                        # Rohdaten der 51 Items (angepasste Label-Struktur)
+                        # Rohdaten der Items
                         "x42i_a_fr_1": a_fr_1,   "x42i_a_fr_2": a_fr_2,   "x42i_a_fr_3": a_fr_3,
                         "x42i_a_co_1": a_co_1,   "x42i_a_co_2": a_co_2,   "x42i_a_co_3": a_co_3,
                         "x42i_a_h_1": a_h_1,     "x42i_a_h_2": a_h_2,     "x42i_a_h_3": a_h_3,
@@ -461,167 +510,3 @@ elif st.session_state.step == "evaluation":
                         "x42i_n_ir_1": n_ir_1,   "x42i_n_ir_2": n_ir_2,   "x42i_n_ir_3": n_ir_3,
                         "x42i_n_st_1": n_st_1,   "x42i_n_st_2": n_st_2,   "x42i_n_st_3": n_st_3,
                         "x42i_o_in_1": o_in_1,   "x42i_o_in_2": o_in_2,   "x42i_o_in_3": o_in_3,
-                        "x42i_o_r_1": o_r_1,     "x42i_o_r_2": o_r_2,     "x42i_o_r_3": o_r_3,
-                        "x42i_o_sc_1": o_sc_1,   "x42i_o_sc_2": o_sc_2,   "x42i_o_sc_3": o_sc_3,
-                        "x42i_hh_si_1": hh_si_1, "x42i_hh_si_2": hh_si_2, "x42i_hh_si_3": hh_si_3,
-                        "x42i_hh_fa_1": hh_fa_1, "x42i_hh_fa_2": hh_fa_2, "x42i_hh_fa_3": hh_fa_3,
-                        "x42i_hh_mo_1": hh_mo_1, "x42i_hh_mo_2": hh_mo_2, "x42i_hh_mo_3": hh_mo_3,
-                        
-                        # Aggregierte Globale Werte
-                        "USER_Extraversion": st.session_state.user_scores["Extraversion"],
-                        "USER_Vertraeglichkeit": st.session_state.user_scores["Verträglichkeit"],
-                        "USER_Gewissenhaftigkeit": st.session_state.user_scores["Gewissenhaftigkeit"],
-                        "USER_Neurotizismus": st.session_state.user_scores["Neurotizismus"],
-                        "USER_Offenheit": st.session_state.user_scores["Offenheit"],
-                        
-                        "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
-                        "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
-                        "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
-                        "AI_Neurotizismus": st.session_state.ai_scores.get("Neurotizismus"),
-                        "AI_Offenheit": st.session_state.ai_scores.get("Offenheit"),
-                        "Freitext_Anmerkungen": anmerkungen.replace("\n", " ")
-                    }
-                    
-                    df = pd.DataFrame([ergebnis_daten])
-                    csv_string = df.to_csv(index=False, sep=";")
-                    
-                    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    clean_target_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
-                    clean_rater_name = "".join(x for x in st.session_state.participant_id if x.isalnum() or x in "._-").strip()
-                    dateiname = f"ergebnis_Rater_{clean_rater_name}_Target_{clean_target_name}_{timestamp_str}.csv"
-                    
-                    try:
-                        upload_results_to_nextcloud(dateiname, csv_string)
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Fehler beim Speichern: {e}")
-
-    # Feedback-Bildschirm
-    else:
-        st.balloons()
-        st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
-        st.write("Ihre Antworten wurden erfolgreich registriert.")
-        
-        st.write("---")
-        st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
-        st.write("Hier sehen Sie Ihre berechneten Dimensionen im Vergleich zu den globalen KI-Werten:")
-        
-        vergleichs_daten = []
-        gesamte_abweichung = 0
-        
-        for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
-            user_val = st.session_state.user_scores.get(dimension, 3)
-            ai_val = st.session_state.ai_scores.get(dimension, 3)
-            diff = round(abs(user_val - ai_val), 2)
-            gesamte_abweichung += diff
-            
-            if diff <= 0.5:
-                feedback = "🎯 Nahezu identisch!"
-            elif diff <= 1.2:
-                feedback = "👍 Sehr nah dran"
-            else:
-                feedback = "🔄 Andere Wahrnehmung"
-                
-            vergleichs_daten.append({
-                "Big-Five Dimension": dimension,
-                "Ihre Einschätzung (Mittelwert)": user_val,
-                "KI-Einschätzung": ai_val,
-                "Abweichung": diff,
-                "Feedback": feedback
-            })
-            
-        df_vergleich = pd.DataFrame(vergleichs_daten)
-        st.table(df_vergleich)
-        
-        gesamte_abweichung = round(gesamte_abweichung, 2)
-        st.write("")
-        if gesamte_abweichung <= 2.5:
-            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! Ihre berechneten Skalenwerte spiegeln das KI-Profil bemerkenswert präzise wider (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-        elif gesamte_abweichung <= 5.0:
-            st.info(f"📊 **Fazit:** Solide Annäherung. Sie haben die Tendenzen der Person im Kern ähnlich bewertet wie die KI (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-        else:
-            st.info(f"👥 **Fazit:** Spannende Nuancen! Ihre menschliche Fremdbeurteilung weicht punktuell von den mathematischen KI-Scores ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-
-        st.write("---")
-        
-        if st.button("Nächste Teilnahme starten"):
-            st.session_state.step = "welcome"
-            st.session_state.participant_id = ""
-            st.session_state.matrikelnummer = ""
-            st.session_state.alter = ""
-            st.session_state.geschlecht = "Keine Angabe"
-            st.session_state.consent_given = False
-            st.session_state.aktuelles_transkript_file = None
-            st.session_state.vp_code = ""
-            st.session_state.transkript_text = ""
-            st.session_state.ai_scores = {}
-            st.session_state.user_scores = {}
-            st.rerun()
-
-# ==========================================
-# 🛠️ ADMIN-BEREICH (IM HINTERGRUND / SIDEBAR)
-# ==========================================
-st.sidebar.markdown("---")
-st.sidebar.subheader("🔒 Admin-Bereich")
-
-# Passwort-Eingabe in der Sidebar (Typ "password" verbirgt die Zeichen)
-admin_password = st.sidebar.text_input("Sicherheitspasswort eingeben", type="password")
-
-# Definiere hier dein gewünschtes Admin-Passwort
-ADMIN_PASSWORT_PROV = "DeinSicheresPasswort2026" 
-
-if admin_password == ADMIN_PASSWORT_PROV:
-    st.sidebar.success("🔑 Admin-Modus aktiv!")
-    
-    # Großes Dashboard im Hauptbereich einblenden
-    st.write("---")
-    st.header("🛠️ Forschungs-Dashboard (Admin-Ansicht)")
-    
-    # 1. Metriken abfragen
-    alle_dateien = load_transcript_list()
-    verbleibend_in_urne = st.session_state.urne
-    
-    # Berechne bereits gezogene Dateien
-    gezogene_dateien = [f for f in alle_dateien if f not in verbleibend_in_urne]
-    
-    # Aktuell im Fokus (falls gerade jemand bewertet)
-    aktuell_gezogen = st.session_state.aktuelles_transkript_file
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Gesamtanzahl Nextcloud", len(alle_dateien))
-    with col2:
-        st.metric("Noch frei (in der Urne)", len(verbleibend_in_urne))
-    with col3:
-        st.metric("Bereits zugelost", len(gezogene_dateien))
-        
-    if aktuell_gezogen:
-        st.info(f"👀 **Aktuell in Bearbeitung:** `{aktuell_gezogen}` (Rater: `{st.session_state.participant_id}`)")
-
-    # 2. Detailtabellen anzeigen
-    tab1, tab2 = st.tabs(["📋 Freie Transkripte", "✅ Bereits zugelost"])
-    
-    with tab1:
-        st.subheader("Verfügbare Dateien in der Urne")
-        if verbleibend_in_urne:
-            df_frei = pd.DataFrame(verbleibend_in_urne, columns=["Dateiname (Noch im Topf)"])
-            st.dataframe(df_frei, use_container_width=True)
-        else:
-            st.warning("Die Urne ist komplett leer! Beim nächsten Rater-Start wird sie automatisch neu befüllt.")
-            
-    with tab2:
-        st.subheader("Bereits gezogene / bearbeitete Dateien")
-        if gezogene_dateien:
-            df_gezogen = pd.DataFrame(gezogene_dateien, columns=["Dateiname (Aus Urne entfernt)"])
-            st.dataframe(df_gezogen, use_container_width=True)
-        else:
-            st.info("Bisher wurde in dieser Session noch kein Transkript zugelost.")
-            
-    # 3. Urne manuell zurücksetzen (Hilfreich bei Tests)
-    if st.button("🔄 Urne manuell aus Nextcloud neu befüllen"):
-        st.session_state.urne = load_transcript_list()
-        st.success("Die Urne wurde erfolgreich frisch geladen!")
-        st.rerun()
-
-elif admin_password:
-    st.sidebar.error("❌ Falsches Passwort.")
