@@ -510,3 +510,153 @@ elif st.session_state.step == "evaluation":
                         "x42i_n_ir_1": n_ir_1,   "x42i_n_ir_2": n_ir_2,   "x42i_n_ir_3": n_ir_3,
                         "x42i_n_st_1": n_st_1,   "x42i_n_st_2": n_st_2,   "x42i_n_st_3": n_st_3,
                         "x42i_o_in_1": o_in_1,   "x42i_o_in_2": o_in_2,   "x42i_o_in_3": o_in_3,
+                        "x42i_o_r_1": o_r_1,     "x42i_o_r_2": o_r_2,     "x42i_o_r_3": o_r_3,
+                        "x42i_o_sc_1": o_sc_1,   "x42i_o_sc_2": o_sc_2,   "x42i_o_sc_3": o_sc_3,
+                        "x42i_hh_si_1": hh_si_1, "x42i_hh_si_2": hh_si_2, "x42i_hh_si_3": hh_si_3,
+                        "x42i_hh_fa_1": hh_fa_1, "x42i_hh_fa_2": hh_fa_2, "x42i_hh_fa_3": hh_fa_3,
+                        "x42i_hh_mo_1": hh_mo_1, "x42i_hh_mo_2": hh_mo_2, "x42i_hh_mo_3": hh_mo_3,
+                        
+                        # Aggregierte Globale Werte
+                        "USER_Extraversion": st.session_state.user_scores["Extraversion"],
+                        "USER_Vertraeglichkeit": st.session_state.user_scores["Verträglichkeit"],
+                        "USER_Gewissenhaftigkeit": st.session_state.user_scores["Gewissenhaftigkeit"],
+                        "USER_Neurotizismus": st.session_state.user_scores["Neurotizismus"],
+                        "USER_Offenheit": st.session_state.user_scores["Offenheit"],
+                        
+                        "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
+                        "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
+                        "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
+                        "AI_Neurotizismus": st.session_state.ai_scores.get("Neurotizismus"),
+                        "AI_Offenheit": st.session_state.ai_scores.get("Offenheit"),
+                        "Freitext_Anmerkungen": anmerkungen.replace("\n", " ")
+                    }
+                    
+                    df = pd.DataFrame([ergebnis_daten])
+                    csv_string = df.to_csv(index=False, sep=";")
+                    
+                    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    clean_target_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
+                    clean_rater_name = "".join(x for x in st.session_state.participant_id if x.isalnum() or x in "._-").strip()
+                    dateiname = f"ergebnis_Rater_{clean_rater_name}_Target_{clean_target_name}_{timestamp_str}.csv"
+                    
+                    try:
+                        upload_results_to_nextcloud(dateiname, csv_string)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Fehler beim Speichern: {e}")
+
+    # Feedback-Bildschirm
+    else:
+        st.balloons()
+        st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
+        st.write("Ihre Antworten wurden erfolgreich registriert.")
+        
+        st.write("---")
+        st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
+        st.write("Hier sehen Sie Ihre berechneten Dimensionen im Vergleich zu den globalen KI-Werten:")
+        
+        vergleichs_daten = []
+        gesamte_abweichung = 0
+        
+        for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
+            user_val = st.session_state.user_scores.get(dimension, 3)
+            ai_val = st.session_state.ai_scores.get(dimension, 3)
+            diff = round(abs(user_val - ai_val), 2)
+            gesamte_abweichung += diff
+            
+            if diff <= 0.5:
+                feedback = "🎯 Nahezu identisch!"
+            elif diff <= 1.2:
+                feedback = "👍 Sehr nah dran"
+            else:
+                feedback = "🔄 Andere Wahrnehmung"
+                
+            vergleichs_daten.append({
+                "Big-Five Dimension": dimension,
+                "Ihre Einschätzung (Mittelwert)": user_val,
+                "KI-Einschätzung": ai_val,
+                "Abweichung": diff,
+                "Feedback": feedback
+            })
+            
+        df_vergleich = pd.DataFrame(vergleichs_daten)
+        st.table(df_vergleich)
+        
+        gesamte_abweichung = round(gesamte_abweichung, 2)
+        st.write("")
+        if gesamte_abweichung <= 2.5:
+            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! Ihre berechneten Skalenwerte spiegeln das KI-Profil bemerkenswert präzise wider (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+        elif gesamte_abweichung <= 5.0:
+            st.info(f"📊 **Fazit:** Solide Annäherung. Sie haben die Tendenzen der Person im Kern ähnlich bewertet wie die KI (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+        else:
+            st.info(f"👥 **Fazit:** Spannende Nuancen! Ihre menschliche Fremdbeurteilung weicht punktuell von den mathematischen KI-Scores ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+
+        st.write("---")
+        
+        if st.button("Nächste Teilnahme starten"):
+            st.session_state.step = "welcome"
+            st.session_state.participant_id = ""
+            st.session_state.matrikelnummer = ""
+            st.session_state.alter = ""
+            st.session_state.geschlecht = "Keine Angabe"
+            st.session_state.consent_given = False
+            st.session_state.aktuelles_transkript_file = None
+            st.session_state.vp_code = ""
+            st.session_state.transkript_text = ""
+            st.session_state.ai_scores = {}
+            st.session_state.user_scores = {}
+            st.rerun()
+
+# ==========================================
+# 🛠️ ADMIN-BEREICH (IM HINTERGRUND / SIDEBAR)
+# ==========================================
+st.sidebar.markdown("---")
+st.sidebar.subheader("🔒 Admin-Bereich")
+
+admin_password = st.sidebar.text_input("Sicherheitspasswort eingeben", type="password")
+ADMIN_PASSWORT_PROV = "DeinSicheresPasswort2026" 
+
+if admin_password == ADMIN_PASSWORT_PROV:
+    st.sidebar.success("🔑 Admin-Modus aktiv!")
+    
+    st.write("---")
+    st.header("🛠️ Forschungs-Dashboard (Admin-Ansicht)")
+    
+    # 1. Metriken live abfragen
+    alle_dateien = load_transcript_list()
+    bereits_vergeben = load_already_assigned_transcripts()
+    verbleibend_in_urne, _ = calculate_available_urn()
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Gesamtanzahl Nextcloud", len(alle_dateien))
+    with col2:
+        st.metric("Noch frei (in aktueller Runde)", len(verbleibend_in_urne))
+    with col3:
+        st.metric("Bereits zugeteilt (Historie)", len(bereits_vergeben))
+        
+    aktuell_gezogen = st.session_state.aktuelles_transkript_file
+    if aktuell_gezogen:
+        st.info(f"👀 **Aktuell in Bearbeitung:** `{aktuell_gezogen}` (Rater: `{st.session_state.participant_id}`)")
+
+    # 2. Detailtabellen anzeigen
+    tab1, tab2 = st.tabs(["📋 Freie Transkripte", "✅ Bereits vergeben (Historie)"])
+    
+    with tab1:
+        st.subheader("Verfügbare Dateien im aktuellen Pool")
+        if verbleibend_in_urne:
+            df_frei = pd.DataFrame(verbleibend_in_urne, columns=["Dateiname (Noch im Topf)"])
+            st.dataframe(df_frei, use_container_width=True)
+        else:
+            st.warning("Die Urne ist komplett leer! Beim nächsten Klick startet automatisch eine neue Runde.")
+            
+    with tab2:
+        st.subheader("Ausgelesene Zuweisungen aus Nextcloud-Ergebnissen")
+        if bereits_vergeben:
+            df_gezogen = pd.DataFrame(list(bereits_vergeben), columns=["Dateiname (Bereits bewertet)"])
+            st.dataframe(df_gezogen, use_container_width=True)
+        else:
+            st.info("Bisher wurden laut Nextcloud-Ergebnisordner noch keine Transkripte final bewertet.")
+
+elif admin_password:
+    st.sidebar.error("❌ Falsches Passwort.")
