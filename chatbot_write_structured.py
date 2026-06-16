@@ -347,7 +347,7 @@ def main():
         vp_code_input = st.text_input("VP-Code (Teilnehmer-Code)", value=st.session_state.default_id, placeholder="z.B. 04ERNS24")
         matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
         
-        if st.button("Weiter zur Studienbeschreibung"):
+        if st.button("Weiter zur Beschreibung der Übung"):
             if not vp_code_input.strip() or not matrikel_input.strip():
                 st.error("Bitte füllen Sie beide Felder aus.")
             else:
