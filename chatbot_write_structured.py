@@ -743,12 +743,17 @@ def main():
                     chat_text = "\n".join(clean_messages)
                     
                     # Hier erzwingen wir das Wort JSON im System-Prompt für BEIDE Bedingungen
-                    analysis_system_prompt = (
-                        "Du bist ein erfahrener Persönlichkeitspsychologe. "
-                        "Analysiere den übermittelten Chatverlauf auf Facettenebene der Big Five. "
-                        "Du MUSST deine Antwort als valides JSON-Objekt formatieren, bei dem die Facettennamen "
-                        "die Schlüssel und die Werte Zahlen von 1 bis 5 sind.\n"
-                        f"{TSDI_BESCHREIBUNGEN}"
+                   analysis_system_prompt = (
+                    "Du bist ein erfahrener Persönlichkeitspsychologe. "
+                    "Analysiere den übermittelten Chatverlauf auf Facettenebene der Big Five. "
+                    "Du MUSST deine Antwort als valides JSON-Objekt formatieren. "
+                    "Nutze ALS SCHLÜSSEL EXAKT NUR diese Namen (ohne Kürzel oder Klammern):\n"
+                    "Freundlichkeit, Rücksichtnahme, Hilfsbereitschaft, Fleiß, Organisation, "
+                    "Durchsetzungsfähigkeit, Selbstbewusstsein, Soziale Aktivität, Depression, "
+                    "Reizbarkeit, Nervosität, Intellekt, Reflexion, Wissenschaftliches Interesse, "
+                    "Aufrichtigkeit, Fairness, Bescheidenheit.\n"
+                    "Die Werte müssen Zahlen von 1 bis 5 sein.\n"
+                    f"{TSDI_BESCHREIBUNGEN}"
                     )
                     
                     res = client.chat.completions.create(
