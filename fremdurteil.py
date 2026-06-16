@@ -557,3 +557,71 @@ elif st.session_state.step == "evaluation":
             st.session_state.ai_scores = {}
             st.session_state.user_scores = {}
             st.rerun()
+
+# ==========================================
+# 🛠️ ADMIN-BEREICH (IM HINTERGRUND / SIDEBAR)
+# ==========================================
+st.sidebar.markdown("---")
+st.sidebar.subheader("🔒 Admin-Bereich")
+
+# Passwort-Eingabe in der Sidebar (Typ "password" verbirgt die Zeichen)
+admin_password = st.sidebar.text_input("Sicherheitspasswort eingeben", type="password")
+
+# Definiere hier dein gewünschtes Admin-Passwort
+ADMIN_PASSWORT_PROV = "DeinSicheresPasswort2026" 
+
+if admin_password == ADMIN_PASSWORT_PROV:
+    st.sidebar.success("🔑 Admin-Modus aktiv!")
+    
+    # Großes Dashboard im Hauptbereich einblenden
+    st.write("---")
+    st.header("🛠️ Forschungs-Dashboard (Admin-Ansicht)")
+    
+    # 1. Metriken abfragen
+    alle_dateien = load_transcript_list()
+    verbleibend_in_urne = st.session_state.urne
+    
+    # Berechne bereits gezogene Dateien
+    gezogene_dateien = [f for f in alle_dateien if f not in verbleibend_in_urne]
+    
+    # Aktuell im Fokus (falls gerade jemand bewertet)
+    aktuell_gezogen = st.session_state.aktuelles_transkript_file
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Gesamtanzahl Nextcloud", len(alle_dateien))
+    with col2:
+        st.metric("Noch frei (in der Urne)", len(verbleibend_in_urne))
+    with col3:
+        st.metric("Bereits zugelost", len(gezogene_dateien))
+        
+    if aktuell_gezogen:
+        st.info(f"👀 **Aktuell in Bearbeitung:** `{aktuell_gezogen}` (Rater: `{st.session_state.participant_id}`)")
+
+    # 2. Detailtabellen anzeigen
+    tab1, tab2 = st.tabs(["📋 Freie Transkripte", "✅ Bereits zugelost"])
+    
+    with tab1:
+        st.subheader("Verfügbare Dateien in der Urne")
+        if verbleibend_in_urne:
+            df_frei = pd.DataFrame(verbleibend_in_urne, columns=["Dateiname (Noch im Topf)"])
+            st.dataframe(df_frei, use_container_width=True)
+        else:
+            st.warning("Die Urne ist komplett leer! Beim nächsten Rater-Start wird sie automatisch neu befüllt.")
+            
+    with tab2:
+        st.subheader("Bereits gezogene / bearbeitete Dateien")
+        if gezogene_dateien:
+            df_gezogen = pd.DataFrame(gezogene_dateien, columns=["Dateiname (Aus Urne entfernt)"])
+            st.dataframe(df_gezogen, use_container_width=True)
+        else:
+            st.info("Bisher wurde in dieser Session noch kein Transkript zugelost.")
+            
+    # 3. Urne manuell zurücksetzen (Hilfreich bei Tests)
+    if st.button("🔄 Urne manuell aus Nextcloud neu befüllen"):
+        st.session_state.urne = load_transcript_list()
+        st.success("Die Urne wurde erfolgreich frisch geladen!")
+        st.rerun()
+
+elif admin_password:
+    st.sidebar.error("❌ Falsches Passwort.")
