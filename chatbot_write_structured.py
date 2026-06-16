@@ -728,21 +728,35 @@ def main():
                 try:
                     clean_messages = []
                     for m in st.session_state.messages:
-                        if m["role"] == "system": continue
+                        if m["role"] == "system": 
+                            continue
                         if m["role"] == "assistant":
+                            # Einheitliches Parsen für Write und Speech
                             try:
-                                clean_messages.append(f"Interviewer: {json.loads(m['content']).get('interviewer_text', '')}")
+                                content_data = json.loads(m['content'])
+                                interviewer_text = content_data.get('interviewer_text', '')
+                                clean_messages.append(f"Interviewer: {interviewer_text}")
                             except:
+                                # Falls es mal kein JSON-String war
                                 clean_messages.append(f"Interviewer: {m['content']}")
                         else:
                             clean_messages.append(f"Teilnehmer: {m['content']}")
                             
                     chat_text = "\n".join(clean_messages)
                     
+                    # Hier erzwingen wir das Wort JSON im System-Prompt für BEIDE Bedingungen
+                    analysis_system_prompt = (
+                        "Du bist ein erfahrener Persönlichkeitspsychologe. "
+                        "Analysiere den übermittelten Chatverlauf auf Facettenebene der Big Five. "
+                        "Du MUSST deine Antwort als valides JSON-Objekt formatieren, bei dem die Facettennamen "
+                        "die Schlüssel und die Werte Zahlen von 1 bis 5 sind.\n"
+                        f"{TSDI_BESCHREIBUNGEN}"
+                    )
+                    
                     res = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": f"Du bist ein erfahrener Persönlichkeitspsychologe. Analysiere den Chat auf Facettenebene der Big Five...\n{TSDI_BESCHREIBUNGEN}"},
+                            {"role": "system", "content": analysis_system_prompt},
                             {"role": "user", "content": f"Hier ist der Chatverlauf:\n{chat_text}"}
                         ],
                         response_format={"type": "json_object"}
@@ -751,7 +765,7 @@ def main():
                 except Exception as e:
                     st.error(f"Fehler bei der Analyse: {e}")
                     st.session_state.ai_bfi = {t: 0 for t in ["Freundlichkeit", "Rücksichtnahme", "Hilfsbereitschaft", "Fleiß", "Organisation", "Durchsetzungsfähigkeit", "Selbstbewusstsein", "Soziale Aktivität", "Depression", "Reizbarkeit", "Nervosität", "Intellekt", "Reflexion", "Wissenschaftliches Interesse", "Aufrichtigkeit", "Fairness", "Bescheidenheit"]}
-
+        
         DIMENSION_FACETS = {
             "Ehrlichkeit-Bescheidenheit": ["Aufrichtigkeit", "Fairness", "Bescheidenheit"],
             "Neurotizismus": ["Depression", "Reizbarkeit", "Nervosität"],
