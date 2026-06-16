@@ -120,6 +120,17 @@ if 'participant_id' not in st.session_state:
 if 'matrikelnummer' not in st.session_state:
     st.session_state.matrikelnummer = ""
 
+# Neue Session States für freiwillige demografische Daten
+if 'alter' not in st.session_state:
+    st.session_state.alter = ""
+
+if 'geschlecht' not in st.session_state:
+    st.session_state.geschlecht = "Keine Angabe"
+
+# Session State für Consent-Status
+if 'consent_given' not in st.session_state:
+    st.session_state.consent_given = False
+
 # Falls noch gar keine Urne existiert, holen wir die Liste aus der Nextcloud
 if 'urne' not in st.session_state:
     st.session_state.urne = load_transcript_list()
@@ -127,8 +138,6 @@ if 'urne' not in st.session_state:
 # Falls die Urne im laufenden Betrieb leergespielt wurde, befüllen wir sie neu!
 if len(st.session_state.urne) == 0:
     st.session_state.urne = load_transcript_list()
-    # Falls die Nextcloud wirklich komplett leer ist (z.B. Verbindungsfehler),
-    # fangen wir das hier ab, damit es zu keinem Absturz kommt:
     if not st.session_state.urne:
         st.session_state.urne = []
 
@@ -158,20 +167,29 @@ if st.session_state.step == "welcome":
     * Geben Sie als erstes die Anzahl der Buchstaben des (ersten) Vornamens Ihrer Mutter ein (z.B. 04)
     * Geben Sie als zweites die letzten beiden Buchstaben des Mädchen-(Geburts-)namens der Mutter ein (z.B. ER)
     * Geben Sie als drittes die letzten beiden Buchstaben des (ersten Vornamens) des Vaters ein (z.B. NS)
-    * Geben Sie als viertes den Tag Ihres Geburtstags ein (z.B. 24)
+    * Geben Sie als viertes den Tag Ihrem Geburtstags ein (z.B. 24)
 
     Ein Versuchspersonencode könnte beispielsweise so aussehen: 04ERNS24
     """)
     
-    vp_code_input = st.text_input("VP-Code (Dein Teilnehmer-Code)", placeholder="z.B. 04ERNS24")
-    matrikel_input = st.text_input("Matrikelnummer", placeholder="z.B. 1234567")
+    # Pflichtangaben
+    vp_code_input = st.text_input("VP-Code (Dein Teilnehmer-Code)*", placeholder="z.B. 04ERNS24")
+    matrikel_input = st.text_input("Matrikelnummer*", placeholder="z.B. 1234567")
+    
+    st.write("---")
+    # Freiwillige Angaben
+    st.subheader("Demografische Angaben (Freiwillig)")
+    alter_input = st.text_input("Alter (Optional)", placeholder="z.B. 23")
+    geschlecht_input = st.selectbox("Geschlecht (Optional)", ["Keine Angabe", "Weiblich", "Männlich", "Divers"])
     
     if st.button("Weiter zur Beschreibung", type="primary"):
         if not vp_code_input.strip() or not matrikel_input.strip():
-            st.error("Bitte füllen Sie beide Felder aus.")
+            st.error("Bitte füllen Sie die Pflichtfelder (*) aus.")
         else:
             st.session_state.participant_id = vp_code_input.strip()
             st.session_state.matrikelnummer = matrikel_input.strip()
+            st.session_state.alter = alter_input.strip() if alter_input.strip() else "Keine Angabe"
+            st.session_state.geschlecht = geschlecht_input
             st.session_state.step = "consent"
             st.rerun()
 
@@ -187,14 +205,14 @@ elif st.session_state.step == "consent":
     * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung.
     """)
     
-    consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der Nutzung meiner Daten für Lehr- und Forschungszwecke zu.")
+    # Nicht verpflichtende Checkbox
+    consent_checked = st.checkbox("Ich stimme der Nutzung meiner anonymisierten Daten für zusätzliche Forschungszwecke freiwillig zu.")
     
     if st.button("Übungsblock starten & Transkript zulosen", type="primary"):
-        if consent_checked:
-            st.session_state.step = "evaluation"
-            st.rerun()
-        #else:
-            #st.warning("Bitte stimmen Sie den Datenschutzbestimmungen zu, um fortzufahren.")
+        # Speichert die Entscheidung, blockiert aber nicht mehr das Weitergehen
+        st.session_state.consent_given = consent_checked
+        st.session_state.step = "evaluation"
+        st.rerun()
 
 
 # --- PHASE 3: EVALUATION (LOSEN, LESEN & FRAGEBOGEN) ---
@@ -227,7 +245,6 @@ elif st.session_state.step == "evaluation":
         
         st.subheader("Schritt 2: Transkript lesen")
         
-        # Kontrastreicher HTML-Scroll-Container für das Transkript
         html_transkript = st.session_state.transkript_text.replace("\n", "<br>")
         st.markdown(
             f"""
@@ -362,12 +379,12 @@ elif st.session_state.step == "evaluation":
             hh_si_2 = st.slider("Die Person würde keine Schmeicheleien nutzen, um eine Gehaltserhöhung zu bekommen.", 1, 5, 3, key="x42i15")
             hh_si_3 = st.slider("Wenn die Person von jemandem etwas will, lache sie auch über dessen schlechteste Witze. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i04")
             
-            st.markdown("### 16. Facette: Fairness (HH-Fa)")
+            st.markdown("### 16. Fairness (HH-Fa)")
             hh_fa_1 = st.slider("Die Person würde in Versuchung geraten, Diebesgut zu kaufen, wenn sie knapp bei Kasse wäre. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i31")
             hh_fa_2 = st.slider("Die Person würde niemals Bestechungsgeld annehmen, auch wenn es sehr viel wäre.", 1, 5, 3, key="x42i17")
             hh_fa_3 = st.slider("Wenn die Person wüsste, dass sie niemals erwischt wird, wäre sie bereit, eine Million zu stehlen. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i08")
             
-            st.markdown("### 17. Facette: Bescheidenheit (HH-Mo)")
+            st.markdown("### 17. Bescheidenheit (HH-Mo)")
             hh_mo_1 = st.slider("Die Person will, dass alle wissen, dass sie eine wichtige angesehene Person ist. *(Achtung: Invertiert)*", 1, 5, 3, key="x42i24")
             hh_mo_2 = st.slider("Die Person ist eine ganz normale Person, die nicht besser ist als andere.", 1, 5, 3, key="x42i34")
             hh_mo_3 = st.slider("Die Person will nicht, dass andere Leute sie behandeln, als ob sie ihnen überlegen sei.", 1, 5, 3, key="x42i51")
@@ -380,8 +397,7 @@ elif st.session_state.step == "evaluation":
             if submit_button:
                 with st.spinner("Ihre Antworten werden sicher übertragen..."):
                     
-                    # 1. Invertierte Items umpolen (Wichtig für korrekte psychometrische Mittelwerte!)
-                    # Aus 1 wird 5, aus 2 wird 4, etc. Formel: 6 - Wert
+                    # 1. Invertierte Items umpolen
                     e_sb_rec = ( (6 - e_sb_1) + (6 - e_sb_2) + (6 - e_sb_3) ) / 3
                     hh_si_rec = ( (6 - hh_si_1) + hh_si_2 + (6 - hh_si_3) ) / 3
                     hh_fa_rec = ( (6 - hh_fa_1) + hh_fa_2 + (6 - hh_fa_3) ) / 3
@@ -421,12 +437,14 @@ elif st.session_state.step == "evaluation":
                         "Offenheit": round(user_offenheit, 2)
                     }
                     
-                    # 2. Daten für die CSV strukturieren (Alle 17 Facetten einzeln erfassen!)
-                    # 3. CSV-Datenstruktur zusammenstellen (Alle 51 Items!)
+                    # 3. CSV-Datenstruktur zusammenstellen (Inklusive Alter, Geschlecht und Consent)
                     ergebnis_daten = {
                         "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "Rater_VP_Code": st.session_state.participant_id,      
                         "Rater_Matrikelnummer": st.session_state.matrikelnummer, 
+                        "Rater_Alter": st.session_state.alter,
+                        "Rater_Geschlecht": st.session_state.geschlecht,
+                        "Forschungs_Consent": 1 if st.session_state.consent_given else 0,
                         "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
                         "Bewerteter_Target_VP_Code": st.session_state.vp_code, 
                         
@@ -439,101 +457,4 @@ elif st.session_state.step == "evaluation":
                         "ITEM_x42i42": e_a_1,  "ITEM_x42i35": e_a_2,  "ITEM_x42i03": e_a_3,
                         "ITEM_x42i23": e_sb_1, "ITEM_x42i10": e_sb_2, "ITEM_x42i22": e_sb_3,
                         "ITEM_x42i40": e_so_1, "ITEM_x42i32": e_so_2, "ITEM_x42i20": e_so_3,
-                        "ITEM_x42i09": n_d_1,  "ITEM_x42i19": n_d_2,  "ITEM_x42i37": n_d_3,
-                        "ITEM_x42i11": n_ir_1, "ITEM_x42i06": n_ir_2, "ITEM_x42i07": n_ir_3,
-                        "ITEM_x42i36": n_st_1, "ITEM_x42i45": n_st_2, "ITEM_x42i13": n_st_3,
-                        "ITEM_x42i38": o_in_1, "ITEM_x42i28": o_in_2, "ITEM_x42i33": o_in_3,
-                        "ITEM_x42i21": o_r_1,  "ITEM_x42i50": o_r_2,  "ITEM_x42i41": o_r_3,
-                        "ITEM_x42i01": o_sc_1, "ITEM_x42i16": o_sc_2, "ITEM_x42i25": o_sc_3,
-                        "ITEM_x42i47": hh_si_1,"ITEM_x42i15": hh_si_2,"ITEM_x42i04": hh_si_3,
-                        "ITEM_x42i31": hh_fa_1,"ITEM_x42i17": hh_fa_2,"ITEM_x42i08": hh_fa_3,
-                        "ITEM_x42i24": hh_mo_1,"ITEM_x42i34": hh_mo_2,"ITEM_x42i51": hh_mo_3,
-                        
-                        # Aggregierte Globale Werte
-                        "USER_Extraversion": st.session_state.user_scores["Extraversion"],
-                        "USER_Vertraeglichkeit": st.session_state.user_scores["Verträglichkeit"],
-                        "USER_Gewissenhaftigkeit": st.session_state.user_scores["Gewissenhaftigkeit"],
-                        "USER_Neurotizismus": st.session_state.user_scores["Neurotizismus"],
-                        "USER_Offenheit": st.session_state.user_scores["Offenheit"],
-                        
-                        "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
-                        "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
-                        "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
-                        "AI_Neurotizismus": st.session_state.ai_scores.get("Neurotizismus"),
-                        "AI_Offenheit": st.session_state.ai_scores.get("Offenheit"),
-                        "Freitext_Anmerkungen": anmerkungen.replace("\n", " ")
-                    }
-                    
-                    df = pd.DataFrame([ergebnis_daten])
-                    csv_string = df.to_csv(index=False, sep=";")
-                    
-                    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    clean_target_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
-                    clean_rater_name = "".join(x for x in st.session_state.participant_id if x.isalnum() or x in "._-").strip()
-                    dateiname = f"ergebnis_Rater_{clean_rater_name}_Target_{clean_target_name}_{timestamp_str}.csv"
-                    
-                    try:
-                        upload_results_to_nextcloud(dateiname, csv_string)
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Fehler beim Speichern: {e}")
-
-    # Unterphase C: Abgesendet -> Feedback-Bildschirm anzeigen
-    else:
-        st.balloons()
-        st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
-        st.write("Ihre Antworten wurden erfolgreich registriert.")
-        
-        st.write("---")
-        st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
-        st.write("Hier sehen Sie Ihre berechneten Dimensionen im Vergleich zu den globalen KI-Werten:")
-        
-        vergleichs_daten = []
-        gesamte_abweichung = 0
-        
-        for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
-            user_val = st.session_state.user_scores.get(dimension, 3)
-            ai_val = st.session_state.ai_scores.get(dimension, 3)
-            diff = round(abs(user_val - ai_val), 2)
-            gesamte_abweichung += diff
-            
-            if diff <= 0.5:
-                feedback = "🎯 Nahezu identisch!"
-            elif diff <= 1.2:
-                feedback = "👍 Sehr nah dran"
-            else:
-                feedback = "🔄 Andere Wahrnehmung"
-                
-            vergleichs_daten.append({
-                "Big-Five Dimension": dimension,
-                "Deine Einschätzung (Mittelwert)": user_val,
-                "KI-Einschätzung": ai_val,
-                "Abweichung": diff,
-                "Feedback": feedback
-            })
-            
-        df_vergleich = pd.DataFrame(vergleichs_daten)
-        st.table(df_vergleich)
-        
-        # Fazit berechnen
-        gesamte_abweichung = round(gesamte_abweichung, 2)
-        st.write("")
-        if gesamte_abweichung <= 2.5:
-            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! Deine berechneten Skalenwerte spiegeln das KI-Profil bemerkenswert präzise wider (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-        elif gesamte_abweichung <= 5.0:
-            st.info(f"📊 **Fazit:** Solide Annäherung. Du hast die Tendenzen der Person im Kern ähnlich bewertet wie die KI (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-        else:
-            st.info(f"👥 **Fazit:** Spannende Nuancen! Deine menschliche Fremdbeurteilung weicht punktuell von den mathematischen KI-Scores ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-
-        st.write("---")
-        
-        if st.button("Nächste Teilnahme starten"):
-            st.session_state.step = "welcome"
-            st.session_state.participant_id = ""
-            st.session_state.matrikelnummer = ""
-            st.session_state.aktuelles_transkript_file = None
-            st.session_state.vp_code = ""
-            st.session_state.transkript_text = ""
-            st.session_state.ai_scores = {}
-            st.session_state.user_scores = {}
-            st.rerun()
+                        "ITEM_x42i09": n_d_1,  "ITEM_x42i19": n_d_2,  "
