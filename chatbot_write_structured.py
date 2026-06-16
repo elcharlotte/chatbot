@@ -361,7 +361,21 @@ def main():
         st.title("Informationen zum Ablauf & Datenschutz 📝")
         st.markdown("""
         ### Beschreibung & Zweck 
+
         Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
+
+        * **Verpflichtung:** Die Teilnahme ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
+
+        * **Ehrlichkeit:** Keine Pflicht zur Wahrheit, aber fiktive Angaben verfälschen die Auswertung.
+
+        * **Ethikvotum:** Bewilligt unter **[EG-IIP-2026049]**.
+
+        ### Datenschutz
+
+        * **OpenAI API:** Daten werden verschlüsselt übertragen, nicht zum Training genutzt und nach 30 Tagen gelöscht.
+
+        * **Speicherung:** Daten landen auf der sicheren Nextcloud der Universität Ulm.
+        
         """)
         
         consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der Nutzung und Speicherung meiner Chatdaten zu Forschungs- und Lehrzwecken zu.")
