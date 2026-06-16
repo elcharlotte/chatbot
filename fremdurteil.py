@@ -27,57 +27,13 @@ if not base_url.endswith(f"files/{NC_USER}/"):
 NC_URL = base_url
 AUTH = HTTPBasicAuth(NC_USER, NC_PASS)
 
-# 2. UTILITY FUNKTIONEN (Nextcloud-Interaktion)
-def load_transcript_list():
-    """
-    Liest alle .json Dateien via WebDAV PROPFIND aus der Nextcloud.
-    Gibt die finalen Versionen (ohne '_preliminary') zurück, sofern für diese
-    auch eine '_preliminary.json' Vorab-Version im selben Ordner existiert.
-    """
-    url = f"{NC_URL}{TRANSKRIPT_ORDNER}/"
-    headers = {"Depth": "1"}
-    try:
-        response = requests.request("PROPFIND", url, auth=AUTH, headers=headers)
-        if response.status_code not in [207, 200]:
-            st.error(f"Nextcloud-Fehler: Status {response.status_code}. Ordnerpfad korrekt?")
-            return []
-            
-        root = ET.fromstring(response.content)
-        
-        # 1. Schritt: Alle Dateinamen aus dem Ordner in einem Set sammeln
-        all_files = set()
-        for response_elem in root.findall(".//{DAV:}response"):
-            href_elem = response_elem.find("{DAV:}href")
-            if href_elem is not None:
-                href = href_elem.text
-                filename = href.split("/")[-1]
-                if filename.endswith(".json"):
-                    all_files.add(filename)
-        
-        # 2. Schritt: Nur die finalen Versionen filtern, die eine Vorab-Version besitzen
-        filtered_files = []
-        for filename in all_files:
-            if filename.endswith(".json") and not filename.endswith("_preliminary.json"):
-                preliminary_version_name = filename.replace(".json", "_preliminary.json")
-                if preliminary_version_name in all_files:
-                    filtered_files.append(filename)
-         
-        return filtered_files
 
-    except Exception as e:
-        st.error(f"Verbindungsfehler zur Nextcloud: {e}")
-        return []
-
-def load_already_assigned_transcripts():
-    """
-    Liest den Ergebnisordner aus und prüft anhand der Dateinamen, welche Targets
-    bereits vergeben oder in Bearbeitung (preliminary) sind.
-    Namensschema: rater_VPCODE_MATRIKEL_target_VPCODE_MATRIKEL[_preliminary][_TIMESTAMP].csv
-    Es wird alles nach '_target_' extrahiert und mit .json gematcht.
-    """
-    url = f"{NC_URL}{ERGEBNIS_ORDNER}/"
+# 2. UTILITY FUNKTIONEN (Nextcloud-Interaktion & Filterung)
+def get_all_files_from_nextcloud_folder(folder_path):
+    """Hilfsfunktion: Holt alle Dateinamen aus einem spezifischen Nextcloud-Ordner via WebDAV."""
+    url = f"{NC_URL}{folder_path}/"
     headers = {"Depth": "1"}
-    assigned = set()
+    files = set()
     try:
         response = requests.request("PROPFIND", url, auth=AUTH, headers=headers)
         if response.status_code in [207, 200]:
@@ -85,43 +41,79 @@ def load_already_assigned_transcripts():
             for response_elem in root.findall(".//{DAV:}response"):
                 href_elem = response_elem.find("{DAV:}href")
                 if href_elem is not None:
-                    filename = href_elem.text.split("/")[-1].lower()
-                    
-                    # Filtere relevante Ergebnisdateien
-                    if "rater_" in filename and "_target_" in filename and filename.endswith(".csv"):
-                        try:
-                            # Isoliere den Teil nach "_target_"
-                            target_part = filename.split("_target_")[1]
-                            
-                            # Entferne Suffixe wie _preliminary oder Zeitstempel
-                            target_part = target_part.replace("_preliminary", "")
-                            if "_" in target_part:
-                                # Falls ein Zeitstempel am Ende hängt (z.B. _20260616_143000.csv)
-                                target_id = target_part.split("_")[0]
-                            else:
-                                target_id = target_part.replace(".csv", "")
-                            
-                            # Rekonstruiere den ursprünglichen Dateinamen der Urne (.json)
-                            transcript_file = f"{target_id}.json"
-                            assigned.add(transcript_file)
-                        except Exception:
-                            pass
-        return assigned
-    except Exception:
-        return set()
+                    filename = href_elem.text.split("/")[-1]
+                    if filename:  # Verzeichniseintrag selbst ignorieren
+                        files.add(filename)
+    except Exception as e:
+        st.error(f"Fehler beim Lesen des Ordners {folder_path}: {e}")
+    return files
+
+
+def analyze_nextcloud_data():
+    """
+    Kernelement für das Debugging und die Urnenberechnung.
+    Analysiert beide Ordner parallel und ordnet IDs zu.
+    """
+    # 1. Dateien aus Forschungsdaten laden
+    transcript_files = get_all_files_from_nextcloud_folder(TRANSKRIPT_ORDNER)
+    
+    # Valide Urnen-Dateien bestimmen (nicht preliminary, aber vorab-Version existiert)
+    urne_dateien = []
+    for f in transcript_files:
+        if f.endswith(".json") and not f.endswith("_preliminary.json"):
+            prelim_version = f.replace(".json", "_preliminary.json")
+            if prelim_version in transcript_files:
+                urne_dateien.append(f)
+                
+    # 2. Dateien aus Fremdurteil laden
+    result_files = get_all_files_from_nextcloud_folder(ERGEBNIS_ORDNER)
+    
+    zugelost_in_bearbeitung = []
+    bereits_bewertet = []
+    
+    # Extraktions-Logik basierend auf dem '_target_'-Muster
+    for f in result_files:
+        if "rater_" in f.lower() and "_target_" in f.lower() and f.endswith(".csv"):
+            try:
+                # Isoliere den Teil nach "_target_"
+                target_part = f.split("_target_")[1]
+                
+                if target_part.endswith("_preliminary.csv"):
+                    # Fall: In Bearbeitung / Zugelost
+                    target_id = target_part.replace("_preliminary.csv", "")
+                    transcript_name = f"{target_id}.json"
+                    zugelost_in_bearbeitung.append(transcript_name)
+                else:
+                    # Fall: Final Bewertet
+                    target_id = target_part.replace(".csv", "")
+                    transcript_name = f"{target_id}.json"
+                    bereits_bewertet.append(transcript_name)
+            except Exception:
+                pass
+
+    return {
+        "urne_total": urne_dateien,
+        "zugelost_preliminary": list(set(zugelost_in_bearbeitung)),
+        "bereits_bewertet_final": list(set(bereits_bewertet))
+    }
+
 
 def calculate_available_urn():
-    """Berechnet die aktuell verfügbare Urne."""
-    alle_transkripte = load_transcript_list()
-    bereits_vergeben = load_already_assigned_transcripts()
+    """Berechnet die aktuell frei verfügbaren Transkripte für Rater."""
+    data = analyze_nextcloud_data()
+    alle_transkripte = data["urne_total"]
     
-    # Filtere belegte Transkripte (sowohl finale als auch preliminary)
-    verfuegbar = [t for t in alle_transkripte if t.lower() not in [b.lower() for b in bereits_vergeben]]
+    # Blockiert ist alles, was entweder schon bewertet wurde ODER aktuell im Status preliminary ist
+    blockiert = set([t.lower() for t in data["zugelost_preliminary"] + data["bereits_bewertet_final"]])
     
+    verfuegbar = [t for t in alle_transkripte if t.lower() not in blockiert]
+    
+    # Falls alle vergeben sind, fangen wir von vorne an (Fallback)
     if alle_transkripte and not verfuegbar:
         return alle_transkripte, True
         
     return verfuegbar, False
+
 
 def read_and_format_json_transcript(filename):
     """Lädt die JSON-Datei, extrahiert ID, Chat und das KI-Assessment."""
@@ -165,6 +157,7 @@ def read_and_format_json_transcript(filename):
     full_transcript_text = "\n".join(formatted_chat)
     return vp_code, full_transcript_text, ai_assessment
 
+
 def upload_results_to_nextcloud(filename, csv_data):
     """Lädt eine CSV-Ergebnisdatei via HTTP PUT in die Nextcloud hoch."""
     url = f"{NC_URL}{ERGEBNIS_ORDNER}/{filename}"
@@ -172,6 +165,7 @@ def upload_results_to_nextcloud(filename, csv_data):
     response = requests.put(url, data=csv_data.encode('utf-8'), auth=AUTH, headers=headers)
     if response.status_code not in [201, 204]:
         raise Exception(f"Upload fehlgeschlagen mit Status {response.status_code}")
+
 
 def delete_preliminary_file(filename):
     """Löscht die temporäre Vorab-Datei via HTTP DELETE, wenn das Formular final gesendet wurde."""
@@ -225,7 +219,6 @@ if st.session_state.step == "welcome":
         if not vp_code_input.strip() or not matrikel_input.strip():
             st.error("Bitte füllen Sie die Pflichtfelder (*) aus.")
         else:
-            # Bereinige die IDs direkt für Dateinamen (Alphanumerisch)
             st.session_state.participant_id = "".join(x for x in vp_code_input.strip() if x.isalnum())
             st.session_state.matrikelnummer = "".join(x for x in matrikel_input.strip() if x.isalnum())
             st.session_state.alter = alter_input.strip() if alter_input.strip() else "Keine Angabe"
@@ -276,21 +269,15 @@ elif st.session_state.step == "evaluation":
                     try:
                         vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
                         
-                        # Generiere Dateinamen-Struktur laut Vorgabe
                         rater_string = f"rater_{st.session_state.participant_id}_{st.session_state.matrikelnummer}"
-                        
-                        # Das Target-Transkript-File (z.B. "vp_12345.json") extrahieren ohne Endung
                         target_clean_id = gezogenes_file.replace(".json", "")
                         target_string = f"target_{target_clean_id}"
                         
-                        # 1) PRELIMINARY DATEINAME (Sofort hochladen um zu blockieren)
+                        # PRELIMINARY DATEINAME (Sofort hochladen um zu blockieren)
                         prelim_filename = f"{rater_string}_{target_string}_preliminary.csv"
-                        
-                        # Ein minimaler Platzhalter-String für die Vorab-Datei
                         placeholder_csv = "Status;Zeitstempel\npreliminary;" + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         upload_results_to_nextcloud(prelim_filename, placeholder_csv)
                         
-                        # Session States belegen
                         st.session_state.preliminary_filename = prelim_filename
                         st.session_state.aktuelles_transkript_file = gezogenes_file
                         st.session_state.vp_code = vp_code
@@ -321,9 +308,6 @@ elif st.session_state.step == "evaluation":
         st.subheader("Schritt 3: TSDI-Persönlichkeitseinschätzung")
         
         with st.form("fragebogen_form"):
-            # ==========================================
-            # 🤝 DIMENSION VERTRÄGLICHKEIT (A)
-            # ==========================================
             st.markdown("## 🤝 Dimension Verträglichkeit (A)")
             st.markdown("### 1. Facette: Freundlichkeit (A-Fr)")
             a_fr_1 = st.slider("Die Person gilt als jemand, mit dem man einfach gut auskommt.", 1, 5, 3, key="x42i29")
@@ -340,9 +324,6 @@ elif st.session_state.step == "evaluation":
             a_h_2 = st.slider("Die Person hilft anderen Leuten gerne, auch wenn nichts für sie dabei herausspringt.", 1, 5, 3, key="x42i48")
             a_h_3 = st.slider("Die Person ist immer großzügig, wenn es darum geht, anderen zu helfen.", 1, 5, 3, key="x42i46")
             
-            # ==========================================
-            # 🎯 DIMENSION GEWISSENHAFTIGKEIT (C)
-            # ==========================================
             st.markdown("## 🎯 Dimension Gewissenhaftigkeit (C)")
             st.markdown("### 4. Facette: Fleiß (C-Hw)")
             c_hw_1 = st.slider("Wenn sich die Person zu etwas verpflichtet, führt sie es immer zu Ende aus.", 1, 5, 3, key="x42i05")
@@ -354,9 +335,6 @@ elif st.session_state.step == "evaluation":
             c_o_2 = st.slider("Die Person versucht einen Plan für Aufgaben zu entwickeln und hält sich daran.", 1, 5, 3, key="x42i49")
             c_o_3 = st.slider("Die Person versucht vollständig vorbereitet zu sein, bevor sie eine Aufgabe anpackt.", 1, 5, 3, key="x42i39")
             
-            # ==========================================
-            # 📢 DIMENSION EXTRAVERSION (E)
-            # ==========================================
             st.markdown("## 📢 Dimension Extraversion (E)")
             st.markdown("### 6. Facette: Durchsetzungsfähigkeit (E-A)")
             e_a_1 = st.slider("Die Person spricht lauter, wenn sie meint, einen Beitrag liefern zu können.", 1, 5, 3, key="x42i42")
@@ -373,9 +351,6 @@ elif st.session_state.step == "evaluation":
             e_so_2 = st.slider("Die Person gibt sich große Mühe Leute kennenzulernen.", 1, 5, 3, key="x42i32")
             e_so_3 = st.slider("Die Person mag Partys auf denen viele Leute sind.", 1, 5, 3, key="x42i20")
             
-            # ==========================================
-            # 🛡️ DIMENSION NEUROTIZISMUS (N)
-            # ==========================================
             st.markdown("## 🛡️ Dimension Neurotizismus (N)")
             st.markdown("### 9. Facette: Depression (N-D)")
             n_d_1 = st.slider("Es gibt Zeiten, in denen sich die Person selbst bedauert.", 1, 5, 3, key="x42i09")
@@ -392,9 +367,6 @@ elif st.session_state.step == "evaluation":
             n_st_2 = st.slider("Wenn die Person unter großem Stress steht, ist sie oft kurz davor zusammenzubrechen.", 1, 5, 3, key="x42i45")
             n_st_3 = st.slider("Die Person ist oft zittrig und angespannt.", 1, 5, 3, key="x42i13")
             
-            # ==========================================
-            # 💡 DIMENSION OFFENHEIT (O)
-            # ==========================================
             st.markdown("## 💡 Dimension Offenheit (O)")
             st.markdown("### 12. Facette: Intellekt (O-In)")
             o_in_1 = st.slider("Die Person mag es, intellektuelle Diskussionen mit Freunden zu führen.", 1, 5, 3, key="x42i38")
@@ -411,9 +383,6 @@ elif st.session_state.step == "evaluation":
             o_sc_2 = st.slider("Die Person denkt oft über die Wunder der Natur nach.", 1, 5, 3, key="x42i16")
             o_sc_3 = st.slider("Die Evolutionstheorie fasziniert die Person.", 1, 5, 3, key="x42i25")
             
-            # ==========================================
-            # 💎 DIMENSION EHRLICHKEIT-BESCHEIDENHEIT (HH)
-            # ==========================================
             st.markdown("## 💎 Dimension Ehrlichkeit-Bescheidenheit (HH)")
             st.markdown("### 15. Facette: Aufrichtigkeit (HH-Si)")
             hh_si_1 = st.slider("Wenn die Person von jemandem, den sie nicht mag, etwas will, verhält sie sich sehr nett. (Invertiert)", 1, 5, 3, key="x42i47")
@@ -437,14 +406,11 @@ elif st.session_state.step == "evaluation":
                  
             if submit_button:
                 with st.spinner("Ihre Antworten werden sicher übertragen..."):
-                    
-                    # 1. Invertierte Items umpolen
                     e_sb_rec = ( (6 - e_sb_1) + (6 - e_sb_2) + (6 - e_sb_3) ) / 3
                     hh_si_rec = ( (6 - hh_si_1) + hh_si_2 + (6 - hh_si_3) ) / 3
                     hh_fa_rec = ( (6 - hh_fa_1) + hh_fa_2 + (6 - hh_fa_3) ) / 3
                     hh_mo_rec = ( (6 - hh_mo_1) + hh_mo_2 + hh_mo_3 ) / 3
                     
-                    # Normal laufende Facetten aggregieren
                     facette_a_fr = (a_fr_1 + a_fr_2 + a_fr_3) / 3
                     facette_a_co = (a_co_1 + a_co_2 + a_co_3) / 3
                     facette_a_h  = (a_h_1 + a_h_2 + a_h_3) / 3
@@ -459,7 +425,6 @@ elif st.session_state.step == "evaluation":
                     facette_o_r  = (o_r_1 + o_r_2 + o_r_3) / 3
                     facette_o_sc = (o_sc_1 + o_sc_2 + o_sc_3) / 3
                     
-                    # 2. Globale Dimensionen berechnen
                     user_extraversion = (facette_e_a + e_sb_rec + facette_e_so) / 3
                     user_vertraeglichkeit = (facette_a_fr + facette_a_co + facette_a_h) / 3
                     user_gewissenhaftigkeit = (facette_c_hw + facette_c_o) / 2
@@ -474,7 +439,6 @@ elif st.session_state.step == "evaluation":
                         "Offenheit": round(user_offenheit, 2)
                     }
                     
-                    # 3. CSV-Datenstruktur zusammenstellen
                     ergebnis_daten = {
                         "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "Rater_VP_Code": st.session_state.participant_id,      
@@ -485,7 +449,6 @@ elif st.session_state.step == "evaluation":
                         "Zugeordneter_Transkript_File": st.session_state.aktuelles_transkript_file,
                         "Bewerteter_Target_VP_Code": st.session_state.vp_code, 
                         
-                        # Rohdaten der Items
                         "x42i_a_fr_1": a_fr_1,   "x42i_a_fr_2": a_fr_2,   "x42i_a_fr_3": a_fr_3,
                         "x42i_a_co_1": a_co_1,   "x42i_a_co_2": a_co_2,   "x42i_a_co_3": a_co_3,
                         "x42i_a_h_1": a_h_1,     "x42i_a_h_2": a_h_2,     "x42i_a_h_3": a_h_3,
@@ -520,8 +483,6 @@ elif st.session_state.step == "evaluation":
                     df = pd.DataFrame([ergebnis_daten])
                     csv_string = df.to_csv(index=False, sep=";")
                     
-                    # 2) FINALE DATEI HOCHLADEN (Laut neuem Schema)
-                    # Struktur: rater_VPCODE_MATRIKEL_target_TARGETID.csv
                     rater_part = f"rater_{st.session_state.participant_id}_{st.session_state.matrikelnummer}"
                     target_clean_id = st.session_state.aktuelles_transkript_file.replace(".json", "")
                     target_part = f"target_{target_clean_id}"
@@ -529,13 +490,9 @@ elif st.session_state.step == "evaluation":
                     finaler_dateiname = f"{rater_part}_{target_part}.csv"
                     
                     try:
-                        # Finale Datei hochladen
                         upload_results_to_nextcloud(finaler_dateiname, csv_string)
-                        
-                        # Die temporäre 'preliminary'-Datei löschen
                         if st.session_state.preliminary_filename:
                             delete_preliminary_file(st.session_state.preliminary_filename)
-                            
                         st.rerun()
                     except Exception as e:
                         st.error(f"Fehler beim Speichern: {e}")
@@ -545,7 +502,6 @@ elif st.session_state.step == "evaluation":
         st.balloons()
         st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
         st.write("Ihre Antworten wurden erfolgreich registriert.")
-        
         st.write("---")
         st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
         
@@ -584,7 +540,6 @@ elif st.session_state.step == "evaluation":
 
         st.write("---")
         if st.button("Nächste Teilnahme starten"):
-            # Setze relevanten State zurück
             st.session_state.step = "welcome"
             st.session_state.participant_id = ""
             st.session_state.matrikelnummer = ""
@@ -600,7 +555,7 @@ elif st.session_state.step == "evaluation":
             st.rerun()
 
 # ==========================================
-# 🛠️ ADMIN-BEREICH (IM HINTERGRUND / SIDEBAR)
+# 🛠️ ADMIN-BEREICH & DEBUGGING (SIDEBAR & MAIN VIEW)
 # ==========================================
 st.sidebar.markdown("---")
 st.sidebar.subheader("🔒 Admin-Bereich")
@@ -612,34 +567,65 @@ if admin_password == ADMIN_PASSWORT_PROV:
     st.sidebar.success("🔑 Admin-Modus aktiv!")
     
     st.write("---")
-    st.header("🛠️ Forschungs-Dashboard (Admin-Ansicht)")
+    st.header("🛠️ Forschungs-Dashboard (Admin & Debugging View)")
     
-    alle_dateien = load_transcript_list()
-    bereits_vergeben = load_already_assigned_transcripts()
-    verbleibend_in_urne, _ = calculate_available_urn()
+    # Live-Analyse der Nextcloud-Ordner aufrufen
+    with st.spinner("Lese aktuelle Ordnerstrukturen aus Nextcloud..."):
+        nc_analysis = analyze_nextcloud_data()
     
-    col1, col2, col3 = st.columns(3)
-    with col1: st.metric("Gesamtanzahl Nextcloud", len(alle_dateien))
-    with col2: st.metric("Noch frei (in aktueller Runde)", len(verbleibend_in_urne))
-    with col3: st.metric("Bereits zugeteilt (Historie/Prelim)", len(bereits_vergeben))
+    # Metriken berechnen
+    total_urn = nc_analysis["urne_total"]
+    prelim_assigned = nc_analysis["zugelost_preliminary"]
+    final_evaluated = nc_analysis["bereits_bewertet_final"]
+    
+    # Berechnung der tatsächlich noch verfügbaren Pool-Größe
+    blockierte_ids = set([t.lower() for t in prelim_assigned + final_evaluated])
+    pool_verbleibend = [t for t in total_urn if t.lower() not in blockierte_ids]
+    
+    # Dashboard-Karten visualisieren
+    col1, col2, col3, col4 = st.columns(4)
+    with col1: st.metric("In Urne (Gesamt)", len(total_urn))
+    with col2: st.metric("Zugelost (In Bearbeitung)", len(prelim_assigned))
+    with col3: st.metric("Bereits bewertet (Final)", len(final_evaluated))
+    with col4: st.metric("Aktuell frei für Ziehung", len(pool_verbleibend))
         
-    aktuellt_gezogen = st.session_state.aktuelles_transkript_file
+    aktuell_gezogen = st.session_state.aktuelles_transkript_file
     if aktuell_gezogen:
-        st.info(f"👀 **Aktuell in Bearbeitung:** `{aktuellt_gezogen}`")
+        st.info(f"👀 **Dieser Browser testet aktuell:** `{aktuell_gezogen}`")
 
-    tab1, tab2 = st.tabs(["📋 Freie Transkripte", "✅ Bereits vergeben / Blockiert"])
+    # Erstellung der drei angeforderten Debugging-Listen
+    tab1, tab2, tab3 = st.tabs([
+        "📋 1. Dateien in der Urne", 
+        "⏳ 2. Zugelost (Preliminary)", 
+        "✅ 3. Bewertet (Final)"
+    ])
+    
     with tab1:
-        st.subheader("Verfügbare Dateien im aktuellen Pool")
-        if verbleibend_in_urne:
-            st.dataframe(pd.DataFrame(verbleibend_in_urne, columns=["Dateiname"]), use_container_width=True)
+        st.subheader("Dateien in der Urne (Forschungsdaten)")
+        st.write("Alle validen `.json`-Transkripte (Exklusive reiner Vorab-Versionen):")
+        if total_urn:
+            df_urn = pd.DataFrame(sorted(total_urn), columns=["Dateiname im Nextcloud-Ordner"])
+            st.dataframe(df_urn, use_container_width=True)
         else:
-            st.warning("Die Urne ist komplett leer!")
+            st.warning("Keine passenden JSON-Paare im Forschungsdaten-Ordner gefunden.")
+            
     with tab2:
-        st.subheader("Ausgelesene Zuweisungen")
-        if bereits_vergeben:
-            st.dataframe(pd.DataFrame(list(bereits_vergeben), columns=["Gezogene Targets (.json)"]), use_container_width=True)
+        st.subheader("Zugelost / Aktuell in Bearbeitung")
+        st.write("Erkannt aus `fremdurteil/` anhand des Suffixes `_preliminary.csv` nach dem `_target_`-Block:")
+        if prelim_assigned:
+            df_prelim = pd.DataFrame(sorted(prelim_assigned), columns=["Gezogene Target-ID (.json Äquivalent)"])
+            st.dataframe(df_prelim, use_container_width=True)
         else:
-            st.info("Bisher wurden keine Transkripte gezogen.")
+            st.info("Aktuell ist kein Transkript blockiert oder in Bearbeitung.")
+            
+    with tab3:
+        st.subheader("Bereits final bewertete Transkripte")
+        st.write("Erkannt aus `fremdurteil/` anhand finaler `.csv`-Dateien (ohne preliminary) nach dem `_target_`-Block:")
+        if final_evaluated:
+            df_final = pd.DataFrame(sorted(final_evaluated), columns=["Bewertete Target-ID (.json Äquivalent)"])
+            st.dataframe(df_final, use_container_width=True)
+        else:
+            st.info("Bisher wurden keine finalen Bewertungen abgegeben.")
 
 elif admin_password:
     st.sidebar.error("❌ Falsches Passwort.")
