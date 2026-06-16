@@ -187,14 +187,14 @@ elif st.session_state.step == "consent":
     * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung.
     """)
     
-    consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der Nutzung zu.")
+    consent_checked = st.checkbox("Ich habe die oben genannten Informationen gelesen und stimme der Nutzung meiner Daten für Lehr- und Forschungszwecke zu.")
     
     if st.button("Übungsblock starten & Transkript zulosen", type="primary"):
         if consent_checked:
             st.session_state.step = "evaluation"
             st.rerun()
-        else:
-            st.warning("Bitte stimmen Sie den Datenschutzbestimmungen zu, um fortzufahren.")
+        #else:
+            #st.warning("Bitte stimmen Sie den Datenschutzbestimmungen zu, um fortzufahren.")
 
 
 # --- PHASE 3: EVALUATION (LOSEN, LESEN & FRAGEBOGEN) ---
