@@ -785,7 +785,7 @@ def main():
             st.session_state.step = "ux_survey2"
             st.rerun()
 
-    # --- PHASE 6: UX Fragebogen Auswertung ---
+# --- PHASE 6: UX Fragebogen Auswertung ---
     elif st.session_state.step == "ux_survey2":
         st.title("Wie war die Auswertung? 📋")
         st.divider()
@@ -793,12 +793,21 @@ def main():
         with st.form("ux_form_results"):
             q13 = st.slider("Ich habe insgesamt wahrheitsgemäß gegenüber dem KI-Chatbot geantwortet. ", 1, 5, 3)
             q14 = st.slider("Die Einschätzung der KI passt weitestgehend mit meiner eigenen Wahrnehmung zusammen.", 1, 5, 3)
+            
+            # --- NEU: Offenes Kommentarfeld innerhalb des Formulars ---
+            kommentar_ki = st.text_area(
+                "Haben Sie Kommentare zu dem KI-Interview?",
+                placeholder="Ihr Feedback, Anmerkungen oder Kritik...",
+                max_chars=1000
+            )
         
             submitted = st.form_submit_button("Übungsblock abschließen!")
             if submitted:
+                # Hier fügen wir den Kommentar der Datenstruktur hinzu
                 st.session_state.ux_responses_results = {
                     "q13_wahrheit": q13,
-                    "q14_passung": q14
+                    "q14_passung": q14,
+                    "kommentar_ki_interview": kommentar_ki  # <-- Wird mit abgespeichert
                 }
 
                 experiment_end_time = time.time()
@@ -808,7 +817,7 @@ def main():
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
                     "ux_responses_interview": st.session_state.get("ux_responses_interview", {}),
-                    "ux_responses_results": st.session_state.ux_responses_results,
+                    "ux_responses_results": st.session_state.ux_responses_results, # Enthält nun auch das Kommentarfeld
                     "ai_assessment": st.session_state.ai_bfi,
                     "chat": st.session_state.messages,
                     "timing": {
