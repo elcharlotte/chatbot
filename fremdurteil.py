@@ -425,7 +425,7 @@ elif st.session_state.step == "evaluation":
                     # 2. Globale Dimensionen berechnen
                     user_extraversion = (facette_e_a + e_sb_rec + facette_e_so) / 3
                     user_vertraeglichkeit = (facette_a_fr + facette_a_co + facette_a_h) / 3
-                    user_gewissenhaftigkeit = (facette_c_hw + facette_c_o) / 3
+                    user_gewissenhaftigkeit = (facette_c_hw + facette_c_o) / 2
                     user_neurotizismus = (facette_n_d + facette_n_ir + facette_n_st) / 3
                     user_offenheit = (facette_o_in + facette_o_r + facette_o_sc) / 3
                     
@@ -524,7 +524,7 @@ elif st.session_state.step == "evaluation":
                 
             vergleichs_daten.append({
                 "Big-Five Dimension": dimension,
-                "Deine Einschätzung (Mittelwert)": user_val,
+                "Ihre Einschätzung (Mittelwert)": user_val,
                 "KI-Einschätzung": ai_val,
                 "Abweichung": diff,
                 "Feedback": feedback
@@ -536,11 +536,11 @@ elif st.session_state.step == "evaluation":
         gesamte_abweichung = round(gesamte_abweichung, 2)
         st.write("")
         if gesamte_abweichung <= 2.5:
-            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! Deine berechneten Skalenwerte spiegeln das KI-Profil bemerkenswert präzise wider (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! Ihre berechneten Skalenwerte spiegeln das KI-Profil bemerkenswert präzise wider (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
         elif gesamte_abweichung <= 5.0:
-            st.info(f"📊 **Fazit:** Solide Annäherung. Du hast die Tendenzen der Person im Kern ähnlich bewertet wie die KI (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            st.info(f"📊 **Fazit:** Solide Annäherung. Sie haben die Tendenzen der Person im Kern ähnlich bewertet wie die KI (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
         else:
-            st.info(f"👥 **Fazit:** Spannende Nuancen! Deine menschliche Fremdbeurteilung weicht punktuell von den mathematischen KI-Scores ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            st.info(f"👥 **Fazit:** Spannende Nuancen! Ihre menschliche Fremdbeurteilung weicht punktuell von den mathematischen KI-Scores ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
 
         st.write("---")
         
