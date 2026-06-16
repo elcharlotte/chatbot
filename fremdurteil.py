@@ -457,4 +457,28 @@ elif st.session_state.step == "evaluation":
                         "ITEM_x42i42": e_a_1,  "ITEM_x42i35": e_a_2,  "ITEM_x42i03": e_a_3,
                         "ITEM_x42i23": e_sb_1, "ITEM_x42i10": e_sb_2, "ITEM_x42i22": e_sb_3,
                         "ITEM_x42i40": e_so_1, "ITEM_x42i32": e_so_2, "ITEM_x42i20": e_so_3,
-                        "ITEM_x42i09": n_d_1,  "ITEM_x42i19": n_d_2,  "
+                        "ITEM_x42i09": n_d_1,  "ITEM_x42i19": n_d_2,  "ITEM_x42i37": n_d_3,
+                        "ITEM_x42i11": n_ir_1, "ITEM_x42i06": n_ir_2, "ITEM_x42i07": n_ir_3,
+                        "ITEM_x42i36": n_st_1, "ITEM_x42i45": n_st_2, "ITEM_x42i13": n_st_3,
+                        "ITEM_x42i38": o_in_1, "ITEM_x42i28": o_in_2, "ITEM_x42i33": o_in_3,
+                        "ITEM_x42i21": o_r_1,  "ITEM_x42i50": o_r_2,  "ITEM_x42i41": o_r_3,
+                        "ITEM_x42i01": o_sc_1, "ITEM_x42i16": o_sc_2, "ITEM_x42i25": o_sc_3,
+                        "ITEM_x42i47": hh_si_1,"ITEM_x42i15": hh_si_2,"ITEM_x42i04": hh_si_3,
+                        "ITEM_x42i31": hh_fa_1,"ITEM_x42i17": hh_fa_2,"ITEM_x42i08": hh_fa_3,
+                        "ITEM_x42i24": hh_mo_1,"ITEM_x42i34": hh_mo_2,"ITEM_x42i51": hh_mo_3,
+                        
+                        # Aggregierte Globale Werte
+                        "USER_Extraversion": st.session_state.user_scores["Extraversion"],
+                        "USER_Vertraeglichkeit": st.session_state.user_scores["Verträglichkeit"],
+                        "USER_Gewissenhaftigkeit": st.session_state.user_scores["Gewissenhaftigkeit"],
+                        "USER_Neurotizismus": st.session_state.user_scores["Neurotizismus"],
+                        "USER_Offenheit": st.session_state.user_scores["Offenheit"],
+                        
+                        "AI_Extraversion": st.session_state.ai_scores.get("Extraversion"),
+                        "AI_Vertraeglichkeit": st.session_state.ai_scores.get("Verträglichkeit"),
+                        "AI_Gewissenhaftigkeit": st.session_state.ai_scores.get("Gewissenhaftigkeit"),
+                        "AI_Neurotizismus": st.session_state.ai_scores.get("Neurotizismus"),
+                        "AI_Offenheit": st.session_state.ai_scores.get("Offenheit"),
+                        "Freitext_Anmerkungen": anmerkungen.replace("\n", " ")
+                    }
+                    
