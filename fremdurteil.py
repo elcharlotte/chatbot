@@ -482,3 +482,78 @@ elif st.session_state.step == "evaluation":
                         "Freitext_Anmerkungen": anmerkungen.replace("\n", " ")
                     }
                     
+                    df = pd.DataFrame([ergebnis_daten])
+                    csv_string = df.to_csv(index=False, sep=";")
+                    
+                    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    clean_target_name = "".join(x for x in st.session_state.vp_code if x.isalnum() or x in "._-").strip()
+                    clean_rater_name = "".join(x for x in st.session_state.participant_id if x.isalnum() or x in "._-").strip()
+                    dateiname = f"ergebnis_Rater_{clean_rater_name}_Target_{clean_target_name}_{timestamp_str}.csv"
+                    
+                    try:
+                        upload_results_to_nextcloud(dateiname, csv_string)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Fehler beim Speichern: {e}")
+
+    # Feedback-Bildschirm
+    else:
+        st.balloons()
+        st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
+        st.write("Ihre Antworten wurden erfolgreich registriert.")
+        
+        st.write("---")
+        st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
+        st.write("Hier sehen Sie Ihre berechneten Dimensionen im Vergleich zu den globalen KI-Werten:")
+        
+        vergleichs_daten = []
+        gesamte_abweichung = 0
+        
+        for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
+            user_val = st.session_state.user_scores.get(dimension, 3)
+            ai_val = st.session_state.ai_scores.get(dimension, 3)
+            diff = round(abs(user_val - ai_val), 2)
+            gesamte_abweichung += diff
+            
+            if diff <= 0.5:
+                feedback = "🎯 Nahezu identisch!"
+            elif diff <= 1.2:
+                feedback = "👍 Sehr nah dran"
+            else:
+                feedback = "🔄 Andere Wahrnehmung"
+                
+            vergleichs_daten.append({
+                "Big-Five Dimension": dimension,
+                "Deine Einschätzung (Mittelwert)": user_val,
+                "KI-Einschätzung": ai_val,
+                "Abweichung": diff,
+                "Feedback": feedback
+            })
+            
+        df_vergleich = pd.DataFrame(vergleichs_daten)
+        st.table(df_vergleich)
+        
+        gesamte_abweichung = round(gesamte_abweichung, 2)
+        st.write("")
+        if gesamte_abweichung <= 2.5:
+            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! Deine berechneten Skalenwerte spiegeln das KI-Profil bemerkenswert präzise wider (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+        elif gesamte_abweichung <= 5.0:
+            st.info(f"📊 **Fazit:** Solide Annäherung. Du hast die Tendenzen der Person im Kern ähnlich bewertet wie die KI (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+        else:
+            st.info(f"👥 **Fazit:** Spannende Nuancen! Deine menschliche Fremdbeurteilung weicht punktuell von den mathematischen KI-Scores ab (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+
+        st.write("---")
+        
+        if st.button("Nächste Teilnahme starten"):
+            st.session_state.step = "welcome"
+            st.session_state.participant_id = ""
+            st.session_state.matrikelnummer = ""
+            st.session_state.alter = ""
+            st.session_state.geschlecht = "Keine Angabe"
+            st.session_state.consent_given = False
+            st.session_state.aktuelles_transkript_file = None
+            st.session_state.vp_code = ""
+            st.session_state.transkript_text = ""
+            st.session_state.ai_scores = {}
+            st.session_state.user_scores = {}
+            st.rerun()
