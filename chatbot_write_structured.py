@@ -363,18 +363,16 @@ def main():
         ### Beschreibung & Zweck 
 
         Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
-
-        * **Verpflichtung:** Die Teilnahme ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
-
-        * **Ehrlichkeit:** Keine Pflicht zur Wahrheit, aber fiktive Angaben verfälschen die Auswertung.
-
-        * **Ethikvotum:** Bewilligt unter **[EG-IIP-2026049]**.
+        Bitte führen Sie das Interview in einer durchgängigen Sitzung durch und unterbrechen Sie das Interview nicht. Die Bearbeitung wird ca. 45 Minuten dauern. 
+        
+        * **Lesitungsnachweis:** Die Teilnahme am Interview ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
+        * **Ehrlichkeit:** Es gibt keine Pflicht zu wahrheitsgemäßen Angaben, aber fiktive Angaben verfälschen die Auswertung und schränken die Selbsterfahrung ein.       
 
         ### Datenschutz
 
-        * **OpenAI API:** Daten werden verschlüsselt übertragen, nicht zum Training genutzt und nach 30 Tagen gelöscht.
-
-        * **Speicherung:** Daten landen auf der sicheren Nextcloud der Universität Ulm.
+        * **OpenAI API:** Die Interview Daten werden verschlüsselt an openAI übertragen, aber NICHT zum Training genutzt und nach 30 Tagen gelöscht.
+        * **Speicherung:** Die Interview Daten werden in einer Nextcloud der Universität Ulm gespeichert.
+        * **Ethikvotum:** Die Verwendung des KI-Chatbots via openAI API wurde von der Ethikkommission bewilligt unter **[EG-IIP-2026049]**.
         
         """)
         
