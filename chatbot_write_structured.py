@@ -405,7 +405,7 @@ def main():
                 st.warning("Bitte stimmen Sie zu.")
 
     # --- PHASE 2.5: MIKROFON TEST ---
-        elif st.session_state.step == "mic_test":
+    elif st.session_state.step == "mic_test":
         st.title("🎙️ Mikrofon-Test & Vorbereitung")
         st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet. Sprechen Sie nach dem Starten der Aufnahme ein paar Worte (z. B. 'Hallo, Test').")
         
