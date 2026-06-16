@@ -405,48 +405,72 @@ def main():
                 st.warning("Bitte stimmen Sie zu.")
 
     # --- PHASE 2.5: MIKROFON TEST ---
-    elif st.session_state.step == "mic_test":
+        elif st.session_state.step == "mic_test":
         st.title("🎙️ Mikrofon-Test & Vorbereitung")
-        st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet.")
+        st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet. Sprechen Sie nach dem Starten der Aufnahme ein paar Worte (z. B. 'Hallo, Test').")
         
+        # --- WICHTIGER GEWÄHLTER HINWEIS FÜR DIE NUTZER ---
+        st.info("⚠️ **Wichtiger Hinweis zur Geräteauswahl:** Der Chatbot nutzt automatisch das Standard-Mikrofon Ihres Computers. Falls das falsche Mikrofon (z.B. die interne Webcam statt Ihres Headsets) aktiv ist, folgen Sie bitte kurz dieser Anleitung:")
+        
+        with st.expander("📋 Anleitung: So legen Sie Ihr Wunsch-Mikrofon fest"):
+            st.markdown("""
+            ### 🪟 Unter Windows:
+            1. Drücken Sie die **Windows-Taste** auf Ihrer Tastatur und tippen Sie **'Soundeinstellungen'** ein (dann Enter drücken).
+            2. Scrollen Sie nach unten zum Bereich **'Eingabe'**.
+            3. Wählen Sie dort Ihr Wunsch-Mikrofon aus.
+            4. Klicken Sie (falls sichtbar) auf **'Als Standardgerät festlegen'**.
+           
+            ### 🍏 Unter macOS:
+            1. Öffnen Sie die **Systemeinstellungen** --> **Ton**.
+            2. Wechseln Sie auf den Reiter **'Eingabe'**.
+            3. Klicken Sie Ihr Wunsch-Mikrofon an, sodass es blau hinterlegt ist. Es ist nun das systemweite Standardgerät.
+          
+            *Laden Sie die Seite nach der Änderung ggf. einmal neu, falls Ihr Mikrofon weiterhin nicht erkannt wird.*
+            """)
+        
+        st.write("---")
         audio_record = mic_recorder(
                 start_prompt="Aufnahme starten",
                 stop_prompt="Aufnahme stoppen",
                 key="speech_recorder"
             )
-            
+           
         if audio_record:
             audio_bytes = audio_record['bytes']
             audio_hash = hashlib.md5(audio_bytes).hexdigest()
-
             if audio_hash != st.session_state.get("last_audio_hash"):
                 st.session_state.last_audio_hash = audio_hash
                 audio_file = io.BytesIO(audio_bytes)
                 audio_file.name = "audio.wav"
-            
-                with st.spinner("Prüfe Audio-Eingang..."):
-                    try:
-                        transcript = client.audio.transcriptions.create(
-                            model="whisper-1", 
-                            file=audio_file
-                        )
-                        if transcript.text.strip():
-                            st.session_state.mic_test_transcript = transcript.text
-                            st.session_state.mic_test_passed = True
-                        else:
-                            st.session_state.mic_test_transcript = "Es wurde kein Text erkannt."
-                            st.session_state.mic_test_passed = False
-                    except Exception as e:
-                        st.error(f"Fehler beim Mikrofon-Test: {e}")
-        
+         
+            with st.spinner("Prüfe Audio-Eingang..."):
+                try:
+                    transcript = client.audio.transcriptions.create(
+                        model="whisper-1", 
+                        file=audio_file
+                    )
+                    if transcript.text.strip():
+                        st.session_state.mic_test_transcript = transcript.text
+                        st.session_state.mic_test_passed = True
+
+                    else:
+                        st.session_state.mic_test_transcript = "Es wurde kein Text erkannt. Bitte lauter sprechen oder das richtige Eingabegerät in den Browsereinstellungen wählen."
+                        st.session_state.mic_test_passed = False
+                except Exception as e:
+                    st.error(f"Fehler beim Mikrofon-Test: {e}")
+       
+        # Visuelle Rückmeldung für die Person
         if "mic_test_transcript" in st.session_state:
             st.info(f"**Erkanntes Audio:** „{st.session_state.mic_test_transcript}“")
+         
             if st.session_state.mic_test_passed:
-                st.success("✅ Mikrofon funktioniert!")
+                st.success("✅ Mikrofon funktioniert erfolgreich! Sie können das Interview jetzt starten.")
                 if st.button("Interview starten"):
                     st.session_state.step = "chat_speech"
                     st.session_state.interview_start_time = time.time()
                     st.rerun()
+            else:
+                st.error("❌ Audio-Signal zu schwach oder fehlerhaft. Bitte versuchen Sie es erneut.") 
 
     # --- PHASE 3A: CHAT WRITE ---
     elif st.session_state.step == "chat_write":
