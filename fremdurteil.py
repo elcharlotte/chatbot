@@ -29,7 +29,11 @@ AUTH = HTTPBasicAuth(NC_USER, NC_PASS)
 
 # 2. UTILITY FUNKTIONEN (Nextcloud-Interaktion)
 def load_transcript_list():
-    """Liest alle .json Dateien, die auf '_preliminary' enden, via WebDAV PROPFIND aus der Nextcloud."""
+    """
+    Liest alle .json Dateien via WebDAV PROPFIND aus der Nextcloud.
+    Gibt die finalen Versionen (ohne '_preliminary') zurück, sofern für diese
+    auch eine '_preliminary.json' Vorab-Version im selben Ordner existiert.
+    """
     url = f"{NC_URL}{TRANSKRIPT_ORDNER}/"
     headers = {"Depth": "1"}
     try:
@@ -39,16 +43,32 @@ def load_transcript_list():
             return []
             
         root = ET.fromstring(response.content)
-        files = []
+        
+        # 1. Schritt: Alle Dateinamen aus dem Ordner in einem Set sammeln
+        all_files = set()
         for response_elem in root.findall(".//{DAV:}response"):
             href_elem = response_elem.find("{DAV:}href")
             if href_elem is not None:
                 href = href_elem.text
                 filename = href.split("/")[-1]
-                # Filtert nur Dateien, die auf "_preliminary.json" enden
-                if filename.endswith("_preliminary.json"):
-                    files.append(filename)
-        return files
+                if filename.endswith(".json"):
+                    all_files.add(filename)
+        
+        # 2. Schritt: Nur die finalen Versionen filtern, die eine Vorab-Version besitzen
+        filtered_files = []
+        for filename in all_files:
+            # Wir betrachten hier nur die regulären/finalen *.json Dateien
+            if filename.endswith(".json") and not filename.endswith("_preliminary.json"):
+                # Erstellt den Namen, den die Vorab-Version haben müsste
+                # (z.B. "aufnahme.json" -> "aufnahme_preliminary.json")
+                preliminary_version_name = filename.replace(".json", "_preliminary.json")
+                
+                # Prüfen, ob diese Vorab-Version ebenfalls im Ordner existiert
+                if preliminary_version_name in all_files:
+                    filtered_files.append(filename)
+                    
+        return filtered_files
+
     except Exception as e:
         st.error(f"Verbindungsfehler zur Nextcloud: {e}")
         return []
