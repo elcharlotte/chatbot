@@ -116,7 +116,7 @@ def calculate_available_urn():
 
 
 def read_and_format_json_transcript(filename):
-    """Lädt die JSON-Datei, extrahiert ID, Chat und das KI-Assessment."""
+    """Lädt die JSON-Datei, extrahiert ID, Chat und berechnet/extrahiert das KI-Assessment."""
     url = f"{NC_URL}{TRANSKRIPT_ORDNER}/{filename}"
     response = requests.get(url, auth=AUTH)
     if response.status_code != 200:
@@ -125,10 +125,47 @@ def read_and_format_json_transcript(filename):
     data = response.json()
     vp_code = data.get("participant_id", data.get("id", filename.replace(".json", "")))
     
-    ai_assessment = data.get("ai_assessment", {
-        "Extraversion": 3, "Verträglichkeit": 3, "Gewissenhaftigkeit": 3, "Neurotizismus": 3, "Offenheit": 3
-    })
+    # 1. Rohe KI-Facetten-Scores aus dem JSON laden
+    ai_raw = data.get("ai_assessment", {})
     
+    # Fallback-Werte (Mitte der Skala = 3), falls ein Key im JSON fehlen sollte
+    ai_facets = {
+        "A-Fr": ai_raw.get("Freundlichkeit", 3),
+        "A-Co": ai_raw.get("Rücksichtnahme", 3),
+        "A-H":  ai_raw.get("Hilfsbereitschaft", 3),
+        "C-Hw": ai_raw.get("Fleiß", 3),
+        "C-O":  ai_raw.get("Organisation", 3),
+        "E-A":  ai_raw.get("Durchsetzungsfähigkeit", 3),
+        "E-SB": ai_raw.get("Selbstbewusstsein", 3),
+        "E-So": ai_raw.get("Soziale Aktivität", 3),
+        "N-D":  ai_raw.get("Depression", 3),
+        "N-Ir": ai_raw.get("Reizbarkeit", 3),
+        "N-St": ai_raw.get("Nervosität", 3),
+        "O-In": ai_raw.get("Intellekt", 3),
+        "O-R":  ai_raw.get("Reflexion", 3),
+        "O-Sc": ai_raw.get("Wissenschaftliches Interesse", 3),
+        "HH-Si": ai_raw.get("Aufrichtigkeit", 3),
+        "HH-Fa": ai_raw.get("Fairness", 3),
+        "HH-Mo": ai_raw.get("Bescheidenheit", 3)
+    }
+    
+    # 2. KI-Hauptdimensionen (Big Five) mathematisch aggregieren (analog zu deiner Rater-Logik)
+    # Wichtig: Im JSON liegen die Werte bereits final/interpretiert vor, daher keine erneute Invertierung nötig.
+    ai_dimensions = {
+        "Verträglichkeit": round((ai_facets["A-Fr"] + ai_facets["A-Co"] + ai_facets["A-H"]) / 3, 2),
+        "Gewissenhaftigkeit": round((ai_facets["C-Hw"] + ai_facets["C-O"]) / 2, 2),
+        "Extraversion": round((ai_facets["E-A"] + ai_facets["E-SB"] + ai_facets["E-So"]) / 3, 2),
+        "Neurotizismus": round((ai_facets["N-D"] + ai_facets["N-Ir"] + ai_facets["N-St"]) / 3, 2),
+        "Offenheit": round((ai_facets["O-In"] + ai_facets["O-R"] + ai_facets["O-Sc"]) / 3, 2)
+    }
+    
+    # Kombiniertes Paket im Session State speichern
+    ai_assessment_compiled = {
+        "dimensions": ai_dimensions,
+        "facets": ai_facets
+    }
+    
+    # Chat-Verlauf Formatierung
     formatted_chat = []
     chat_verlauf = data.get("chat", [])
     for message in chat_verlauf:
@@ -155,8 +192,7 @@ def read_and_format_json_transcript(filename):
         formatted_chat.append(f"{label}:\n{content}\n")
         
     full_transcript_text = "\n".join(formatted_chat)
-    return vp_code, full_transcript_text, ai_assessment
-
+    return vp_code, full_transcript_text, ai_assessment_compiled
 
 def upload_results_to_nextcloud(filename, csv_data):
     """Lädt eine CSV-Ergebnisdatei via HTTP PUT in die Nextcloud hoch."""
@@ -497,46 +533,123 @@ elif st.session_state.step == "evaluation":
                     except Exception as e:
                         st.error(f"Fehler beim Speichern: {e}")
 
-    # Feedback-Bildschirm
+# Feedback-Bildschirm
     else:
         st.balloons()
         st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
-        st.write("Ihre Antworten wurden erfolgreich registriert.")
+        st.write("Ihre Antworten wurden erfolgreich registriert und an Nextcloud übertragen.")
         st.write("---")
-        st.subheader("🤖 Ihr Urteil im Vergleich zur KI-Bewertung")
         
-        vergleichs_daten = []
-        gesamte_abweichung = 0
+        # Aufteilung der Ergebnisse in übersichtliche Tabs
+        tab_big5, tab_facetten = st.tabs(["📊 1. Big-Five Hauptebene", "🔍 2. Detaillierte Facetten-Ebene"])
         
-        for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
-            user_val = st.session_state.user_scores.get(dimension, 3)
-            ai_val = st.session_state.ai_scores.get(dimension, 3)
-            diff = round(abs(user_val - ai_val), 2)
-            gesamte_abweichung += diff
+        # Extraktion der kompilierten KI-Ergebnisse
+        ai_compiled = st.session_state.ai_scores
+        ai_dims = ai_compiled.get("dimensions", {})
+        ai_facs = ai_compiled.get("facets", {})
+        
+        # --- TAB 1: BIG FIVE HAUPTEBENE ---
+        with tab_big5:
+            st.subheader("🤖 Ihr Gesamturteil im Vergleich zur KI")
             
-            if diff <= 0.5: feedback = "🎯 Nahezu identisch!"
-            elif diff <= 1.2: feedback = "👍 Sehr nah dran"
-            else: feedback = "🔄 Andere Wahrnehmung"
+            vergleichs_daten = []
+            gesamte_abweichung = 0
+            
+            for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
+                user_val = st.session_state.user_scores.get(dimension, 3)
+                ai_val = ai_dims.get(dimension, 3)
+                diff = round(abs(user_val - ai_val), 2)
+                gesamte_abweichung += diff
                 
-            vergleichs_daten.append({
-                "Big-Five Dimension": dimension,
-                "Ihre Einschätzung (Mittelwert)": user_val,
-                "KI-Einschätzung": ai_val,
-                "Abweichung": diff,
-                "Feedback": feedback
-            })
+                if diff <= 0.5: feedback = "🎯 Nahezu identisch!"
+                elif diff <= 1.2: feedback = "👍 Sehr nah dran"
+                else: feedback = "🔄 Andere Wahrnehmung"
+                    
+                vergleichs_daten.append({
+                    "Big-Five Dimension": dimension,
+                    "Ihre Einschätzung (Mittelwert)": user_val,
+                    "KI-Einschätzung (Mittelwert)": ai_val,
+                    "Abweichung": diff,
+                    "Feedback": feedback
+                })
+                
+            df_vergleich = pd.DataFrame(vergleichs_daten)
+            st.table(df_vergleich)
             
-        df_vergleich = pd.DataFrame(vergleichs_daten)
-        st.table(df_vergleich)
-        
-        gesamte_abweichung = round(gesamte_abweichung, 2)
-        st.write("")
-        if gesamte_abweichung <= 2.5:
-            st.info(f"🧠 **Fazit:** Starke Übereinstimmung! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-        elif gesamte_abweichung <= 5.0:
-            st.info(f"📊 **Fazit:** Solide Annäherung. (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-        else:
-            st.info(f"👥 **Fazit:** Spannende Nuancen! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            gesamte_abweichung = round(gesamte_abweichung, 2)
+            st.write("")
+            if gesamte_abweichung <= 2.5:
+                st.info(f"🧠 **Fazit:** Starke Übereinstimmung auf globaler Ebene! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            elif gesamte_abweichung <= 5.0:
+                st.info(f"📊 **Fazit:** Solide Annäherung auf globaler Ebene. (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+            else:
+                st.info(f"👥 **Fazit:** Spannende unterschiedliche Wahrnehmungen! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+
+        # --- TAB 2: DETALLIERTE FACETTEN-EBENE ---
+        with tab_facetten:
+            st.subheader("🔎 Detailvergleich auf TSDI-Facetten-Ebene")
+            st.write("Vergleichen Sie Ihre Einschätzung mit der der KI für jede der 17 Persönlichkeitsfacetten:")
+
+            # Erstellung der detaillierten Facettenliste inkl. KI-Gegenüberstellung
+            # Berechnung erfolgt live aus den Slider-Inhalten im st.session_state
+            raw_facetten_konfiguration = [
+                ("Verträglichkeit (A)", "Freundlichkeit (A-Fr)", (st.session_state.get("x42i29", 3) + st.session_state.get("x42i14", 3) + st.session_state.get("x42i43", 3)) / 3, "A-Fr"),
+                ("Verträglichkeit (A)", "Rücksichtnahme (A-Co)", (st.session_state.get("x42i02", 3) + st.session_state.get("x42i26", 3) + st.session_state.get("x42i27", 3)) / 3, "A-Co"),
+                ("Verträglichkeit (A)", "Hilfsbereitschaft (A-H)", (st.session_state.get("x42i12", 3) + st.session_state.get("x42i48", 3) + st.session_state.get("x42i46", 3)) / 3, "A-H"),
+                
+                ("Gewissenhaftigkeit (C)", "Fleiß (C-Hw)", (st.session_state.get("x42i05", 3) + st.session_state.get("x42i30", 3) + st.session_state.get("x42i44", 3)) / 3, "C-Hw"),
+                ("Gewissenhaftigkeit (C)", "Organisation (C-O)", (st.session_state.get("x42i18", 3) + st.session_state.get("x42i49", 3) + st.session_state.get("x42i39", 3)) / 3, "C-O"),
+                
+                ("Extraversion (E)", "Durchsetzungsfähigkeit (E-A)", (st.session_state.get("x42i42", 3) + st.session_state.get("x42i35", 3) + st.session_state.get("x42i03", 3)) / 3, "E-A"),
+                ("Extraversion (E)", "Selbstbewusstsein (E-SB)*", ((6 - st.session_state.get("x42i23", 3)) + (6 - st.session_state.get("x42i10", 3)) + (6 - st.session_state.get("x42i22", 3))) / 3, "E-SB"),
+                ("Extraversion (E)", "Soziale Aktivität (E-So)", (st.session_state.get("x42i40", 3) + st.session_state.get("x42i32", 3) + st.session_state.get("x42i20", 3)) / 3, "E-So"),
+                
+                ("Neurotizismus (N)", "Depression (N-D)", (st.session_state.get("x42i09", 3) + st.session_state.get("x42i19", 3) + st.session_state.get("x42i37", 3)) / 3, "N-D"),
+                ("Neurotizismus (N)", "Reizbarkeit (N-Ir)", (st.session_state.get("x42i11", 3) + st.session_state.get("x42i06", 3) + st.session_state.get("x42i07", 3)) / 3, "N-Ir"),
+                ("Neurotizismus (N)", "Nervosität (N-St)", (st.session_state.get("x42i36", 3) + st.session_state.get("x42i45", 3) + st.session_state.get("x42i13", 3)) / 3, "N-St"),
+                
+                ("Offenheit (O)", "Intellekt (O-In)", (st.session_state.get("x42i38", 3) + st.session_state.get("x42i28", 3) + st.session_state.get("x42i33", 3)) / 3, "O-In"),
+                ("Offenheit (O)", "Reflexion (O-R)", (st.session_state.get("x42i21", 3) + st.session_state.get("x42i50", 3) + st.session_state.get("x42i41", 3)) / 3, "O-R"),
+                ("Offenheit (O)", "Wissenschaftl. Interesse (O-Sc)", (st.session_state.get("x42i01", 3) + st.session_state.get("x42i16", 3) + st.session_state.get("x42i25", 3)) / 3, "O-Sc"),
+                
+                ("Ehrlichkeit-Bescheidenheit (HH)", "Aufrichtigkeit (HH-Si)*", ((6 - st.session_state.get("x42i47", 3)) + st.session_state.get("x42i15", 3) + (6 - st.session_state.get("x42i04", 3))) / 3, "HH-Si"),
+                ("Ehrlichkeit-Bescheidenheit (HH)", "Fairness (HH-Fa)*", ((6 - st.session_state.get("x42i31", 3)) + st.session_state.get("x42i17", 3) + (6 - st.session_state.get("x42i08", 3))) / 3, "HH-Fa"),
+                ("Ehrlichkeit-Bescheidenheit (HH)", "Bescheidenheit (HH-Mo)*", ((6 - st.session_state.get("x42i24", 3)) + st.session_state.get("x42i34", 3) + st.session_state.get("x42i51", 3)) / 3, "HH-Mo")
+            ]
+            
+            facetten_vergleichs_daten = []
+            for dim_label, facet_label, user_calc_val, short_key in raw_facetten_konfiguration:
+                u_val = round(user_calc_val, 2)
+                a_val = float(ai_facs.get(short_key, 3))
+                f_diff = round(abs(u_val - a_val), 2)
+                
+                if f_diff <= 0.34: f_feedback = "🎯 Identisch"
+                elif f_diff <= 1.01: f_feedback = "👍 Ähnlich"
+                else: f_feedback = "🔄 Abweichend"
+                
+                facetten_vergleichs_daten.append({
+                    "Hauptdimension": dim_label,
+                    "TSDI Facette": facet_label,
+                    "Ihr Wert": u_val,
+                    "KI Wert": a_val,
+                    "Abweichung": f_diff,
+                    "Verhältnis": f_feedback
+                })
+                
+            df_facetten = pd.DataFrame(facetten_vergleichs_daten)
+            
+            # Schicke interaktive Tabelle mit Streamlit Dataframe-UI
+            st.dataframe(
+                df_facetten, 
+                use_container_width=True, 
+                hide_index=True,
+                column_config={
+                    "Ihr Wert": st.column_config.NumberColumn(format="%.2f"),
+                    "KI Wert": st.column_config.NumberColumn(format="%.2f"),
+                    "Abweichung": st.column_config.NumberColumn(format="%.2f")
+                }
+            )
+            st.caption("* Werte enthalten bereits mathematisch korrekt invertierte Items.")
 
         st.write("---")
         if st.button("Nächste Teilnahme starten"):
