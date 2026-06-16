@@ -329,14 +329,6 @@ def main():
             elif pwd_input:
                 st.caption("❌ Falsches Passwort")
 
-Was passiert jetzt im Notfall?
-
-    Du gibst dein Admin-Passwort in der Sidebar ein.
-
-    Du klickst auf "Interview überspringen & zu UX-Fragen".
-
-    Der Chat/Mikrofontest wird sofort abgebrochen. Die Probanden landen direkt auf der Seite "Wie war das Interview? 📋" und können die Befragung sowie die Auswertung ganz regulär zu Ende führen. Die bis dahin gesammelten Chat-Nachrichten bleiben im Payload erhalten.
-
     # --- PHASE 1: WILLKOMMEN ---
     if st.session_state.step == "welcome":
         st.title("Willkommen zum Interview 🤖")
