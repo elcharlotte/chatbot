@@ -247,16 +247,16 @@ LEITFADEN:
 
 DEINE ANTWORT-STRUKTUR:
 Du musst deine Antwort zwingend als ein valides JSON-Objekt formatieren. Das JSON-Objekt muss exakt diese zwei Felder enthalten:
-1. "aktuelle_facette": Eine Zahl von 0 bis 14. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 0. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 1, u.s.w.
+1. "aktuelle_facette": Eine Zahl von 0 bis 17. Gibt an, welche Facette die Testperson mit ihrer LETZTEN Antwort gerade beantwortet hat. Wenn du noch ganz am Anfang (beim Einstieg) bist, ist es 0. Wenn die erste Facette (A-Co) erfolgreich besprochen wurde, wechselst du auf 1, u.s.w.
 2. "interviewer_text": Deine Frage oder Antwort an den Nutzer.
 """
 
 INIT_PROMPT_STRUCTURED = """
-Vielen Dank für Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Dies wird weitestgehend wie ein gewöhnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Wie sehr hält man Sie für jemanden, mit dem man einfach gut auskommt?
+Vielen Dank fuer Ihre Teilnahme! \n\nIch bin ein AI Agent und werde im weiteren Verlauf ein persoenlichkeitsdiagnostisches Interview mit Ihnen fuehren. Dies wird weitestgehend wie ein gewoehnlicher Fragebogen ablaufen. \n\nLassen Sie uns direkt beginnen. Wie sehr haelt man Sie fuer jemanden, mit dem man einfach gut auskommt?
 """
 
 INIT_PROMPT_OPEN = """
-Vielen Dank für Ihre Teilnahme! Ich bin ein AI Agent und werde im weiteren Verlauf ein persönlichkeitsdiagnostisches Interview mit Ihnen führen. Lassen Sie uns mit dem ersten Thema beginnen: der Dimension 'Extraversion'. Diese Dimension beschreibt, inwiefern Personen gesellig, gesprächig, freundlich und aktiv sind. Menschen mit hoher Ausprägung fühlen sich wohl in Gruppen und mögen aufregende Situationen, während Personen mit niedriger Ausprägung eher zurückhaltend und bedachtsam sind. Wie würden Sie sich im Vergleich zu anderen Personen hinsichtlich Ihrer Extraversion einschätzen?
+Vielen Dank fuer Ihre Teilnahme! Ich bin ein AI Agent und werde im weiteren Verlauf ein persoenlichkeitsdiagnostisches Interview mit Ihnen fuehren. Lassen Sie uns mit dem ersten Thema beginnen: der Dimension 'Extraversion'. Diese Dimension beschreibt, inwiefern Personen gesellig, gespraechig, freundlich und aktiv sind. Menschen mit hoher Auspraegung fuehlen sich wohl in Gruppen und moegen aufregende Situationen, waehrend Personen mit niedriger Auspraegung eher zurueckhaltend und bedachtsam sind. Wie wuerden Sie sich im Vergleich zu anderen Personen hinsichtlich Ihrer Extraversion einschaetzen?
 """
 
 
@@ -342,9 +342,9 @@ def main():
 
     # --- PHASE 2: EINWILLIGUNG ---
     elif st.session_state.step == "consent":
-        st.title("Informationen zur Studie & Datenschutz 📝")
+        st.title("Informationen zum Ablauf & Datenschutz 📝")
         st.markdown("""
-        ### Beschreibung & Zweck der Studie
+        ### Beschreibung & Zweck 
         Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
         * **Verpflichtung:** Die Teilnahme ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
         * **Ehrlichkeit:** Keine Pflicht zur Wahrheit, aber fiktive Angaben verfälschen die Auswertung.
@@ -748,7 +748,6 @@ def main():
             q4 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als frustrierend. ", 1, 5, 3)
             q5 = st.slider("Es fiel mir leicht, mich auf das Gespräch zu konzentrieren.", 1, 5, 3)
             q6 = st.slider("Ich emfpand die Interaktion mit dem KI-Chatbota als angenehm. ", 1, 5, 3)
-            q7 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als ineffizient (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
             q8 = st.slider("Ich denke die Interaktion mit dem KI-Chatbot hätte effizienter sein können (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
             q9 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als sicher (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
             q10 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als interessant (im Hinblick auf die Messung meiner Persönlichkeit).", 1, 5, 3)
@@ -764,8 +763,7 @@ def main():
                     "q4_frust": q4,
                     "q5_konzentr": q5,
                     "q6_angenehm": q6,
-                    "q7_ineffizient": q7,
-                    "q8_vorhersehbar": q8, 
+                    "q8_ineffizient": q7,
                     "q9_sicher": q9, 
                     "q10_interessant": q10, 
                     "q11_auswahl": q11, 
