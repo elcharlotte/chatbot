@@ -66,7 +66,11 @@ def load_transcript_list():
                 # Prüfen, ob diese Vorab-Version ebenfalls im Ordner existiert
                 if preliminary_version_name in all_files:
                     filtered_files.append(filename)
-                    
+                # Füge das innerhalb deiner Schleife in load_transcript_list() ein:
+                filename = href.split("/")[-1]
+
+                # DEBUG: Zeigt dir im Terminal oder in der App, was Nextcloud liefert
+                print(f"Gefundener Dateiname: '{filename}'")           
         return filtered_files
 
     except Exception as e:
