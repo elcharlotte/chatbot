@@ -568,7 +568,7 @@ elif st.session_state.step == "evaluation":
 else:
     st.balloons()
     st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
-    st.write("Ihre Antworten wurden erfolgreich registriert und an Nextcloud übertragen.")
+    st.write("Ihre Antworten wurden erfolgreich registriert und an Nextcloud übertragen. Schauen Sie sich hier an, wie gut Ihre Fremdeinschätzung im Vergleich zur KI war. Wechseln Sie zwischen den Tabs "Gesamturteil" und "Facettenurteil"")
     st.write("---")
     
     # Aufteilung der Ergebnisse in übersichtliche Tabs
@@ -581,7 +581,7 @@ else:
     
     # --- TAB 1: BIG FIVE HAUPTEBENE ---
     with tab_big5:
-        st.subheader("🤖 Ihr Gesamturteil im Vergleich zur KI")
+        st.subheader("🤖 Gesamturteil im Vergleich zur KI")
         
         vergleichs_daten = []
         gesamte_abweichung = 0
@@ -618,7 +618,7 @@ else:
 
     # --- TAB 2: DETALLIERTE FACETTEN-EBENE ---
     with tab_facetten:
-        st.subheader("🔎 Detailvergleich auf TSDI-Facetten-Ebene")
+        st.subheader("🔎 Facettenurteil im Vergleich zur KI")
         st.write("Vergleichen Sie Ihre Einschätzung mit der der KI für jede der 17 Persönlichkeitsfacetten:")
 
         raw_facetten_konfiguration = [
