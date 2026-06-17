@@ -572,7 +572,7 @@ else:
     st.write("---")
     
     # Aufteilung der Ergebnisse in übersichtliche Tabs
-    tab_big5, tab_facetten = st.tabs(["📊 1. Big-Five Hauptebene", "🔍 2. Detaillierte Facetten-Ebene"])
+    tab_big5, tab_facetten = st.tabs(["📊 1. Gesamturteil", "🔍 2. Facettenurteil"])
     
     # Extraktion der kompilierten KI-Ergebnisse
     ai_compiled = st.session_state.ai_scores
