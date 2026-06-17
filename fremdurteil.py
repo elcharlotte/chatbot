@@ -149,8 +149,7 @@ def read_and_format_json_transcript(filename):
         "HH-Mo": ai_raw.get("Bescheidenheit", 3)
     }
     
-    # 2. KI-Hauptdimensionen (Big Five) mathematisch aggregieren (analog zu deiner Rater-Logik)
-    # Wichtig: Im JSON liegen die Werte bereits final/interpretiert vor, daher keine erneute Invertierung nötig.
+    # 2. KI-Hauptdimensionen (Big Five) mathematisch aggregieren
     ai_dimensions = {
         "Verträglichkeit": round((ai_facets["A-Fr"] + ai_facets["A-Co"] + ai_facets["A-H"]) / 3, 2),
         "Gewissenhaftigkeit": round((ai_facets["C-Hw"] + ai_facets["C-O"]) / 2, 2),
@@ -193,6 +192,7 @@ def read_and_format_json_transcript(filename):
         
     full_transcript_text = "\n".join(formatted_chat)
     return vp_code, full_transcript_text, ai_assessment_compiled
+
 
 def upload_results_to_nextcloud(filename, csv_data):
     """Lädt eine CSV-Ergebnisdatei via HTTP PUT in die Nextcloud hoch."""
@@ -306,7 +306,7 @@ elif st.session_state.step == "evaluation":
                     try:
                         vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
                       
-                        # NEU: Startzeitpunkt exakt hier festhalten (wenn das Transkript geladen wurde)
+                        # Startzeitpunkt festhalten
                         st.session_state.start_zeitpunkt = datetime.now()
                        
                         rater_string = f"rater_{st.session_state.participant_id}_{st.session_state.matrikelnummer}"
@@ -328,7 +328,7 @@ elif st.session_state.step == "evaluation":
                     except Exception as e:
                         st.error(f"Fehler beim Reservieren der Datei: {e}")
 
-elif not st.session_state.user_scores:
+    elif not st.session_state.user_scores:
         st.success("Ihnen wurde erfolgreich ein Interview-Transkript zugelost und für Sie reserviert!")
         st.write("---")
         
@@ -559,140 +559,138 @@ elif not st.session_state.user_scores:
                             delete_preliminary_file(st.session_state.preliminary_filename)
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Fehler beim Speichern: {e}")                    
-# Feedback-Bildschirm
-    else:
-        st.balloons()
-        st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
-        st.write("Ihre Antworten wurden erfolgreich registriert und an Nextcloud übertragen.")
-        st.write("---")
-        
-        # Aufteilung der Ergebnisse in übersichtliche Tabs
-        tab_big5, tab_facetten = st.tabs(["📊 1. Big-Five Hauptebene", "🔍 2. Detaillierte Facetten-Ebene"])
-        
-        # Extraktion der kompilierten KI-Ergebnisse
-        ai_compiled = st.session_state.ai_scores
-        ai_dims = ai_compiled.get("dimensions", {})
-        ai_facs = ai_compiled.get("facets", {})
-        
-        # --- TAB 1: BIG FIVE HAUPTEBENE ---
-        with tab_big5:
-            st.subheader("🤖 Ihr Gesamturteil im Vergleich zur KI")
-            
-            vergleichs_daten = []
-            gesamte_abweichung = 0
-            
-            for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
-                user_val = st.session_state.user_scores.get(dimension, 3)
-                ai_val = ai_dims.get(dimension, 3)
-                diff = round(abs(user_val - ai_val), 2)
-                gesamte_abweichung += diff
-                
-                if diff <= 0.5: feedback = "🎯 Nahezu identisch!"
-                elif diff <= 1.2: feedback = "👍 Sehr nah dran"
-                else: feedback = "🔄 Andere Wahrnehmung"
-                    
-                vergleichs_daten.append({
-                    "Big-Five Dimension": dimension,
-                    "Ihre Einschätzung (Mittelwert)": user_val,
-                    "KI-Einschätzung (Mittelwert)": ai_val,
-                    "Abweichung": diff,
-                    "Feedback": feedback
-                })
-                
-            df_vergleich = pd.DataFrame(vergleichs_daten)
-            st.table(df_vergleich)
-            
-            gesamte_abweichung = round(gesamte_abweichung, 2)
-            st.write("")
-            if gesamte_abweichung <= 2.5:
-                st.info(f"🧠 **Fazit:** Starke Übereinstimmung auf globaler Ebene! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-            elif gesamte_abweichung <= 5.0:
-                st.info(f"📊 **Fazit:** Solide Annäherung auf globaler Ebene. (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
-            else:
-                st.info(f"👥 **Fazit:** Spannende unterschiedliche Wahrnehmungen! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+                        st.error(f"Fehler beim Speichern: {e}")
 
-        # --- TAB 2: DETALLIERTE FACETTEN-EBENE ---
-        with tab_facetten:
-            st.subheader("🔎 Detailvergleich auf TSDI-Facetten-Ebene")
-            st.write("Vergleichen Sie Ihre Einschätzung mit der der KI für jede der 17 Persönlichkeitsfacetten:")
-
-            # Erstellung der detaillierten Facettenliste inkl. KI-Gegenüberstellung
-            # Berechnung erfolgt live aus den Slider-Inhalten im st.session_state
-            raw_facetten_konfiguration = [
-                ("Verträglichkeit (A)", "Freundlichkeit (A-Fr)", (st.session_state.get("x42i29", 3) + st.session_state.get("x42i14", 3) + st.session_state.get("x42i43", 3)) / 3, "A-Fr"),
-                ("Verträglichkeit (A)", "Rücksichtnahme (A-Co)", (st.session_state.get("x42i02", 3) + st.session_state.get("x42i26", 3) + st.session_state.get("x42i27", 3)) / 3, "A-Co"),
-                ("Verträglichkeit (A)", "Hilfsbereitschaft (A-H)", (st.session_state.get("x42i12", 3) + st.session_state.get("x42i48", 3) + st.session_state.get("x42i46", 3)) / 3, "A-H"),
-                
-                ("Gewissenhaftigkeit (C)", "Fleiß (C-Hw)", (st.session_state.get("x42i05", 3) + st.session_state.get("x42i30", 3) + st.session_state.get("x42i44", 3)) / 3, "C-Hw"),
-                ("Gewissenhaftigkeit (C)", "Organisation (C-O)", (st.session_state.get("x42i18", 3) + st.session_state.get("x42i49", 3) + st.session_state.get("x42i39", 3)) / 3, "C-O"),
-                
-                ("Extraversion (E)", "Durchsetzungsfähigkeit (E-A)", (st.session_state.get("x42i42", 3) + st.session_state.get("x42i35", 3) + st.session_state.get("x42i03", 3)) / 3, "E-A"),
-                ("Extraversion (E)", "Selbstbewusstsein (E-SB)*", ((6 - st.session_state.get("x42i23", 3)) + (6 - st.session_state.get("x42i10", 3)) + (6 - st.session_state.get("x42i22", 3))) / 3, "E-SB"),
-                ("Extraversion (E)", "Soziale Aktivität (E-So)", (st.session_state.get("x42i40", 3) + st.session_state.get("x42i32", 3) + st.session_state.get("x42i20", 3)) / 3, "E-So"),
-                
-                ("Neurotizismus (N)", "Depression (N-D)", (st.session_state.get("x42i09", 3) + st.session_state.get("x42i19", 3) + st.session_state.get("x42i37", 3)) / 3, "N-D"),
-                ("Neurotizismus (N)", "Reizbarkeit (N-Ir)", (st.session_state.get("x42i11", 3) + st.session_state.get("x42i06", 3) + st.session_state.get("x42i07", 3)) / 3, "N-Ir"),
-                ("Neurotizismus (N)", "Nervosität (N-St)", (st.session_state.get("x42i36", 3) + st.session_state.get("x42i45", 3) + st.session_state.get("x42i13", 3)) / 3, "N-St"),
-                
-                ("Offenheit (O)", "Intellekt (O-In)", (st.session_state.get("x42i38", 3) + st.session_state.get("x42i28", 3) + st.session_state.get("x42i33", 3)) / 3, "O-In"),
-                ("Offenheit (O)", "Reflexion (O-R)", (st.session_state.get("x42i21", 3) + st.session_state.get("x42i50", 3) + st.session_state.get("x42i41", 3)) / 3, "O-R"),
-                ("Offenheit (O)", "Wissenschaftl. Interesse (O-Sc)", (st.session_state.get("x42i01", 3) + st.session_state.get("x42i16", 3) + st.session_state.get("x42i25", 3)) / 3, "O-Sc"),
-                
-                ("Ehrlichkeit-Bescheidenheit (HH)", "Aufrichtigkeit (HH-Si)*", ((6 - st.session_state.get("x42i47", 3)) + st.session_state.get("x42i15", 3) + (6 - st.session_state.get("x42i04", 3))) / 3, "HH-Si"),
-                ("Ehrlichkeit-Bescheidenheit (HH)", "Fairness (HH-Fa)*", ((6 - st.session_state.get("x42i31", 3)) + st.session_state.get("x42i17", 3) + (6 - st.session_state.get("x42i08", 3))) / 3, "HH-Fa"),
-                ("Ehrlichkeit-Bescheidenheit (HH)", "Bescheidenheit (HH-Mo)*", ((6 - st.session_state.get("x42i24", 3)) + st.session_state.get("x42i34", 3) + st.session_state.get("x42i51", 3)) / 3, "HH-Mo")
-            ]
+# --- FEEDBACK-BILDSCHIRM ---
+else:
+    st.balloons()
+    st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
+    st.write("Ihre Antworten wurden erfolgreich registriert und an Nextcloud übertragen.")
+    st.write("---")
+    
+    # Aufteilung der Ergebnisse in übersichtliche Tabs
+    tab_big5, tab_facetten = st.tabs(["📊 1. Big-Five Hauptebene", "🔍 2. Detaillierte Facetten-Ebene"])
+    
+    # Extraktion der kompilierten KI-Ergebnisse
+    ai_compiled = st.session_state.ai_scores
+    ai_dims = ai_compiled.get("dimensions", {})
+    ai_facs = ai_compiled.get("facets", {})
+    
+    # --- TAB 1: BIG FIVE HAUPTEBENE ---
+    with tab_big5:
+        st.subheader("🤖 Ihr Gesamturteil im Vergleich zur KI")
+        
+        vergleichs_daten = []
+        gesamte_abweichung = 0
+        
+        for dimension in ["Extraversion", "Verträglichkeit", "Gewissenhaftigkeit", "Neurotizismus", "Offenheit"]:
+            user_val = st.session_state.user_scores.get(dimension, 3)
+            ai_val = ai_dims.get(dimension, 3)
+            diff = round(abs(user_val - ai_val), 2)
+            gesamte_abweichung += diff
             
-            facetten_vergleichs_daten = []
-            for dim_label, facet_label, user_calc_val, short_key in raw_facetten_konfiguration:
-                u_val = round(user_calc_val, 2)
-                a_val = float(ai_facs.get(short_key, 3))
-                f_diff = round(abs(u_val - a_val), 2)
+            if diff <= 0.5: feedback = "🎯 Nahezu identisch!"
+            elif diff <= 1.2: feedback = "👍 Sehr nah dran"
+            else: feedback = "🔄 Andere Wahrnehmung"
                 
-                if f_diff <= 0.34: f_feedback = "🎯 Identisch"
-                elif f_diff <= 1.01: f_feedback = "👍 Ähnlich"
-                else: f_feedback = "🔄 Abweichend"
-                
-                facetten_vergleichs_daten.append({
-                    "Hauptdimension": dim_label,
-                    "TSDI Facette": facet_label,
-                    "Ihr Wert": u_val,
-                    "KI Wert": a_val,
-                    "Abweichung": f_diff,
-                    "Verhältnis": f_feedback
-                })
-                
-            df_facetten = pd.DataFrame(facetten_vergleichs_daten)
+            vergleichs_daten.append({
+                "Big-Five Dimension": dimension,
+                "Ihre Einschätzung (Mittelwert)": user_val,
+                "KI-Einschätzung (Mittelwert)": ai_val,
+                "Abweichung": diff,
+                "Feedback": feedback
+            })
             
-            # Schicke interaktive Tabelle mit Streamlit Dataframe-UI
-            st.dataframe(
-                df_facetten, 
-                use_container_width=True, 
-                hide_index=True,
-                column_config={
-                    "Ihr Wert": st.column_config.NumberColumn(format="%.2f"),
-                    "KI Wert": st.column_config.NumberColumn(format="%.2f"),
-                    "Abweichung": st.column_config.NumberColumn(format="%.2f")
-                }
-            )
-            st.caption("* Werte enthalten bereits mathematisch korrekt invertierte Items.")
+        df_vergleich = pd.DataFrame(vergleichs_daten)
+        st.table(df_vergleich)
+        
+        gesamte_abweichung = round(gesamte_abweichung, 2)
+        st.write("")
+        if gesamte_abweichung <= 2.5:
+            st.info(f"🧠 **Fazit:** Starke Übereinstimmung auf globaler Ebene! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+        elif gesamte_abweichung <= 5.0:
+            st.info(f"📊 **Fazit:** Solide Annäherung auf globaler Ebene. (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
+        else:
+            st.info(f"👥 **Fazit:** Spannende unterschiedliche Wahrnehmungen! (Gesamtabweichung: **{gesamte_abweichung}** Punkte).")
 
-        st.write("---")
-        if st.button("Nächste Teilnahme starten"):
-            st.session_state.step = "welcome"
-            st.session_state.participant_id = ""
-            st.session_state.matrikelnummer = ""
-            st.session_state.alter = ""
-            st.session_state.geschlecht = "Keine Angabe"
-            st.session_state.consent_given = False
-            st.session_state.aktuelles_transkript_file = None
-            st.session_state.vp_code = ""
-            st.session_state.transkript_text = ""
-            st.session_state.ai_scores = {}
-            st.session_state.user_scores = {}
-            st.session_state.preliminary_filename = ""
-            st.rerun()
+    # --- TAB 2: DETALLIERTE FACETTEN-EBENE ---
+    with tab_facetten:
+        st.subheader("🔎 Detailvergleich auf TSDI-Facetten-Ebene")
+        st.write("Vergleichen Sie Ihre Einschätzung mit der der KI für jede der 17 Persönlichkeitsfacetten:")
+
+        raw_facetten_konfiguration = [
+            ("Verträglichkeit (A)", "Freundlichkeit (A-Fr)", (st.session_state.get("x42i29", 3) + st.session_state.get("x42i14", 3) + st.session_state.get("x42i43", 3)) / 3, "A-Fr"),
+            ("Verträglichkeit (A)", "Rücksichtnahme (A-Co)", (st.session_state.get("x42i02", 3) + st.session_state.get("x42i26", 3) + st.session_state.get("x42i27", 3)) / 3, "A-Co"),
+            ("Verträglichkeit (A)", "Hilfsbereitschaft (A-H)", (st.session_state.get("x42i12", 3) + st.session_state.get("x42i48", 3) + st.session_state.get("x42i46", 3)) / 3, "A-H"),
+            
+            ("Gewissenhaftigkeit (C)", "Fleiß (C-Hw)", (st.session_state.get("x42i05", 3) + st.session_state.get("x42i30", 3) + st.session_state.get("x42i44", 3)) / 3, "C-Hw"),
+            ("Gewissenhaftigkeit (C)", "Organisation (C-O)", (st.session_state.get("x42i18", 3) + st.session_state.get("x42i49", 3) + st.session_state.get("x42i39", 3)) / 3, "C-O"),
+            
+            ("Extraversion (E)", "Durchsetzungsfähigkeit (E-A)", (st.session_state.get("x42i42", 3) + st.session_state.get("x42i35", 3) + st.session_state.get("x42i03", 3)) / 3, "E-A"),
+            ("Extraversion (E)", "Selbstbewusstsein (E-SB)*", ((6 - st.session_state.get("x42i23", 3)) + (6 - st.session_state.get("x42i10", 3)) + (6 - st.session_state.get("x42i22", 3))) / 3, "E-SB"),
+            ("Extraversion (E)", "Soziale Aktivität (E-So)", (st.session_state.get("x42i40", 3) + st.session_state.get("x42i32", 3) + st.session_state.get("x42i20", 3)) / 3, "E-So"),
+            
+            ("Neurotizismus (N)", "Depression (N-D)", (st.session_state.get("x42i09", 3) + st.session_state.get("x42i19", 3) + st.session_state.get("x42i37", 3)) / 3, "N-D"),
+            ("Neurotizismus (N)", "Reizbarkeit (N-Ir)", (st.session_state.get("x42i11", 3) + st.session_state.get("x42i06", 3) + st.session_state.get("x42i07", 3)) / 3, "N-Ir"),
+            ("Neurotizismus (N)", "Nervosität (N-St)", (st.session_state.get("x42i36", 3) + st.session_state.get("x42i45", 3) + st.session_state.get("x42i13", 3)) / 3, "N-St"),
+            
+            ("Offenheit (O)", "Intellekt (O-In)", (st.session_state.get("x42i38", 3) + st.session_state.get("x42i28", 3) + st.session_state.get("x42i33", 3)) / 3, "O-In"),
+            ("Offenheit (O)", "Reflexion (O-R)", (st.session_state.get("x42i21", 3) + st.session_state.get("x42i50", 3) + st.session_state.get("x42i41", 3)) / 3, "O-R"),
+            ("Offenheit (O)", "Wissenschaftl. Interesse (O-Sc)", (st.session_state.get("x42i01", 3) + st.session_state.get("x42i16", 3) + st.session_state.get("x42i25", 3)) / 3, "O-Sc"),
+            
+            ("Ehrlichkeit-Bescheidenheit (HH)", "Aufrichtigkeit (HH-Si)*", ((6 - st.session_state.get("x42i47", 3)) + st.session_state.get("x42i15", 3) + (6 - st.session_state.get("x42i04", 3))) / 3, "HH-Si"),
+            ("Ehrlichkeit-Bescheidenheit (HH)", "Fairness (HH-Fa)*", ((6 - st.session_state.get("x42i31", 3)) + st.session_state.get("x42i17", 3) + (6 - st.session_state.get("x42i08", 3))) / 3, "HH-Fa"),
+            ("Ehrlichkeit-Bescheidenheit (HH)", "Bescheidenheit (HH-Mo)*", ((6 - st.session_state.get("x42i24", 3)) + st.session_state.get("x42i34", 3) + st.session_state.get("x42i51", 3)) / 3, "HH-Mo")
+        ]
+        
+        facetten_vergleichs_daten = []
+        for dim_label, facet_label, user_calc_val, short_key in raw_facetten_konfiguration:
+            u_val = round(user_calc_val, 2)
+            a_val = float(ai_facs.get(short_key, 3))
+            f_diff = round(abs(u_val - a_val), 2)
+            
+            if f_diff <= 0.34: f_feedback = "🎯 Identisch"
+            elif f_diff <= 1.01: f_feedback = "👍 Ähnlich"
+            else: f_feedback = "🔄 Abweichend"
+            
+            facetten_vergleichs_daten.append({
+                "Hauptdimension": dim_label,
+                "TSDI Facette": facet_label,
+                "Ihr Wert": u_val,
+                "KI Wert": a_val,
+                "Abweichung": f_diff,
+                "Verhältnis": f_feedback
+            })
+            
+        df_facetten = pd.DataFrame(facetten_vergleichs_daten)
+        
+        st.dataframe(
+            df_facetten, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={
+                "Ihr Wert": st.column_config.NumberColumn(format="%.2f"),
+                "KI Wert": st.column_config.NumberColumn(format="%.2f"),
+                "Abweichung": st.column_config.NumberColumn(format="%.2f")
+            }
+        )
+        st.caption("* Werte enthalten bereits mathematisch korrekt invertierte Items.")
+
+    st.write("---")
+    if st.button("Nächste Teilnahme starten"):
+        st.session_state.step = "welcome"
+        st.session_state.participant_id = ""
+        st.session_state.matrikelnummer = ""
+        st.session_state.alter = ""
+        st.session_state.geschlecht = "Keine Angabe"
+        st.session_state.consent_given = False
+        st.session_state.aktuelles_transkript_file = None
+        st.session_state.vp_code = ""
+        st.session_state.transkript_text = ""
+        st.session_state.ai_scores = {}
+        st.session_state.user_scores = {}
+        st.session_state.preliminary_filename = ""
+        st.rerun()
 
 # ==========================================
 # 🛠️ ADMIN-BEREICH & DEBUGGING (SIDEBAR & MAIN VIEW)
@@ -709,31 +707,26 @@ if admin_password == ADMIN_PASSWORT_PROV:
     st.write("---")
     st.header("🛠️ Forschungs-Dashboard (Admin & Debugging View)")
     
-    # Live-Analyse der Nextcloud-Ordner aufrufen
     with st.spinner("Lese aktuelle Ordnerstrukturen aus Nextcloud..."):
         nc_analysis = analyze_nextcloud_data()
     
-    # Metriken berechnen
     total_urn = nc_analysis["urne_total"]
     prelim_assigned = nc_analysis["zugelost_preliminary"]
     final_evaluated = nc_analysis["bereits_bewertet_final"]
     
-    # Berechnung der tatsächlich noch verfügbaren Pool-Größe
     blockierte_ids = set([t.lower() for t in prelim_assigned + final_evaluated])
     pool_verbleibend = [t for t in total_urn if t.lower() not in blockierte_ids]
     
-    # Dashboard-Karten visualisieren
     col1, col2, col3, col4 = st.columns(4)
     with col1: st.metric("In Urne (Gesamt)", len(total_urn))
     with col2: st.metric("Zugelost (In Bearbeitung)", len(prelim_assigned))
     with col3: st.metric("Bereits bewertet (Final)", len(final_evaluated))
     with col4: st.metric("Aktuell frei für Ziehung", len(pool_verbleibend))
         
-    aktuell_gezogen = st.session_state.aktuelles_transkript_file
-    if aktuell_gezogen:
-        st.info(f"👀 **Dieser Browser testet aktuell:** `{aktuell_gezogen}`")
+    aktuellt_gezogen = st.session_state.aktuelles_transkript_file
+    if aktuellt_gezogen:
+        st.info(f"👀 **Dieser Browser testet aktuell:** `{aktuellt_gezogen}`")
 
-    # Erstellung der drei angeforderten Debugging-Listen
     tab1, tab2, tab3 = st.tabs([
         "📋 1. Dateien in der Urne", 
         "⏳ 2. Zugelost (Preliminary)", 
