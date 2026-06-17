@@ -568,7 +568,7 @@ elif st.session_state.step == "evaluation":
 else:
     st.balloons()
     st.subheader("🎉 Vielen Dank für Ihre Teilnahme!")
-    st.write("Ihre Antworten wurden erfolgreich registriert und an Nextcloud übertragen. Schauen Sie sich hier an, wie gut Ihre Fremdeinschätzung im Vergleich zur KI war. Wechseln Sie zwischen den Tabs "Gesamturteil" und "Facettenurteil"")
+    st.write("Ihre Antworten wurden erfolgreich registriert und an Nextcloud übertragen. Schauen Sie sich hier an, wie gut Ihre Fremdeinschätzung im Vergleich zur KI war. Wechseln Sie zwischen den Tabs **Gesamturteil** und **Facettenurteil**")
     st.write("---")
     
     # Aufteilung der Ergebnisse in übersichtliche Tabs
