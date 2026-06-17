@@ -448,16 +448,13 @@ elif st.session_state.step == "evaluation":
             submit_button = st.form_submit_button("Formular absenden", type="primary")
                  
             if submit_button:
-
-
-
-            if submit_button:
                 with st.spinner("Ihre Antworten werden sicher übertragen..."):
                     
-                    # NEU: Endzeitpunkt festhalten und Dauer berechnen
+                    # 1. ZEITMESSUNG (Hier sicher platziert, kein extra try/except nötig)
                     end_zeitpunkt = datetime.now()
-                    start_zeitpunkt = st.session_state.get("start_zeitpunkt", end_zeitpunkt) # Fallback, falls Session verloren ging
+                    start_zeitpunkt = st.session_state.get("start_zeitpunkt", end_zeitpunkt)
                     dauer_sekunden = round((end_zeitpunkt - start_zeitpunkt).total_seconds(), 1)
+
                     
                     # (Hier folgen Ihre bestehenden Berechnungen e_sb_rec, facette_a_fr, etc.)
                     e_sb_rec = ( (6 - e_sb_1) + (6 - e_sb_2) + (6 - e_sb_3) ) / 3
