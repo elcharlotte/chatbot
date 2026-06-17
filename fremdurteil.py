@@ -456,7 +456,7 @@ elif st.session_state.step == "evaluation":
             anmerkungen = st.text_area("Gibt es noch sonstige Auffälligkeiten oder Bemerkungen zur Person? (Optional)", max_chars=500)
             
             # Der offizielle Form-Submit-Button erstreckt sich über die volle Breite
-            submit_button = st.form_submit_button("Formular absenden", type="primary", use_container_width=True)
+            submit_button = st.form_submit_button("Fremdurteil absenden", type="primary", use_container_width=True)
             
             if submit_button:
                 with st.spinner("Ihre Antworten werden sicher übertragen..."):
@@ -557,6 +557,9 @@ elif st.session_state.step == "evaluation":
                         upload_results_to_nextcloud(finaler_dateiname, csv_string)
                         if st.session_state.preliminary_filename:
                             delete_preliminary_file(st.session_state.preliminary_filename)
+                        
+                        # ZUERST den Step ändern, damit die App weiß, dass sie die Feedback-Seite zeigen soll!
+                        st.session_state.step = "feedback" 
                         st.rerun()
                     except Exception as e:
                         st.error(f"Fehler beim Speichern: {e}")
