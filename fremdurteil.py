@@ -275,7 +275,7 @@ elif st.session_state.step == "consent":
     * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung.
     """)
     
-    consent_checked = st.checkbox("Ich stimme der Nutzung meiner anonymisierten Daten für zusätzliche Forschungszwecke freiwillig zu.")
+    consent_checked = st.checkbox("Ich stimme der Nutzung meiner anonymisierten Daten für Lehr- und Forschungszwecke zu.")
     
     if st.button("Übungsblock starten & Transkript zulosen", type="primary"):
         st.session_state.consent_given = consent_checked
