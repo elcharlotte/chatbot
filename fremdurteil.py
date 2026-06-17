@@ -305,9 +305,6 @@ elif st.session_state.step == "evaluation":
                     
                     try:
                         vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
-
-                    try:
-                        vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
                       
                         # NEU: Startzeitpunkt exakt hier festhalten (wenn das Transkript geladen wurde)
                         st.session_state.start_zeitpunkt = datetime.now()
