@@ -9,7 +9,7 @@ from requests.auth import HTTPBasicAuth
 import xml.etree.ElementTree as ET
 
 # 1. SEITEN-KONFIGURATION
-st.set_page_config(page_title="Forschungsstudie: Transkript-Bewertung", page_icon="📝", layout="centered")
+st.set_page_config(page_title="Forschungsstudie: Transkript-Bewertung", page_icon="📝", layout="wide")
 
 # Zugangsdaten aus Secrets laden & bereinigen
 NC_USER = st.secrets["nextcloud"]["username"].strip()
