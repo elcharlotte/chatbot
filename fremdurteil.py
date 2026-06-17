@@ -9,7 +9,7 @@ from requests.auth import HTTPBasicAuth
 import xml.etree.ElementTree as ET
 
 # 1. SEITEN-KONFIGURATION
-st.set_page_config(page_title="Forschungsstudie: Transkript-Bewertung", page_icon="📝", layout="wide")
+st.set_page_config(page_title="Übung Teil 2: Transkript-Bewertung", page_icon="📝", layout="wide")
 
 # Zugangsdaten aus Secrets laden & bereinigen
 NC_USER = st.secrets["nextcloud"]["username"].strip()
@@ -272,7 +272,7 @@ elif st.session_state.step == "consent":
     In diesem zweiten Teil der Übung nehmen Sie die Rolle einer **fremdbeurteilenden Person** ein. Ihnen wird das anonymisierte Transkript eines bereits geführten Interviews zugelost.
     
     * **Ihre Aufgabe:** Lesen Sie das Transkript aufmerksam durch. Schätzen Sie die interviewte Person im Anschluss auf den 17 TSDI-Persönlichkeitsfacetten ein.
-    * **Verpflichtung:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung.
+    * **Leistungsnachweis:** Diese Fremdbeurteilung ist der zweite Teil der wöchentlichen Übungsleistung.
     """)
     
     consent_checked = st.checkbox("Ich stimme der Nutzung meiner anonymisierten Daten für Lehr- und Forschungszwecke zu.")
