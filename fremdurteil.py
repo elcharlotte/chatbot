@@ -226,6 +226,7 @@ if 'transkript_text' not in st.session_state: st.session_state.transkript_text =
 if 'ai_scores' not in st.session_state: st.session_state.ai_scores = {}
 if 'user_scores' not in st.session_state: st.session_state.user_scores = {}
 if 'preliminary_filename' not in st.session_state: st.session_state.preliminary_filename = ""
+if 'start_zeitpunkt' not in st.session_state: st.session_state.start_zeitpunkt = None
 
 
 # --- PHASE 1: WILLKOMMEN & DATENEINGABE ---
@@ -304,7 +305,13 @@ elif st.session_state.step == "evaluation":
                     
                     try:
                         vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
-                        
+
+                    try:
+                        vp_code, text, ai_scores = read_and_format_json_transcript(gezogenes_file)
+                      
+                        # NEU: Startzeitpunkt exakt hier festhalten (wenn das Transkript geladen wurde)
+                        st.session_state.start_zeitpunkt = datetime.now()
+                       
                         rater_string = f"rater_{st.session_state.participant_id}_{st.session_state.matrikelnummer}"
                         target_clean_id = gezogenes_file.replace(".json", "")
                         target_string = f"target_{target_clean_id}"
@@ -441,7 +448,18 @@ elif st.session_state.step == "evaluation":
             submit_button = st.form_submit_button("Formular absenden", type="primary")
                  
             if submit_button:
+
+
+
+            if submit_button:
                 with st.spinner("Ihre Antworten werden sicher übertragen..."):
+                    
+                    # NEU: Endzeitpunkt festhalten und Dauer berechnen
+                    end_zeitpunkt = datetime.now()
+                    start_zeitpunkt = st.session_state.get("start_zeitpunkt", end_zeitpunkt) # Fallback, falls Session verloren ging
+                    dauer_sekunden = round((end_zeitpunkt - start_zeitpunkt).total_seconds(), 1)
+                    
+                    # (Hier folgen Ihre bestehenden Berechnungen e_sb_rec, facette_a_fr, etc.)
                     e_sb_rec = ( (6 - e_sb_1) + (6 - e_sb_2) + (6 - e_sb_3) ) / 3
                     hh_si_rec = ( (6 - hh_si_1) + hh_si_2 + (6 - hh_si_3) ) / 3
                     hh_fa_rec = ( (6 - hh_fa_1) + hh_fa_2 + (6 - hh_fa_3) ) / 3
@@ -466,7 +484,7 @@ elif st.session_state.step == "evaluation":
                     user_gewissenhaftigkeit = (facette_c_hw + facette_c_o) / 2
                     user_neurotizismus = (facette_n_d + facette_n_ir + facette_n_st) / 3
                     user_offenheit = (facette_o_in + facette_o_r + facette_o_sc) / 3
-                    
+
                     st.session_state.user_scores = {
                         "Extraversion": round(user_extraversion, 2),
                         "Verträglichkeit": round(user_vertraeglichkeit, 2),
@@ -476,9 +494,15 @@ elif st.session_state.step == "evaluation":
                     }
                     
                     ergebnis_daten = {
-                        "Zeitstempel": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "Zeitstempel": end_zeitpunkt.strftime("%Y-%m-%d %H:%M:%S"),
+                        
+                        # NEU: Die drei neuen Spalten für Ihre Auswertung
+                        "Bearbeitung_Start": start_zeitpunkt.strftime("%Y-%m-%d %H:%M:%S") if st.session_state.start_zeitpunkt else "N/A",
+                        "Bearbeitung_Ende": end_zeitpunkt.strftime("%Y-%m-%d %H:%M:%S"),
+                        "Bearbeitungsdauer_Sekunden": dauer_sekunden,
+                        
                         "Rater_VP_Code": st.session_state.participant_id,      
-                        "Rater_Matrikelnummer": st.session_state.matrikelnummer, 
+                        "Rater_Matrikelnummer": st.session_state.matrikelnummer,
                         "Rater_Alter": st.session_state.alter,
                         "Rater_Geschlecht": st.session_state.geschlecht,
                         "Forschungs_Consent": 1 if st.session_state.consent_given else 0,
