@@ -18,7 +18,7 @@ EMERGENCY_PASSWORD = "SicheresNotfallPasswort123!"
 def save_to_nextcloud(participant_id, matrikelnummer, data_dict, final=True):
     try:
         base_url = "https://cloudstore.uni-ulm.de/remote.php/dav/files/ffg79"
-        folder = "Forschungsdaten"
+        folder = "chatbot_bugfix"
         
         if final:
             filename = f"interview_{participant_id}_{matrikelnummer}.json"
