@@ -4,7 +4,6 @@ from openai import OpenAI
 import json
 import requests
 import uuid
-import threading
 import random
 import time
 from datetime import datetime
@@ -13,16 +12,14 @@ import hashlib
 from streamlit_mic_recorder import mic_recorder
 
 # --- ADMIN KONFIGURATION ---
-EMERGENCY_PASSWORD = "SicheresNotfallPasswort123!" # <-- Hier dein Wunschpasswort eintragen
+EMERGENCY_PASSWORD = "SicheresNotfallPasswort123!" 
 
 # --- KONFIGURATION & HELPER ------------------------------------------------------------------
-# 1) ANPASSUNG: matrikelnummer als Parameter hinzugefügt und save_time entfernt
 def save_to_nextcloud(participant_id, matrikelnummer, data_dict, final=True):
     try:
         base_url = "https://cloudstore.uni-ulm.de/remote.php/dav/files/ffg79"
         folder = "Forschungsdaten"
         
-        # Dateiname enthält jetzt VP-Code und Matrikelnummer statt Zeitstempel
         if final:
             filename = f"interview_{participant_id}_{matrikelnummer}.json"
         else:
@@ -35,7 +32,8 @@ def save_to_nextcloud(participant_id, matrikelnummer, data_dict, final=True):
         response = requests.put(upload_url, data=data, auth=auth, headers={'Content-Type': 'application/json'})
         return response.status_code in [201, 204]
     except Exception as e:
-        st.error(f"Speicherfehler: {e}")
+        # Im Hintergrund-Log ausgeben, um Streamlit-UI-Crashes zu vermeiden
+        print(f"Speicherfehler in Nextcloud: {e}")
         return False
 
 def reset_app():
@@ -50,10 +48,10 @@ TSDI_BESCHREIBUNGEN = """
 
 - VERTRÄGLICHKEIT (A): Mit dieser Dimension werden Einstellungen und gewohnheitsmäßige Verhaltensweisen in sozialen Beziehungen umschrieben. Personen mit hoher Ausprägung sind hilfsbereit, entgegenkommend, vertrauensbereit und bemüht anderen zu helfen. Sie begegnen anderen Menschen mit Wohlwollen, neigen zu Gutmütigkeit, sind bereit, in Auseinandersetzungen nachzugeben und können im Extremfall als unterwürfig oder abhängig erscheinen. Personen mit niedriger Ausprägung beschreiben sich als eher egozentrisch, misstrauisch gegenüber den Intentionen anderer, grob, sowie wenig geneigt zu kooperativem Verhalten und mit einer Präferenz für wettbewerbsorientiertes Verhalten.
 - GEWISSENHAFTIGKEIT (C): Die Grundlage der Gewissenhaftigkeit bilden Unterschiede beim Planen, Organisieren und Ausführen von Aufgaben. Personen mit einer hohen Ausprägung beschreiben sich als eher zielstrebig, willensstark und entschlossen, während Personen mit einer niedrigen Ausprägung ihre Zielsetzungen mit geringerem Engagement verfolgen.
-- EXTRAVERSION (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreudig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
+- EXTRAVERSION (E): Personen mit hoher Ausprägung in diesem Bereich lassen sich als gesellig, gesprächig, freundlich, unternehmensfreugig und aktiv beschreiben. Sie mögen die Gesellschaft andere, fühlen sich wohl in Gruppen, sind aber auch durchsetzungsfähig, selbstbewusst, dominant und lieben aufregenden Situationen und Stimulierungen. Personen mit niedriger Ausprägung in diesem Bereich sind eher zurückhaltend, ruhig, ausgeglichen und bedachtsam. Sie bevorzugen eher, allein zu sein. Introversion wird weniger als der Gegensatz von Extraversion, sondern mehr als das Fehlen von Extraversion beschrieben.
 - NEUROTIZISMUS (N): Neurotizismus erfasst Unterschiede zwischen Personen hinsichtlich ihrer gefühlsmäßigen Robustheit einerseits und ihrer emotionalen Empfindlichkeit bzw. Ansprechbarkeit andererseits. Personen mit hoher Ausprägung in diesem Bereich sind empfindlicher und neigen unter Stress dazu, leichter aus dem Gleichgewicht zu kommen. Sie entwickeln eher unangepasste Formen der Problembewältigung, neigen zu unrealistischen Ideen und sind weniger in der Lage, ihre Bedürfnisse zu kontrollieren. Personen mit niedriger Ausprägung in diesem Bereich beschreiben sich als ausgeglichen, emotional stabil und robust und geraten nicht so leicht aus der Fassung. Charakteristisch für diese Personen ist, dass sie Gefühlszustände nicht so stark erleben.
 - OFFENHEIT FÜR ERFAHRUNGEN (O): Personen mit hoher Ausprägung in diesem Bereich sind interessiert an neuen Erfahrungen, Erlebnissen, Eindrücken. Sie geben an ein reges Fantasieleben zu haben und eigene positive wie negative Gefühle sehr deutlich wahrzunehmen. Sie lassen sich auf neue Ideen ein und sind unkonventionell in ihren Wertorientierungen. Personen mit niedrigen Ausprägungen in diesem Bereich lassen sich als eher konventionell und konservativ eingestellt beschrieben. Sie ziehen Bekanntes und Bewährtes dem Neuen vor. Emotionale Reaktionen sind weniger intensiv, der Bereich der Interessen ist eingeschränkt und diesen Interessen wird auch nicht mit so starker Intensität nachgegangen, im Gegensatz zu Personen mit hoher Ausprägung.
-- EHRLICHKEIT-BESCHEIDENHEIT (HH): Personen mit sehr niedrigen Werten in der Skala "Ehrlichkeit-Bescheidenheit" neigen dazu, sich zu verstellen, um ihre Ziele zu erreichen. Sie nehmen Regeln häufig nicht so genau, streben nach materiellem Reichtum und Ansehen und neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit sehr hohen Werten in dieser Skala hingegen verhalten sich stets authentisch und ehrlich. Sie vermeiden es, andere zu ihren eigenen Gunsten zu beeinflussen, und handeln stets fair. Sie streben weder Luxusgüter noch einen hohen sozialen Status an, noch haben sie den Anspruch, bevorzugt behandelt zu werden.
+- EHRLICHKEIT-BESCHEIDENHEIT (HH): Personen mit sehr niedrigen Werten in der Skala "Ehrlichkeit-Bescheidenheit" neigen dazu, sich zu verstellen, um ihre Ziele zu erreichen. Sie nehmen Regeln häufig nicht so genau, streben nach materieller Reichtum und Ansehen und neigen dazu, sich anderen gegenüber privilegiert und überlegen zu fühlen. Personen mit sehr hohen Werten in dieser Skala hingegen verhalten sich stets authentisch und ehrlich. Sie vermeiden es, andere zu ihren eigenen Gunsten zu beeinflussen, und handeln stets fair. Sie streben weder Luxusgüter noch einen hohen sozialen Status an, noch haben sie den Anspruch, bevorzugt behandelt zu werden.
 
 ## FACETTEN:
 
@@ -264,7 +262,6 @@ INIT_PROMPT_OPEN = """
 Vielen Dank fuer Ihre Teilnahme! Ich bin ein AI Agent und werde im weiteren Verlauf ein persoenlichkeitsdiagnostisches Interview mit Ihnen fuehren. Lassen Sie uns mit dem ersten Thema beginnen: der Dimension 'Extraversion'. Diese Dimension beschreibt, inwiefern Personen gesellig, gespraechig, freundlich und aktiv sind. Menschen mit hoher Auspraegung fuehlen sich wohl in Gruppen und moegen aufregende Situationen, waehrend Personen mit niedriger Auspraegung eher zurueckhaltend und bedachtsam sind. Wie wuerden Sie sich im Vergleich zu anderen Personen hinsichtlich Ihrer Extraversion einschaetzen?
 """
 
-
 #--- Condition Configs --------------------------------------------------------------------------------------
 CONDITION_CONFIGS = {
     "structured-write": {
@@ -313,7 +310,6 @@ def main():
         st.session_state.research_consent = False
         st.session_state.experiment_start_time = time.time()
 
-    # --- 2) ANPASSUNG: NOTFALL-BUTTON SPRINGT ZUM INTERVIEW-ENDE ---
     with st.sidebar:
         st.subheader("⚙️ Administration")
         with st.expander("Notfall-Optionen", expanded=False):
@@ -321,9 +317,7 @@ def main():
             if pwd_input == EMERGENCY_PASSWORD:
                 st.error("⚠️ Autorisierter Bereich")
                 if st.button("⏭️ Interview überspringen & zu UX-Fragen"):
-                    # Zeitstempel für das vorzeitige Ende setzen, um NameErrors im Payload zu verhindern
                     st.session_state.interview_end_time = time.time()
-                    # Direkt zum ersten UX-Fragebogen springen
                     st.session_state.step = "ux_survey1"
                     st.rerun()
             elif pwd_input:
@@ -365,7 +359,7 @@ def main():
         Dieses KI-gestützte Interview dient der Persönlichkeitsdiagnostik. Am Ende erhalten Sie eine Auswertung Ihrer Big Five.
         Bitte führen Sie das Interview in einer durchgängigen Sitzung durch und unterbrechen Sie das Interview nicht. Die Bearbeitung wird ca. 45 Minuten dauern. 
         
-        * **Lesitungsnachweis:** Die Teilnahme am Interview ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
+        * **Leistungsnachweis:** Die Teilnahme am Interview ist Teil der Übungsleistung. Wer nicht teilnimmt, erhält keinen Credit.
         * **Ehrlichkeit:** Es gibt keine Pflicht zu wahrheitsgemäßen Angaben, aber fiktive Angaben verfälschen die Auswertung und schränken die Selbsterfahrung ein.       
 
         ### Datenschutz
@@ -407,7 +401,6 @@ def main():
         st.title("🎙️ Mikrofon-Test & Vorbereitung")
         st.write("Bitte testen Sie Ihr Mikrofon, bevor das Interview startet. Sprechen Sie nach dem Starten der Aufnahme ein paar Worte (z. B. 'Hallo, Test').")
         
-        # --- WICHTIGER GEWÄHLTER HINWEIS FÜR DIE NUTZER ---
         st.info("⚠️ **Wichtiger Hinweis zur Geräteauswahl:** Der Chatbot nutzt automatisch das Standard-Mikrofon Ihres Computers. Falls das falsche Mikrofon (z.B. die interne Webcam statt Ihres Headsets) aktiv ist, folgen Sie bitte kurz dieser Anleitung:")
         
         with st.expander("📋 Anleitung: So legen Sie Ihr Wunsch-Mikrofon fest"):
@@ -417,7 +410,7 @@ def main():
             2. Scrollen Sie nach unten zum Bereich **'Eingabe'**.
             3. Wählen Sie dort Ihr Wunsch-Mikrofon aus.
             4. Klicken Sie (falls sichtbar) auf **'Als Standardgerät festlegen'**.
-           
+            
             ### 🍏 Unter macOS:
             1. Öffnen Sie die **Systemeinstellungen** --> **Ton**.
             2. Wechseln Sie auf den Reiter **'Eingabe'**.
@@ -427,10 +420,11 @@ def main():
             """)
         
         st.write("---")
+        # FIX: Dynamischer Key, um Hängenbleiben beim Rerun zu verhindern
         audio_record = mic_recorder(
                 start_prompt="Aufnahme starten",
                 stop_prompt="Aufnahme stoppen",
-                key="speech_recorder"
+                key=f"mic_test_recorder_{st.session_state.get('last_audio_hash', 'init')}"
             )
            
         if audio_record:
@@ -450,14 +444,12 @@ def main():
                     if transcript.text.strip():
                         st.session_state.mic_test_transcript = transcript.text
                         st.session_state.mic_test_passed = True
-
                     else:
                         st.session_state.mic_test_transcript = "Es wurde kein Text erkannt. Bitte lauter sprechen oder das richtige Eingabegerät in den Browsereinstellungen wählen."
                         st.session_state.mic_test_passed = False
                 except Exception as e:
                     st.error(f"Fehler beim Mikrofon-Test: {e}")
        
-        # Visuelle Rückmeldung für die Person
         if "mic_test_transcript" in st.session_state:
             st.info(f"**Erkanntes Audio:** „{st.session_state.mic_test_transcript}“")
          
@@ -495,7 +487,6 @@ def main():
 
         st.divider()
 
-        # Inject CSS for scrollable chat container
         st.markdown("""
         <style>
         .chat-container { height: 35vh; overflow-y: auto; display: flex; flex-direction: column-reverse; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #fafafa; margin-bottom: 1rem; }
@@ -517,7 +508,8 @@ def main():
                         interview_ended = True
                     text_content = text_content.replace("[INTERVIEW_FERTIG]", "").strip()
                 except:
-                    text_content = msg["content"]
+                    # FIX: Sicheres Fallback für unvollständiges JSON
+                    text_content = str(msg["content"])
                 chat_html += f'<div class="chat-bubble-ai">🤖 {text_content}</div>'
             else:
                 chat_html += f'<div class="chat-bubble-user">{msg["content"]}</div>'
@@ -573,8 +565,8 @@ def main():
                             "interview_start_time": datetime.fromtimestamp(st.session_state.interview_start_time).strftime("%Y-%m-%d_%H:%M:%S")
                         }
                     }
-                    # 1) ANPASSUNG: args enthält nun st.session_state.matrikelnummer
-                    threading.Thread(target=save_to_nextcloud, args=(st.session_state.participant_id, st.session_state.matrikelnummer, full_data, False), daemon=True).start()
+                    # FIX: Synchroner und sicherer Speicheraufruf ohne Threading-Risiko
+                    save_to_nextcloud(st.session_state.participant_id, st.session_state.matrikelnummer, full_data, False)
                 st.rerun()
 
     # --- PHASE 3B: CHAT SPEECH ---
@@ -610,12 +602,13 @@ def main():
                 if msg["role"] == "assistant":
                     try:
                         data = json.loads(msg["content"])
-                        display_text = data.get("interviewer_text", msg["content"])
+                        display_text = data.get("interviewer_text", "")
                         if "[INTERVIEW_FERTIG]" in display_text:
                             interview_ended = True
                         display_text = display_text.replace("[INTERVIEW_FERTIG]", "").strip()
                     except:
-                        display_text = msg["content"]
+                        # FIX: Sicheres Fallback für die UI-Ausgabe
+                        display_text = str(msg["content"])
                 else:
                     display_text = msg["content"]
                 with st.chat_message(msg["role"]):
@@ -633,10 +626,11 @@ def main():
             st.write("---")
             st.write("🎤 **Antwort einsprechen:**")
             
+            # FIX: Dynamischer Key pro Interaktionsrunde, um Verschwinden des Buttons zu beheben
             audio_record = mic_recorder(
                 start_prompt="Aufnahme starten",
                 stop_prompt="Aufnahme stoppen",
-                key="interview_speech_recorder"
+                key=f"interview_speech_recorder_{len(st.session_state.messages)}"
             )
             
             if audio_record:
@@ -681,12 +675,8 @@ def main():
                     "chat": st.session_state.messages
                 }
                 
-                # 1) ANPASSUNG: args enthält nun st.session_state.matrikelnummer
-                threading.Thread(
-                    target=save_to_nextcloud, 
-                    args=(st.session_state.participant_id, st.session_state.matrikelnummer, full_data, False),
-                    daemon=True
-                ).start()
+                # FIX: Synchroner Cloud-Upload zur Stabilitätsgarantie
+                save_to_nextcloud(st.session_state.participant_id, st.session_state.matrikelnummer, full_data, False)
                 st.rerun()
 
     # --- PHASE 4: UX Fragebogen Interview ---
@@ -701,7 +691,7 @@ def main():
             q4 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als frustrierend. ", 1, 5, 3)
             q5 = st.slider("Es fiel mir leicht, mich auf das Gespräch zu konzentrieren.", 1, 5, 3)
             q6 = st.slider("Ich emfpand die Interaktion mit dem KI-Chatbot als angenehm. ", 1, 5, 3)
-            q7 = st.slider("Ich denke die Interaktion mit dem KI-Chatbot hätte effizienter sein können.", 1, 5, 3) # gefixt: q7 statt q8 im slider key
+            q7 = st.slider("Ich denke die Interaktion mit dem KI-Chatbot hätte effizienter sein können.", 1, 5, 3)
             q9 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als sicher.", 1, 5, 3)
             q10 = st.slider("Ich empfand die Interaktion mit dem KI-Chatbot als interessant.", 1, 5, 3)
             q11 = st.slider("Ich fand die Fragen des KI-Chatbot nicht sonderlich gut gewählt.", 1,5,3)
@@ -729,20 +719,17 @@ def main():
                         if m["role"] == "system": 
                             continue
                         if m["role"] == "assistant":
-                            # Einheitliches Parsen für Write und Speech
                             try:
                                 content_data = json.loads(m['content'])
                                 interviewer_text = content_data.get('interviewer_text', '')
                                 clean_messages.append(f"Interviewer: {interviewer_text}")
                             except:
-                                # Falls es mal kein JSON-String war
                                 clean_messages.append(f"Interviewer: {m['content']}")
                         else:
                             clean_messages.append(f"Teilnehmer: {m['content']}")
                             
                     chat_text = "\n".join(clean_messages)
                     
-                    # Hier erzwingen wir das Wort JSON im System-Prompt für BEIDE Bedingungen
                     analysis_system_prompt = (
                     "Du bist ein erfahrener Persönlichkeitspsychologe. "
                     "Analysiere den übermittelten Chatverlauf auf Facettenebene der Big Five. "
@@ -790,7 +777,7 @@ def main():
             st.session_state.step = "ux_survey2"
             st.rerun()
 
-# --- PHASE 6: UX Fragebogen Auswertung ---
+    # --- PHASE 6: UX Fragebogen Auswertung ---
     elif st.session_state.step == "ux_survey2":
         st.title("Wie war die Auswertung? 📋")
         st.divider()
@@ -799,7 +786,6 @@ def main():
             q13 = st.slider("Ich habe insgesamt wahrheitsgemäß gegenüber dem KI-Chatbot geantwortet. ", 1, 5, 3)
             q14 = st.slider("Die Einschätzung der KI passt weitestgehend mit meiner eigenen Wahrnehmung zusammen.", 1, 5, 3)
             
-            # --- NEU: Offenes Kommentarfeld innerhalb des Formulars ---
             kommentar_ki = st.text_area(
                 "Haben Sie Kommentare zu dem KI-Interview?",
                 placeholder="Ihr Feedback, Anmerkungen oder Kritik...",
@@ -808,11 +794,10 @@ def main():
         
             submitted = st.form_submit_button("Übungsblock abschließen!")
             if submitted:
-                # Hier fügen wir den Kommentar der Datenstruktur hinzu
                 st.session_state.ux_responses_results = {
                     "q13_wahrheit": q13,
                     "q14_passung": q14,
-                    "kommentar_ki_interview": kommentar_ki  # <-- Wird mit abgespeichert
+                    "kommentar_ki_interview": kommentar_ki  
                 }
 
                 experiment_end_time = time.time()
@@ -822,7 +807,7 @@ def main():
                     "condition": st.session_state.condition,
                     "research_consent": st.session_state.research_consent,
                     "ux_responses_interview": st.session_state.get("ux_responses_interview", {}),
-                    "ux_responses_results": st.session_state.ux_responses_results, # Enthält nun auch das Kommentarfeld
+                    "ux_responses_results": st.session_state.ux_responses_results, 
                     "ai_assessment": st.session_state.ai_bfi,
                     "chat": st.session_state.messages,
                     "timing": {
@@ -834,13 +819,13 @@ def main():
                         "duration_experiment_seconds": round(experiment_end_time - st.session_state.experiment_start_time, 2)
                     }
                 }
-                # 1) ANPASSUNG: Hier wird st.session_state.matrikelnummer übergeben
+                
                 if save_to_nextcloud(st.session_state.participant_id, st.session_state.matrikelnummer, final_payload, True):
                     st.session_state.data_saved = True
                     st.session_state.step = "farewell"
                     st.rerun()
                 else:
-                    st.error("Speicherfehler. Bitte versuchen Sie es erneut.")
+                    st.error("Speicherfehler beim finalen Abspeichern. Bitte versuchen Sie es erneut.")
     
     # --- PHASE 7: ABSCHLUSS ---
     elif st.session_state.step == "farewell":
