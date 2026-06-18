@@ -118,18 +118,62 @@ def analyze_nextcloud_data():
 
 
 def calculate_available_urn():
-    """Berechnet die aktuell frei verfügbaren Transkripte für Rater."""
+    """Berechnet die aktuell frei verfügbaren Transkripte für Rater und schließt das eigene aus."""
     data = analyze_nextcloud_data()
     alle_transkripte = data["urne_total"]
     
-    # Blockiert ist alles, was entweder schon bewertet wurde ODER aktuell im Status preliminary ist
+    # 1. Blockiert durch andere Rater (preliminary oder final)
     blockiert = set([t.lower() for t in data["zugelost_preliminary"] + data["bereits_bewertet_final"]])
     
-    verfuegbar = [t for t in alle_transkripte if t.lower() not in blockiert]
+    # 2. Eigenes Transkript ausschließen (Sicherheitsabgleich mit User-Inputs)
+    user_vp = st.session_state.get("participant_id", "").strip().lower()
+    user_matrikel = st.session_state.get("matrikelnummer", "").strip().lower()
     
-    # Falls alle vergeben sind, fangen wir von vorne an (Fallback)
+    verfuegbar = []
+    for t in alle_transkripte:
+        t_lower = t.lower()
+        
+        # Falls die Datei bereits von jemand anderem blockiert ist -> überspringen
+        if t_lower in blockiert:
+            continue
+            
+        # Abgleich: Ist es das eigene Transkript?
+        # Beispiel-Name: "interview_04ERNS24_1234567_preliminary.json" oder "interview_04ERNS24_1234567.json"
+        parts = t_lower.split("_")
+        
+        ist_eigenes = False
+        if len(parts) >= 3:
+            vp_in_file = parts[1]        # "04erns24"
+            matrikel_in_file = parts[2]  # "1234567" (bzw. ohne .json Endung falls kürzer)
+            
+            # Bereinige potenzielle Dateiendungen, falls der String dort aufhört
+            matrikel_in_file = matrikel_in_file.replace(".json", "")
+            
+            if vp_in_file == user_vp or matrikel_in_file == user_matrikel:
+                ist_eigenes = True
+                
+        # Fallback-Sicherheit: Falls die Namensstruktur mal abweicht, machen wir einen groben Text-Match
+        if user_vp in t_lower or (len(user_matrikel) > 4 and user_matrikel in t_lower):
+            ist_eigenes = True
+            
+        # Nur hinzufügen, wenn es NICHT das eigene Interview ist
+        if not ist_eigenes:
+            verfuegbar.append(t)
+    
+    # Falls ALLES vergeben ist (oder nur noch das eigene übrig wäre), Fallback auf alle außer das eigene
     if alle_transkripte and not verfuegbar:
-        return alle_transkripte, True
+        # Erneuter Filter für den Fallback-Pool: Alle Transkripte, außer dem eigenen
+        fallback_pool = []
+        for t in alle_transkripte:
+            t_lower = t.lower()
+            parts = t_lower.split("_")
+            if len(parts) >= 3:
+                if parts[1] != user_vp and parts[2].replace(".json", "") != user_matrikel:
+                    fallback_pool.append(t)
+            elif user_vp not in t_lower:
+                fallback_pool.append(t)
+                
+        return fallback_pool, True
         
     return verfuegbar, False
 
