@@ -51,21 +51,40 @@ def get_all_files_from_nextcloud_folder(folder_path):
 
 def analyze_nextcloud_data():
     """
-    Kernelement für das Debugging und die Urnenberechnung.
+    Kerneylement für das Debugging und die Urnenberechnung.
     Analysiert beide Ordner parallel und ordnet IDs zu.
     """
     # 1. Dateien aus Forschungsdaten laden
     transcript_files = get_all_files_from_nextcloud_folder(TRANSKRIPT_ORDNER)
     
-    # Valide Urnen-Dateien bestimmen (nicht preliminary, aber vorab-Version existiert)
+    # Geheime Whitelist aus Secrets laden (Fallback auf leere Liste, falls nicht gesetzt)
+    allowed_prelims = st.secrets["nextcloud"].get("allowed_preliminary_vpcodes", [])
+    
+    # Valide Urnen-Dateien bestimmen
     urne_dateien = []
     for f in transcript_files:
-        if f.endswith(".json") and not f.endswith("_preliminary.json"):
+        if not f.endswith(".json"):
+            continue
+            
+        # Fall A: Es ist eine reguläre finale Datei (deine bisherige Logik)
+        if not f.endswith("_preliminary.json"):
             prelim_version = f.replace(".json", "_preliminary.json")
             if prelim_version in transcript_files:
                 urne_dateien.append(f)
+        
+        # Fall B: Es ist eine reine Preliminary-Datei, aber der VP-Code steht auf der Whitelist
+        else:
+            # Beispiel-Dateiname: "interview_04ERNS24_1234567_preliminary.json"
+            # Wir splitten den Namen, um an den VP-Code zu kommen
+            parts = f.split("_")
+            if len(parts) >= 2:
+                # Da deine Benennung "interview_VPCODE_..." ist, steht der VPCODE an Index 1
+                vp_code_from_file = parts[1] 
                 
-    # 2. Dateien aus Fremdurteil laden
+                if vp_code_from_file in allowed_prelims:
+                    urne_dateien.append(f)
+                    
+    # 2. Dateien aus Fremdurteil laden (ab hier bleibt alles exakt wie in deinem Code)
     result_files = get_all_files_from_nextcloud_folder(ERGEBNIS_ORDNER)
     
     zugelost_in_bearbeitung = []
