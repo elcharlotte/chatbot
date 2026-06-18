@@ -30,16 +30,16 @@ def save_to_nextcloud(participant_id, matrikelnummer, data_dict, final=True):
         auth = (st.secrets["nextcloud"]["user"], st.secrets["nextcloud"]["password"])
         
         response = requests.put(upload_url, data=data, auth=auth, headers={'Content-Type': 'application/json'})
-        return response.status_code in [201, 204]
+        
+        # --- DIAGNOSTE-UPGRADE: Zeigt dir im Admin-Fall den Status an ---
+        if response.status_code not in [201, 204]:
+            st.error(f"Nextcloud Fehler: Status {response.status_code} - {response.text}")
+            return False
+            
+        return True
     except Exception as e:
-        # Im Hintergrund-Log ausgeben, um Streamlit-UI-Crashes zu vermeiden
-        print(f"Speicherfehler in Nextcloud: {e}")
+        st.error(f"Kritischer Verbindungsfehler zu Nextcloud: {e}")
         return False
-
-def reset_app():
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.rerun()
 
 # --- TSDI LEITFADEN --------------------------------------------------------------------------
 TSDI_BESCHREIBUNGEN = """
