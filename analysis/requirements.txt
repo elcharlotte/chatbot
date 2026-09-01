@@ -1,0 +1,9 @@
+# Data loading & wrangling
+pandas>=2.0.0
+numpy>=1.24.0
+
+# LLM rating pipeline (utils/llm_rating_utils.py, llm_ratings_api.py)
+openai>=1.40.0         # client.chat.completions.parse() structured outputs
+pydantic>=2.0.0        # response_format schemas (config.py, FacetLevelRatings, ItemLevelRatings)
+tqdm>=4.65.0           # progress bar in rate_df_api
+python-dotenv>=1.0.0   # loads OPENAI_KEY etc. from .env

@@ -1,0 +1,11 @@
+data/
+figures/
+meeting_slides/
+results/
+literature/
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc

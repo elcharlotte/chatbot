@@ -1,5 +1,0 @@
-streamlit
-openai
-requests
-uuid
-streamlit-mic-recorder
